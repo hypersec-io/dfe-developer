@@ -28,7 +28,7 @@ cd dfe-developer/fedora
 
 ### Standard Developer Tools
 - Docker CE and Docker Compose
-- Python development (UV, Poetry, pyenv)
+- Python development (UV, pyenv)
 - Cloud tools (AWS CLI, kubectl, Helm + Dashboard, Terraform)
 - Kubernetes tools (K9s, Freelens, Minikube, ArgoCD)
 - Git extensions and GitHub CLI
