@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.1.2] - 2024-10-24
+## [2.1.2] - 2025-10-24
 
 ### Fixed
 - Dynamic version detection for Confluent CLI (uses latest from packages.confluent.io)
@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Full contribution guidelines including fork/PR workflow
 - Code standards and testing requirements documentation
 
-## [2.1.1] - 2024-10-24
+## [2.1.1] - 2025-10-24
 
 ### Added
 - Helm Dashboard plugin installation for visual Helm chart management
@@ -36,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed specific version numbers from README.md (centralized in VERSION file)
 - Updated documentation to reflect new Kubernetes tools
 
-## [2.1.0] - 2024-10-20
+## [2.1.0] - 2025-10-20
 
 ### Added
 - Slack installation via Flatpak in install-dfe-developer-core.sh
@@ -60,7 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Code maintainability with single execution path instead of root/user branching
 - Consistency with "run as user, sudo only when needed" design principle
 
-## [2.0.0] - 2024-10-19
+## [2.0.0] - 2025-10-19
 
 ### Ported
 - Ported from internal HyperSec SOE build
