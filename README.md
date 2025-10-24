@@ -1,8 +1,10 @@
 # DFE Developer Environment
 
-Standardised complete eveloper environment setup for HyperSec DFE developers on Fedora Linux.
+Standardised complete developer environment setup for HyperSec DFE developers on Fedora Linux.
 
 ## Quick Start
+
+To be installed onto Fedora Linux 42+
 
 ```bash
 # Clone the repository
