@@ -1,0 +1,68 @@
+# DFE Developer Environment - Git Ignore
+
+# OS files
+.DS_Store
+Thumbs.db
+*~
+*.swp
+*.swo
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+
+# Logs and temp files
+*.log
+*.tmp
+*.temp
+*.bak
+*.backup
+*.orig
+.tmp/
+tmp/
+temp/
+
+# Credentials and secrets
+.env
+*.secret
+*.key
+*.pem
+credentials.json
+.aws/
+.azure/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+__pycache__/
+*.pyc
+node_modules/
+
+# Testing
+.coverage
+coverage/
+test-results/
+.pytest_cache/
+
+# Project specific
+downloads/
+installers/
+*.local.sh
+local-config/
+
+# AI assistant work files - never commit (local only, public repo)
+STATE.md
+CLAUDE.md
+.claude/
+*claude*.tmp
+*claude*.draft
+.cline/
+.aider/
+.cursor/
+.continue/
+
+# Keep these even though they have claude in name
+!lib.sh
+!install-*claude*.sh

@@ -1,0 +1,29 @@
+# Git Attributes - DFE Developer Environment
+
+# Text files - LF line endings
+* text=auto eol=lf
+
+# Scripts
+*.sh text eol=lf
+*.bash text eol=lf
+lib.sh text eol=lf
+
+# Documentation
+*.md text eol=lf
+*.txt text eol=lf
+
+# Config files
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.conf text eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary
+*.zip binary
+*.tar binary
+*.gz binary
