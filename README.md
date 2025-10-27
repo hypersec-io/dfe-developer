@@ -69,9 +69,60 @@ bats *.bats                # Unit and integration tests
 - `fedora/` - Installation scripts
 - `fedora/lib.sh` - Shared utility functions
 - `fedora/tests/` - Test suite
+- `claude/` - Claude Code utilities
 - `VERSION` - Version tracking
 - `CHANGELOG.md` - Release history
 - `TODO.md` - Task tracking
+
+## Claude Contributor Fix Script
+
+The `claude/claude-contrib-fix.sh` script removes Claude Code from GitHub contributors when it autonomously adds itself without permission.
+
+### Problem
+
+Claude Code sometimes adds "Co-Authored-By: Claude" attribution to commits without explicit user consent, causing Claude to appear as a repository contributor on GitHub.
+
+### Solution
+
+This script removes Claude attribution from commits and forces GitHub to reindex contributors.
+
+### Usage
+
+```bash
+# Use current repository with default branch
+cd dfe-developer
+./claude/claude-contrib-fix.sh
+
+# Specify repository URL
+./claude/claude-contrib-fix.sh https://github.com/owner/repo.git
+
+# Specify repository and branch
+./claude/claude-contrib-fix.sh https://github.com/owner/repo.git develop
+
+# Clean a non-default branch (no GitHub reindex)
+./claude/claude-contrib-fix.sh https://github.com/owner/repo.git feature-branch
+```
+
+### Features
+
+- Removes "Co-Authored-By: Claude" and "Generated with Claude Code" from commit messages
+- Auto-detects repository default branch (main, master, etc.)
+- Optional branch parameter to clean specific branches
+- For default branch: forces GitHub contributor reindex
+- For non-default branches: only cleans commits (no gh CLI required)
+- Comprehensive error handling and automatic cleanup
+
+### Requirements
+
+- git (required)
+- gh (GitHub CLI) - only required when working on default branch
+- Push access to the repository
+
+### Help
+
+```bash
+./claude/claude-contrib-fix.sh --help
+```
 
 ## Contributing
 
