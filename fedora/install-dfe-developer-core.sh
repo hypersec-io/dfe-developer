@@ -15,7 +15,6 @@
 #   - JFrog CLI, GitHub CLI, Azure CLI
 #   - OpenVPN 3 client
 #   - Claude Code CLI with auto-update, MCP Server Memory
-#   - Pyright language server, Yeoman generator
 #   - UV and Nox Python tools
 #   - Slack (Flatpak)
 #
@@ -125,14 +124,6 @@ PATH="$HOME/.npm-global/bin:$PATH" claude config set auto_update true || true
 # Model Context Protocol - Server Memory (user-specific installation)
 print_info "Installing MCP Server Memory via npm (user-specific)..."
 npm install -g @modelcontextprotocol/server-memory
-
-# Pyright - Python type checker and language server (user-specific installation)
-print_info "Installing Pyright via npm (user-specific)..."
-npm install -g pyright
-
-# Yeoman - Scaffolding tool for generating projects (user-specific installation)
-print_info "Installing Yeoman via npm (user-specific)..."
-npm install -g yo
 
 # claude-monitor via UV (if UV is installed)
 if command -v uv &>/dev/null; then
