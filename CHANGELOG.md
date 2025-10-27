@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.5] - 2025-10-27
+
+### Fixed
+- Enhanced claude-contrib-fix.sh with optional branch parameter
+- Script now supports cleaning non-default branches without GitHub reindex
+- gh CLI dependency now optional (only required for default branch operations)
+- Improved default branch auto-detection (git symbolic-ref, fallback to gh CLI)
+
 ## [2.1.4] - 2025-10-27
 
 ### Fixed
