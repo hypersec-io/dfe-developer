@@ -75,7 +75,7 @@ npm install -g \
     @semantic-release/commit-analyzer \
     @semantic-release/release-notes-generator \
     @semantic-release/exec \
-    conventional-changelog-conventionalcommits
+    conventional-changelog-conventionalcommits 
 
 # OpenVPN 3 COPR repository
 print_info "Setting up OpenVPN 3 repository..."
@@ -124,6 +124,9 @@ PATH="$HOME/.npm-global/bin:$PATH" claude config set auto_update true || true
 # Model Context Protocol - Server Memory (user-specific installation)
 print_info "Installing MCP Server Memory via npm (user-specific)..."
 npm install -g @modelcontextprotocol/server-memory
+
+# Linear.app CLI tool (system-wide installation)
+sudo npm install -g @digitalstories/linear-cli
 
 # claude-monitor via UV (if UV is installed)
 if command -v uv &>/dev/null; then
