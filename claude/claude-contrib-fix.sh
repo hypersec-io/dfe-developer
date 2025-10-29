@@ -38,6 +38,7 @@
 #   - Must have push access to the repository
 #
 # LICENSE:
+#   (c) HyperSec 2025
 #   Licensed under the Apache License, Version 2.0
 #   See ../LICENSE file for full license text
 # ============================================================================
