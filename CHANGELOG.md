@@ -5,111 +5,180 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.1.6] - 2025-10-28
+## [2.2.0] - 2025-10-30
 
 ### Added
-- Linear.app CLI tool (@digitalstories/linear-cli) to core developer tools
+- **[Fedora]** Linear.app CLI tool (@digitalstories/linear-cli) to core developer tools
+- **[Fedora]** fedora/QUICKSTART.md for fast-start installation guide
+- **[Windows]** Windows 11 SOE setup scripts integrated into repository
+- **[Windows]** Built-in debloat with comprehensive telemetry and bloatware removal
+- **[Windows]** Default Switch automatic scheduled task for new Hyper-V VMs
+- **[Windows]** Development workflow documentation (Windows for productivity, Linux VMs for development)
+- **[Claude]** Enhanced claude-contrib-fix.sh with optional branch parameter
+- **[Claude]** Script now supports cleaning non-default branches without GitHub reindex
+- **[Claude]** gh CLI dependency now optional (only required for default branch operations)
 
-## [2.1.5] - 2025-10-27
+### Changed
+- **[Windows]** Renamed script: `hypersec-windows-soe.ps1` → `hypersec-windows.ps1`
+- **[Windows]** Switched from VMware to Microsoft Hyper-V as primary virtualization platform
+- **[Windows]** Security first: Full VBS, Credential Guard, HVCI enabled by default
+- **[Windows]** Simplified log files to `%USERPROFILE%\basename.log`
+- **[Project]** Unified versioning across Fedora and Windows platforms (single CHANGELOG)
+- **[Project]** Removed duplicate LICENSE files from subdirectories (all reference root LICENSE)
+- **[Project]** Merged Windows README into root README for centralized documentation
+
+### Deprecated
+- **[Windows]** `hypersec-windows-vmware.ps1` retained but no longer maintained (security trade-offs)
 
 ### Fixed
-- Enhanced claude-contrib-fix.sh with optional branch parameter
-- Script now supports cleaning non-default branches without GitHub reindex
-- gh CLI dependency now optional (only required for default branch operations)
-- Improved default branch auto-detection (git symbolic-ref, fallback to gh CLI)
-
-## [2.1.4] - 2025-10-27
-
-### Fixed
-- Added claude-contrib-fix.sh script to remove Claude Code from GitHub contributors
-- Script includes automatic repository detection, default branch detection, and --help flag
-- Fixes issue where Claude Code autonomously adds itself as contributor without permission
+- **[Windows]** PowerShell syntax error in scheduled task trigger creation
+- **[Windows]** Log file location and naming consistency
+- **[Claude]** Improved default branch auto-detection (git symbolic-ref, fallback to gh CLI)
 
 ## [2.1.3] - 2025-10-27
 
 ### Removed
-- Removed yo (Yeoman) from npm global installations
-- Removed pyright from npm global installations
+- **[Fedora]** Removed yo (Yeoman) from npm global installations
+- **[Fedora]** Removed pyright from npm global installations
 
 ## [2.1.2] - 2025-10-24
 
 ### Fixed
-- Dynamic version detection for Confluent CLI (uses latest from packages.confluent.io)
-- Dynamic version detection for kubectl (uses latest stable from dl.k8s.io)
-- Replaced cd with pushd/popd in AWS CLI installation for safer directory changes
-- Updated unit tests to match ISO timestamp format in print functions
-- ShellCheck warnings resolved (all tests pass)
+- **[Fedora]** Dynamic version detection for Confluent CLI (uses latest from packages.confluent.io)
+- **[Fedora]** Dynamic version detection for kubectl (uses latest stable from dl.k8s.io)
+- **[Fedora]** Replaced cd with pushd/popd in AWS CLI installation for safer directory changes
+- **[Fedora]** Updated unit tests to match ISO timestamp format in print functions
+- **[Fedora]** ShellCheck warnings resolved (all tests pass)
 
 ### Changed
-- Character policy updated to ASCII-only (no emojis)
-- Standardized script headers across all optimizer scripts
-- All documentation updated to reflect ASCII-only policy
+- **[Fedora]** Character policy updated to ASCII-only (no emojis)
+- **[Fedora]** Standardized script headers across all optimizer scripts
+- **[Fedora]** All documentation updated to reflect ASCII-only policy
 
 ### Added
-- Comprehensive CONTRIBUTING.md with Apache project standards
-- Full contribution guidelines including fork/PR workflow
-- Code standards and testing requirements documentation
+- **[Fedora]** Comprehensive CONTRIBUTING.md with Apache project standards
+- **[Fedora]** Full contribution guidelines including fork/PR workflow
+- **[Fedora]** Code standards and testing requirements documentation
 
 ## [2.1.1] - 2025-10-24
 
 ### Added
-- Helm Dashboard plugin installation for visual Helm chart management
-- Freelens Kubernetes IDE via Flatpak for K8s cluster management
-- Dash-to-panel transparency settings (40% opacity)
-- K9s and Freelens verification checks in installation output
+- **[Fedora]** Helm Dashboard plugin installation for visual Helm chart management
+- **[Fedora]** Freelens Kubernetes IDE via Flatpak for K8s cluster management
+- **[Fedora]** Dash-to-panel transparency settings (40% opacity)
+- **[Fedora]** K9s and Freelens verification checks in installation output
 
 ### Changed
-- Removed specific version numbers from README.md (centralized in VERSION file)
-- Updated documentation to reflect new Kubernetes tools
+- **[Fedora]** Removed specific version numbers from README.md (centralized in VERSION file)
+- **[Fedora]** Updated documentation to reflect new Kubernetes tools
 
 ## [2.1.0] - 2025-10-20
 
 ### Added
-- Slack installation via Flatpak in install-dfe-developer-core.sh
-- Automatic flathub remote configuration for user-level Flatpak installations
-- Robust error handling for optional Flatpak installations
+- **[Fedora]** Slack installation via Flatpak in install-dfe-developer-core.sh
+- **[Fedora]** Automatic flathub remote configuration for user-level Flatpak installations
+- **[Fedora]** Robust error handling for optional Flatpak installations
+- **[Windows]** Enhanced Australian English locale configuration
+- **[Windows]** Default Switch automatic network assignment for new Hyper-V VMs
+- **[Windows]** C:\VM structure with automatic directory creation
+- **[Windows]** Scheduled task for automatic Default Switch enforcement
 
 ### Fixed
-- Claude Code CLI command (changed from `claude-code` to `claude`)
-- Claude Code auto-update configuration now uses correct command
-- Flatpak installations now use `--user` flag for proper permissions
+- **[Fedora]** Claude Code CLI command (changed from `claude-code` to `claude`)
+- **[Fedora]** Claude Code auto-update configuration now uses correct command
+- **[Fedora]** Flatpak installations now use `--user` flag for proper permissions
 
 ### Changed
-- Removed all SUDO_USER references from scripts (~50+ lines of code simplified)
-- Scripts now use $HOME and $USER directly instead of complex SUDO_USER logic
-- Simplified UV installation (removed SUDO_USER branching)
-- Simplified VM optimizer GUI configurations (OBEX, VS Code, Chrome, Slack, Firefox, GNOME)
-- Simplified restore_settings function in install-vm-optimizer.sh
-- All user-specific paths now use $HOME instead of /home/$SUDO_USER/
+- **[Fedora]** Removed all SUDO_USER references from scripts (~50+ lines of code simplified)
+- **[Fedora]** Scripts now use $HOME and $USER directly instead of complex SUDO_USER logic
+- **[Fedora]** Simplified UV installation (removed SUDO_USER branching)
+- **[Fedora]** Simplified VM optimizer GUI configurations
+- **[Fedora]** All user-specific paths now use $HOME instead of /home/$SUDO_USER/
+- **[Windows]** Improved Hyper-V configuration with registry and PowerShell module detection
+- **[Windows]** Better handling of Hyper-V default paths (Set-VMHost with registry fallback)
 
 ### Improved
-- Code maintainability with single execution path instead of root/user branching
-- Consistency with "run as user, sudo only when needed" design principle
+- **[Fedora]** Code maintainability with single execution path instead of root/user branching
+- **[Fedora]** Consistency with "run as user, sudo only when needed" design principle
+
+## [2.0.3] - 2025-09-23
+
+### Changed
+- **[Windows]** Updated Chocolatey packages to current versions
+- **[Windows]** RoyalTS fixed to use `royalts-v7-x64` for latest v7 installation
+- **[Windows]** GitHub Desktop added with `--NoDesktopShortcut` parameter
+- **[Windows]** TigerVNC reverted to working `tigervnc` package name
+- **[Windows]** Browser configuration updated to Windows 11-compatible manual method only
+
+### Added
+- **[Windows]** WinMerge as development tool
+- **[Windows]** GitHub Desktop (replaced SourceTree)
+
+### Removed
+- **[Windows]** SetUserFTA dependencies and file association automation removed
+- **[Windows]** Teams from bloatware cleanup (now properly installed with M365)
+- **[Windows]** SourceTree (replaced with GitHub Desktop)
+
+## [2.0.2] - 2025-08-27
+
+### Changed
+- **[Windows]** Windows 11 24H2 compatibility improvements
+- **[Windows]** Updated package versions for Windows 11 24H2
+- **[Windows]** Improved error handling for Windows 11 security restrictions
+
+## [2.0.1] - 2025-07-22
+
+### Added
+- **[Windows]** Enhanced privacy hardening with built-in telemetry disabling
+- **[Windows]** Improved bloatware removal automation
+- **[Windows]** Better service cleanup and startup program management
+
+### Changed
+- **[Windows]** Refined Australian English locale configuration
+- **[Windows]** Improved power management detection for laptop vs desktop
 
 ## [2.0.0] - 2025-10-19
 
 ### Ported
-- Ported from internal HyperSec SOE build
+- **[Fedora]** Ported from internal HyperSec SOE build
+- **[Windows]** Migrated from internal HyperSec repository to public GitHub
 
 ### Changed
-- Complete rewrite 
-- Removed all verify, uninstall, and check functions
-- Consolidated library functions into single lib.sh file
-- Simplified all installation scripts by 85%  
-- Removed numbered steps from console output and comments  
+- **[Fedora]** Complete rewrite
+- **[Fedora]** Removed all verify, uninstall, and check functions
+- **[Fedora]** Consolidated library functions into single lib.sh file
+- **[Fedora]** Simplified all installation scripts by 85%
+- **[Fedora]** Removed numbered steps from console output and comments
+- **[Windows]** Restructured for public consumption and broader compatibility
+- **[Windows]** Improved installation workflow and user experience
+- **[Windows]** Better error handling and logging throughout
 
 ### Added
-- BATS testing framework for unit and integration tests
-- Container tests with Podman/Docker support
-- developer_sudoers function for passwordless sudo setup
-- Git pre-push hook for automatic version tagging
+- **[Fedora]** BATS testing framework for unit and integration tests
+- **[Fedora]** Container tests with Podman/Docker support
+- **[Fedora]** developer_sudoers function for passwordless sudo setup
+- **[Fedora]** Git pre-push hook for automatic version tagging
+- **[Windows]** Complete rewrite with modular architecture
+- **[Windows]** VMware Workstation optimization and automation
+- **[Windows]** Enhanced privacy hardening with comprehensive telemetry disabling
+- **[Windows]** Australian English configuration (locale, timezone, regional settings)
+- **[Windows]** System restore point management
+- **[Windows]** Automated software installation via Chocolatey
+- **[Windows]** Custom wallpaper support
+- **[Windows]** Windows Defender ATP onboarding support
+- **[Windows]** Comprehensive documentation (README, QUICKSTART, VMWARE guides)
 
 ### Fixed
-- All ShellCheck warnings (SC2155, SC2046, SC2034)
-- Container test SELinux context issues
-- Script executable permissions
+- **[Fedora]** All ShellCheck warnings (SC2155, SC2046, SC2034)
+- **[Fedora]** Container test SELinux context issues
+- **[Fedora]** Script executable permissions
 
 ### Removed
-- Complex mode selection logic
-- Verification and uninstallation functions
-- Over-engineered error handling
+- **[Fedora]** Complex mode selection logic
+- **[Fedora]** Verification and uninstallation functions
+- **[Fedora]** Over-engineered error handling
+
+### Note
+- **[Fedora]** First public release after internal development at HyperSec
+- **[Windows]** First public release after internal development at HyperSec
+- Previous versions (1.x) were internal-only for both platforms
