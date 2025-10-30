@@ -302,8 +302,7 @@ optimize_memory() {
 SystemMaxUse=100M
 RuntimeMaxUse=100M
 EOF
-        systemctl restart systemd-journald 2>/dev/null || true
-        print_info "Journal size limited to 100M"
+        print_info "Journal size limited to 100M (will apply after reboot)"
     else
         print_info "Journal configuration already optimized"
     fi
@@ -783,10 +782,9 @@ uninstall_optimizations() {
     # Reload settings
     sysctl --system >/dev/null 2>&1
     systemctl daemon-reload
-    systemctl restart systemd-journald
-    
+
     print_info "VM optimizations uninstalled"
-    print_info "Reboot recommended to fully restore settings"
+    print_info "Reboot required to fully restore settings"
 }
 
 # Main execution
