@@ -171,9 +171,7 @@ openvpn3 version &>/dev/null && echo "  [OK] OpenVPN 3" || echo "  [FAIL] OpenVP
 echo ""
 echo "User-installed Tools (in ~/.npm-global/bin):"
 [ -x "$HOME/.npm-global/bin/semantic-release" ] && echo "  [OK] semantic-release" || echo "  [FAIL] semantic-release"
-[ -x "$HOME/.npm-global/bin/claude" ] && echo "  [OK] Claude Code CLI" || echo "  [FAIL] Claude Code CLI"
-[ -x "$HOME/.npm-global/bin/pyright" ] && echo "  [OK] Pyright" || echo "  [FAIL] Pyright"
-[ -x "$HOME/.npm-global/bin/yo" ] && echo "  [OK] Yeoman" || echo "  [FAIL] Yeoman"
+[ -x "$HOME/.npm-global/bin/claude --version" ] && echo "  [OK] Claude Code CLI" || echo "  [FAIL] Claude Code CLI"
 
 echo ""
 echo "Python Tools:"
