@@ -479,11 +479,8 @@ check_optimizations() {
     echo ""
     echo "Optimizer files present:"
     [[ -f /etc/sysctl.d/99-rdp-optimization.conf ]] && echo "  [OK] TCP optimization config"
-    [[ -f /etc/profile.d/rdp-optimizer.sh ]] && echo "  [OK] Session optimization script"
-    [[ -f /etc/NetworkManager/dispatcher.d/99-rdp-mtu ]] && echo "  [OK] MTU optimization script"
-    [[ -f /etc/NetworkManager/dispatcher.d/99-rdp-vpn-mtu ]] && echo "  [OK] VPN MTU script"
+    [[ -f /etc/NetworkManager/conf.d/99-rdp-mtu.conf ]] && echo "  [OK] MTU configuration"
     [[ -f /etc/dconf/db/local.d/00-rdp-optimizer ]] && echo "  [OK] Desktop settings (dconf)"
-    [[ -d /etc/systemd/system/gnome-remote-desktop.service.d ]] && echo "  [OK] Service optimizations"
     [[ -f /etc/pki/ca-trust/source/anchors/gnome-remote-desktop-rdp.crt ]] && echo "  [OK] RDP certificate trust"
     
     echo ""
@@ -746,19 +743,10 @@ verify_optimizations() {
     
     # Test: MTU settings
     print_info "Testing MTU optimizations..."
-    if [[ -f /etc/NetworkManager/dispatcher.d/99-rdp-mtu ]]; then
-        print_info "  [OK] MTU optimization script exists"
+    if [[ -f /etc/NetworkManager/conf.d/99-rdp-mtu.conf ]]; then
+        print_info "  [OK] MTU optimization config exists"
         ((tests_passed++))
-        
-        # Check if script is executable
-        if [[ -x /etc/NetworkManager/dispatcher.d/99-rdp-mtu ]]; then
-            print_info "  [OK] MTU script is executable"
-            ((tests_passed++))
-        else
-            print_error "  [FAIL] MTU script not executable"
-            ((tests_failed++))
-        fi
-        
+
         # Check current MTU on active interface
         local active_iface
         active_iface=$(ip route | grep default | awk '{print $5}' | head -1)
@@ -769,46 +757,41 @@ verify_optimizations() {
                 print_info "  [OK] MTU optimized on $active_iface: $current_mtu"
                 ((tests_passed++))
             else
-                print_warning "  [WARN] MTU not yet optimized on $active_iface: $current_mtu (restart NetworkManager)"
+                print_warning "  [WARN] MTU will be applied after NetworkManager restart"
                 ((tests_warning++))
             fi
         fi
     else
-        print_error "  [FAIL] MTU optimization script missing"
+        print_error "  [FAIL] MTU optimization config missing"
         ((tests_failed++))
     fi
     echo ""
-    
+
     # Test: Service configuration
     print_info "Testing service configurations..."
-    if [[ -d /etc/systemd/system/gnome-remote-desktop.service.d ]]; then
-        if [[ -f /etc/systemd/system/gnome-remote-desktop.service.d/optimization.conf ]]; then
-            print_info "  [OK] Service optimization config exists"
+    if [[ -f /etc/dconf/db/local.d/00-rdp-optimizer ]]; then
+        print_info "  [OK] Service optimization config exists"
+        ((tests_passed++))
+
+        # Check if service is running
+        if systemctl is-active gnome-remote-desktop &>/dev/null; then
+            print_info "  [OK] gnome-remote-desktop service is active"
             ((tests_passed++))
-            
-            # Check if service is running
-            if systemctl is-active gnome-remote-desktop &>/dev/null; then
-                print_info "  [OK] gnome-remote-desktop service is active"
-                ((tests_passed++))
-            else
-                print_warning "  [WARN] gnome-remote-desktop service not active"
-                ((tests_warning++))
-            fi
-            
-            # Check if service is enabled
-            if systemctl is-enabled gnome-remote-desktop &>/dev/null; then
-                print_info "  [OK] gnome-remote-desktop service is enabled"
-                ((tests_passed++))
-            else
-                print_warning "  [WARN] gnome-remote-desktop service not enabled"
-                ((tests_warning++))
-            fi
         else
-            print_error "  [FAIL] Service optimization config missing"
-            ((tests_failed++))
+            print_warning "  [WARN] gnome-remote-desktop service not active"
+            ((tests_warning++))
+        fi
+
+        # Check if service is enabled
+        if systemctl is-enabled gnome-remote-desktop &>/dev/null; then
+            print_info "  [OK] gnome-remote-desktop service is enabled"
+            ((tests_passed++))
+        else
+            print_warning "  [WARN] gnome-remote-desktop service not enabled"
+            ((tests_warning++))
         fi
     else
-        print_error "  [FAIL] Service optimization directory missing"
+        print_error "  [FAIL] Service optimization config missing"
         ((tests_failed++))
     fi
     echo ""

@@ -479,11 +479,11 @@ verify_optimizations() {
     
     # 2. Kernel parameters
     print_verify_section "" "KERNEL OPTIMIZATIONS"
-    
-    if [[ -f /etc/sysctl.d/99-vm-optimization.conf ]]; then
+
+    if [[ -f /etc/sysctl.d/98-vm-optimizer.conf ]]; then
         echo "   [OK] VM optimization config exists"
         increment_verify_pass
-        
+
         # Check specific settings
         verify_sysctl_setting "vm.swappiness" "10" "Swappiness" && increment_verify_pass || increment_verify_warn
         verify_sysctl_setting "vm.vfs_cache_pressure" "50" "VFS cache pressure" && increment_verify_pass || increment_verify_warn
