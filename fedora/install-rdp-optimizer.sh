@@ -293,10 +293,14 @@ install_optimizations() {
     
     # Apply optimizations using consolidated functions
     configure_gnome_rdp
-    apply_tcp_optimizations  
+    apply_tcp_optimizations
     configure_mtu_settings
     configure_rdp_certificate
-    
+
+    # Enable gnome-remote-desktop service
+    print_info "Enabling gnome-remote-desktop service..."
+    systemctl --user enable gnome-remote-desktop.service || true
+
     # Record installation state
     echo "INSTALLATION_DATE=$(date)" >> "$STATE_FILE"
     echo "VPN_OPTIMIZE=$VPN_OPTIMIZE" >> "$STATE_FILE"
