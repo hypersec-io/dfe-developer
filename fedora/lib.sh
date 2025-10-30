@@ -21,6 +21,134 @@ print_info() { echo "[INFO] $1"; }
 print_ok() { echo "[OK] $1"; }
 
 # ============================================================================
+# VERIFICATION TRACKING
+# ============================================================================
+# Global verification counters
+VERIFY_PASSED=0
+VERIFY_WARNED=0
+VERIFY_FAILED=0
+
+reset_verify_counts() {
+    VERIFY_PASSED=0
+    VERIFY_WARNED=0
+    VERIFY_FAILED=0
+}
+
+increment_verify_pass() {
+    ((VERIFY_PASSED++)) || true
+}
+
+increment_verify_warn() {
+    ((VERIFY_WARNED++)) || true
+}
+
+increment_verify_fail() {
+    ((VERIFY_FAILED++)) || true
+}
+
+print_verify_section() {
+    local icon="${1:-}"
+    local title="${2:-}"
+    echo ""
+    [ -n "$title" ] && echo "$title"
+}
+
+print_verify_summary() {
+    echo ""
+    print_info "========================================="
+    print_info "Verification Summary:"
+    print_info "  Passed:   $VERIFY_PASSED"
+    [ "$VERIFY_WARNED" -gt 0 ] && print_warning "  Warnings: $VERIFY_WARNED"
+    [ "$VERIFY_FAILED" -gt 0 ] && print_error "  Failed:   $VERIFY_FAILED"
+    echo ""
+}
+
+# Verify sysctl setting
+verify_sysctl_setting() {
+    local key="$1"
+    local expected="$2"
+    local description="${3:-$key}"
+    local current
+    current=$(sysctl -n "$key" 2>/dev/null || echo "")
+
+    if [ "$current" = "$expected" ]; then
+        echo "   [OK] $description: $current"
+        return 0
+    else
+        echo "   [WARN] $description: $current (expected: $expected)"
+        return 1
+    fi
+}
+
+# Verify command exists
+verify_command_exists() {
+    local cmd="$1"
+    local description="${2:-$cmd}"
+
+    if command -v "$cmd" &>/dev/null; then
+        echo "   [OK] $description installed"
+        return 0
+    else
+        echo "   [FAIL] $description not found"
+        return 1
+    fi
+}
+
+# Verify service status
+verify_service_status() {
+    local service="$1"
+    local description="${2:-$service}"
+
+    if systemctl is-active "$service" &>/dev/null; then
+        echo "   [OK] $description is running"
+        return 0
+    else
+        echo "   [WARN] $description is not running"
+        return 1
+    fi
+}
+
+# Verify kernel module loaded
+verify_module_loaded() {
+    local module="$1"
+    local description="${2:-$module}"
+
+    if lsmod | grep -q "^$module "; then
+        echo "   [OK] $description loaded"
+        return 0
+    else
+        echo "   [WARN] $description not loaded"
+        return 1
+    fi
+}
+
+# Detect virtualization platform
+detect_virtualization() {
+    if command -v systemd-detect-virt &>/dev/null; then
+        local virt_type
+        virt_type=$(systemd-detect-virt 2>/dev/null || echo "none")
+        echo "$virt_type"
+    else
+        echo "unknown"
+    fi
+}
+
+# Create sysctl configuration file
+create_sysctl_config() {
+    local filename="$1"
+    shift
+    local description="$1"
+    shift
+    local settings=("$@")
+
+    sudo tee "/etc/sysctl.d/${filename}.conf" >/dev/null <<EOF
+# ${description}
+$(printf '%s\n' "${settings[@]}")
+EOF
+    sudo sysctl --system >/dev/null 2>&1 || true
+}
+
+# ============================================================================
 # SYSTEM DETECTION
 # ============================================================================
 # Check if running on specific distro

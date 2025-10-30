@@ -53,25 +53,24 @@ dconf_update_safe() {
     sudo dconf update || true
 }
 
-# Helper function to create sysctl config
-create_sysctl_config() {
-    local filename="$1"
-    shift
-    local description="$1"
-    shift
-    local settings=("$@")
-
-    sudo tee "/etc/sysctl.d/${filename}.conf" >/dev/null <<EOF
-# ${description}
-$(printf '%s\n' "${settings[@]}")
-EOF
-    sudo sysctl --system >/dev/null 2>&1 || true
-}
-
 # Helper function to reload service
 reload_service_safe() {
     local service="$1"
     sudo systemctl daemon-reload || true
+}
+
+# Helper function to update CA trust
+update_ca_trust_safe() {
+    sudo update-ca-trust || true
+}
+
+# Helper function to create certificate info
+create_certificate_info() {
+    local cert_file="$1"
+    local info_file="$2"
+    if [ -f "$cert_file" ]; then
+        sudo openssl x509 -in "$cert_file" -text -noout | sudo tee "$info_file" >/dev/null 2>&1 || true
+    fi
 }
 
 # Create backup directory
@@ -99,48 +98,48 @@ apply_system_dconf() {
     
     # Create system-wide dconf profile if it doesn't exist
     if [[ ! -f /etc/dconf/profile/user ]]; then
-        mkdir -p /etc/dconf/profile
-        cat > /etc/dconf/profile/user << 'EOF'
+        sudo mkdir -p /etc/dconf/profile
+        sudo bash -c 'cat > /etc/dconf/profile/user << '\''EOF'\''
 user-db:user
 system-db:local
-EOF
+EOF'
     fi
-    
+
     # Create the database directory
-    mkdir -p /etc/dconf/db/local.d
-    
+    sudo mkdir -p /etc/dconf/db/local.d
+
     # Create or update the settings file
     local settings_file="/etc/dconf/db/local.d/00-rdp-optimizer"
-    
+
     if [[ ! -f "$settings_file" ]]; then
-        echo "# RDP Optimizer System-Wide Settings for gnome-remote-desktop" > "$settings_file"
-        echo "# Optimized for Fedora Remote Login" >> "$settings_file"
-        echo "" >> "$settings_file"
+        sudo bash -c "echo '# RDP Optimizer System-Wide Settings for gnome-remote-desktop' > '$settings_file'"
+        sudo bash -c "echo '# Optimized for Fedora Remote Login' >> '$settings_file'"
+        sudo bash -c "echo '' >> '$settings_file'"
     fi
-    
+
     # Add the schema section if not present
-    if ! grep -q "^\[$schema\]" "$settings_file"; then
-        echo "" >> "$settings_file"
-        echo "[$schema]" >> "$settings_file"
+    if ! sudo grep -q "^\[$schema\]" "$settings_file" 2>/dev/null; then
+        sudo bash -c "echo '' >> '$settings_file'"
+        sudo bash -c "echo '[$schema]' >> '$settings_file'"
     fi
-    
+
     # Add or update the key-value pair
     # Use a simpler approach - write to temp file then move
-    if grep -q "^$key=" "$settings_file"; then
+    if sudo grep -q "^$key=" "$settings_file" 2>/dev/null; then
         # Key exists, update it
-        awk -v schema="[$schema]" -v key="$key" -v value="$value" '
+        sudo awk -v schema="[$schema]" -v key="$key" -v value="$value" '
             BEGIN { in_section = 0 }
             $0 == schema { in_section = 1 }
             /^\[/ && $0 != schema { in_section = 0 }
             in_section && $0 ~ "^" key "=" { print key "=" value; next }
             { print }
-        ' "$settings_file" > "$settings_file.tmp" && mv "$settings_file.tmp" "$settings_file"
+        ' "$settings_file" | sudo tee "$settings_file.tmp" >/dev/null && sudo mv "$settings_file.tmp" "$settings_file"
     else
         # Key doesn't exist, add it after the schema header
-        awk -v schema="[$schema]" -v key="$key" -v value="$value" '
+        sudo awk -v schema="[$schema]" -v key="$key" -v value="$value" '
             { print }
             $0 == schema { print key "=" value }
-        ' "$settings_file" > "$settings_file.tmp" && mv "$settings_file.tmp" "$settings_file"
+        ' "$settings_file" | sudo tee "$settings_file.tmp" >/dev/null && sudo mv "$settings_file.tmp" "$settings_file"
     fi
 }
 
