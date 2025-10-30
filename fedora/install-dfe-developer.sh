@@ -427,10 +427,16 @@ if [ "$HAS_GNOME" = "true" ] && command -v flatpak &>/dev/null; then
 fi
 
 # Install Minikube
-print_info "Installing Minikube..."
-curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
-sudo install minikube-linux-amd64 /usr/local/bin/minikube
-rm -f minikube-linux-amd64
+if ! command -v minikube &>/dev/null; then
+    print_info "Installing Minikube..."
+    pushd /tmp >/dev/null || exit 1
+    curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
+    sudo install minikube-linux-amd64 /usr/local/bin/minikube
+    rm -f minikube-linux-amd64
+    popd >/dev/null || exit 1
+else
+    print_info "Minikube already installed, skipping..."
+fi
 
 # Install kubectx and kubens
 print_info "Installing kubectx and kubens..."
