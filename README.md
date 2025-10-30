@@ -25,7 +25,11 @@ cd dfe-developer/fedora
 ./install-vm-optimizer.sh       # VM optimizations
 ./install-rdp-optimizer.sh      # RDP optimizations
 
+# Optional: Enable passwordless sudo (development machines only)
+./install-dfe-developer.sh --sudoers
 ```
+
+**Note:** Passwordless sudo is NOT configured by default for security. The scripts will prompt for your password when needed. Use `--sudoers` flag only on development machines (NOT on admin, bastion, or production systems).
 
 ## What Gets Installed
 
@@ -178,7 +182,7 @@ cd windows
 
 ### Requirements
 
-- **Windows 11 Pro** (24H2 recommended, Build 26100+)
+- **Windows 11 Pro** (24H2 or later recommended, Build 26100+)
 - **Administrator privileges**
 - **Internet connection**
 - **TPM 2.0** (for VBS/Credential Guard)
@@ -205,5 +209,3 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for:
 ## License
 
 Apache License 2.0 - See [LICENSE](LICENSE) file for details.
-
-

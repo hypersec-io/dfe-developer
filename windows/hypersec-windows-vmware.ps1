@@ -140,7 +140,7 @@ VM TEMPLATES CREATED:
     - vSphere-compatible VM template
 
 REQUIREMENTS:
-    - Windows 11 (24H2 recommended)
+    - Windows 11 (24H2 or later recommended)
     - Administrator privileges
     - VMware Workstation 17.6+ installed
     - System restart required after completion
