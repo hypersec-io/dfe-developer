@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.1] - 2025-10-30
+
+### Changed
+- **[Fedora]** Updated Ghostty configuration to Solarized Dark theme
+- **[Fedora]** Enabled programming ligatures (calt, liga) instead of disabling them
+- **[Fedora]** Reduced font size from 12 to 11 for better high-DPI displays
+- **[Fedora]** Added window dimensions (35x140) for practical terminal size
+- **[Fedora]** Disabled VSync for better RDP performance
+- **[Fedora]** Added useful keybindings (copy/paste, tabs, font sizing)
+- **[Fedora]** RDP-optimized settings (software renderer for remote sessions)
+
 ## [2.3.0] - 2025-10-30
 
 ### Fixed

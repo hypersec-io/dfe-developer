@@ -536,29 +536,60 @@ CONFIG_DIR="$HOME/.config/ghostty"
 mkdir -p "$CONFIG_DIR"
 if [ ! -f "$CONFIG_DIR/config" ]; then
     cat > "$CONFIG_DIR/config" << 'EOF'
-# Ghostty Configuration
+# Ghostty Configuration - Fedora Optimized
+# Font Configuration
 font-family = JetBrains Mono
-font-size = 12
-font-feature = -liga
-font-feature = -calt
-gtk-single-instance = true
+font-size = 11
+font-feature = calt
+font-feature = liga
+
+# Theme - Solarized Dark
+theme = iTerm2 Solarized Dark
+
+# Window Configuration
+window-height = 35
+window-width = 140
 window-padding-x = 8
 window-padding-y = 8
 window-save-state = always
-theme = dark
+
+# Transparency - disabled for RDP optimization
+background-opacity = 1.0
+unfocused-split-opacity = 1.0
+
+# Performance - VSync disabled for RDP
+window-vsync = false
+gtk-single-instance = false
+
+# Scrollback
 scrollback-limit = 10000
+
+# Cursor
 cursor-style = block
 cursor-style-blink = true
+
+# Shell Integration
 shell-integration = detect
 shell-integration-features = cursor,sudo,title
-copy-on-select = true
+
+# Mouse Behavior
+mouse-hide-while-typing = true
+
+# Keybindings
+keybind = ctrl+shift+c=copy_to_clipboard
+keybind = ctrl+shift+v=paste_from_clipboard
+keybind = ctrl+shift+t=new_tab
+keybind = ctrl+shift+n=new_window
+keybind = ctrl+plus=increase_font_size:1
+keybind = ctrl+minus=decrease_font_size:1
+keybind = ctrl+zero=reset_font_size
+
+# RDP Optimizations
 renderer = auto
-background-opacity = 1.0
 EOF
     # Adjust for RDP/remote sessions
     if [ -n "${SSH_CONNECTION:-}" ] || [ -n "${RDP_SESSION:-}" ] || [ -n "${REMOTE_DESKTOP_SESSION:-}" ]; then
         sed -i 's/renderer = auto/renderer = software/' "$CONFIG_DIR/config"
-        sed -i 's/gtk-single-instance = true/gtk-single-instance = false/' "$CONFIG_DIR/config"
     fi
 fi
 
