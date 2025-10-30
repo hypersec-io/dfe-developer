@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2025-10-30
+
+### Fixed
+- **[Fedora]** Fixed all systemctl enable/disable/daemon-reload commands to use sudo
+- **[Fedora]** Fixed GRUB configuration operations to use sudo
+- **[Fedora]** Fixed /sys/ filesystem writes to use sudo tee
+- **[Fedora]** Fixed NetworkManager configuration writes to use sudo
+- **[Fedora]** All scripts now run without PolicyKit authentication prompts
+
+### Removed
+- **[Fedora]** Removed file logging from VM optimizer (console only, use tee for logs)
+
 ## [2.2.9] - 2025-10-30
 
 ### Fixed

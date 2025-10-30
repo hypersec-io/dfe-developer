@@ -78,7 +78,6 @@ npm install -g \
     @semantic-release/changelog \
     @semantic-release/git \
     @semantic-release/github \
-    @semantic-release/gitlab \
     @semantic-release/commit-analyzer \
     @semantic-release/release-notes-generator \
     @semantic-release/exec \

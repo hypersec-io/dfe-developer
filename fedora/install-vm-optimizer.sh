@@ -175,30 +175,30 @@ install_vm_tools() {
     case "$vm_type" in
         vmware)
             print_info "Installing VMware tools..."
-            dnf install -y open-vm-tools open-vm-tools-desktop 2>/dev/null || true
-            systemctl enable vmtoolsd.service 2>/dev/null || true
+            sudo dnf install -y open-vm-tools open-vm-tools-desktop 2>/dev/null || true
+            sudo systemctl enable vmtoolsd.service 2>/dev/null || true
             ;;
         vbox)
             print_info "Installing VirtualBox Guest Additions dependencies..."
-            dnf install -y kernel-devel kernel-headers gcc make perl 2>/dev/null || true
+            sudo dnf install -y kernel-devel kernel-headers gcc make perl 2>/dev/null || true
             print_info "Please install VirtualBox Guest Additions from the VM menu"
             ;;
         kvm)
             print_info "Installing QEMU/KVM guest agent..."
-            dnf install -y qemu-guest-agent spice-vdagent 2>/dev/null || true
-            systemctl enable qemu-guest-agent.service 2>/dev/null || true
-            systemctl enable spice-vdagentd.service 2>/dev/null || true
+            sudo dnf install -y qemu-guest-agent spice-vdagent 2>/dev/null || true
+            sudo systemctl enable qemu-guest-agent.service 2>/dev/null || true
+            sudo systemctl enable spice-vdagentd.service 2>/dev/null || true
             ;;
         hyperv)
             print_info "Installing Hyper-V integration services..."
-            dnf install -y hyperv-daemons hyperv-tools 2>/dev/null || true
-            systemctl enable hypervkvpd.service 2>/dev/null || true
-            systemctl enable hypervvssd.service 2>/dev/null || true
+            sudo dnf install -y hyperv-daemons hyperv-tools 2>/dev/null || true
+            sudo systemctl enable hypervkvpd.service 2>/dev/null || true
+            sudo systemctl enable hypervvssd.service 2>/dev/null || true
             ;;
         ec2)
             print_info "Installing AWS EC2 tools..."
-            dnf install -y ec2-utils cloud-init cloud-utils-growpart 2>/dev/null || true
-            systemctl enable cloud-init 2>/dev/null || true
+            sudo dnf install -y ec2-utils cloud-init cloud-utils-growpart 2>/dev/null || true
+            sudo systemctl enable cloud-init 2>/dev/null || true
             ;;
         xen)
             print_info "Installing Xen guest tools..."
@@ -213,11 +213,11 @@ optimize_grub() {
     print_info "Optimizing GRUB configuration for VM..."
     
     # Backup current GRUB config
-    cp /etc/default/grub /etc/default/grub.backup.vm-optimizer
-    
+    sudo cp /etc/default/grub /etc/default/grub.backup.vm-optimizer
+
     # Add VM-specific kernel parameters
     local grub_cmdline="elevator=noop"
-    
+
     case "$vm_type" in
         kvm|qemu)
             grub_cmdline="$grub_cmdline no_timer_check"
@@ -229,15 +229,15 @@ optimize_grub() {
             grub_cmdline="$grub_cmdline console=ttyS0,115200n8 console=tty0"
             ;;
     esac
-    
+
     # Update GRUB configuration
     if ! grep -q "vm-optimizer" /etc/default/grub; then
-        sed -i "s/GRUB_CMDLINE_LINUX=\"/GRUB_CMDLINE_LINUX=\"$grub_cmdline /" /etc/default/grub
-        echo "# Added by vm-optimizer" >> /etc/default/grub
+        sudo sed -i "s/GRUB_CMDLINE_LINUX=\"/GRUB_CMDLINE_LINUX=\"$grub_cmdline /" /etc/default/grub
+        sudo bash -c "echo '# Added by vm-optimizer' >> /etc/default/grub"
     fi
-    
+
     # Reduce GRUB timeout
-    sed -i 's/GRUB_TIMEOUT=.*/GRUB_TIMEOUT=1/' /etc/default/grub
+    sudo sed -i 's/GRUB_TIMEOUT=.*/GRUB_TIMEOUT=1/' /etc/default/grub
     
     # Regenerate GRUB configuration
     if [ -f /boot/grub2/grub.cfg ]; then
@@ -256,26 +256,26 @@ optimize_disk_io() {
     # Set I/O scheduler to noop for virtual disks
     for disk in /sys/block/sd*/queue/scheduler /sys/block/vd*/queue/scheduler; do
         if [ -f "$disk" ]; then
-            echo noop > "$disk" 2>/dev/null || echo none > "$disk" 2>/dev/null || true
+            echo noop | sudo tee "$disk" >/dev/null 2>&1 || echo none | sudo tee "$disk" >/dev/null 2>&1 || true
         fi
     done
-    
+
     # Create udev rule for persistent I/O scheduler (if not exists)
     if [ ! -f /etc/udev/rules.d/60-vm-disk-scheduler.rules ]; then
-        cat > /etc/udev/rules.d/60-vm-disk-scheduler.rules <<EOF
+        sudo bash -c 'cat > /etc/udev/rules.d/60-vm-disk-scheduler.rules <<EOF
 # Set noop scheduler for virtual disks
 ACTION=="add|change", KERNEL=="sd[a-z]|vd[a-z]", ATTR{queue/scheduler}="noop"
-EOF
+EOF'
         print_info "Created udev rule for I/O scheduler"
     else
         print_info "I/O scheduler udev rule already exists"
     fi
-    
+
     # Disable unnecessary disk features
     for disk in /sys/block/sd*/queue /sys/block/vd*/queue; do
         if [ -d "$disk" ]; then
-            echo 0 > "$disk/add_random" 2>/dev/null || true
-            echo 0 > "$disk/rotational" 2>/dev/null || true
+            echo 0 | sudo tee "$disk/add_random" >/dev/null 2>&1 || true
+            echo 0 | sudo tee "$disk/rotational" >/dev/null 2>&1 || true
         fi
     done
     
@@ -287,11 +287,11 @@ optimize_memory() {
     print_info "Optimizing memory usage..."
     
     # Disable unnecessary systemd units
-    systemctl disable dnf-makecache.timer 2>/dev/null || true
-    systemctl disable dnf-makecache.service 2>/dev/null || true
-    
+    sudo systemctl disable dnf-makecache.timer 2>/dev/null || true
+    sudo systemctl disable dnf-makecache.service 2>/dev/null || true
+
     # Reduce journal size
-    journalctl --vacuum-size=100M 2>/dev/null || true
+    sudo journalctl --vacuum-size=100M 2>/dev/null || true
     
     # Configure journal to use less memory (if not exists)
     sudo mkdir -p /etc/systemd/journald.conf.d/
@@ -598,103 +598,6 @@ verify_optimizations() {
     set -e
 }
 
-# Create optimization report
-create_report() {
-    local vm_type="$1"
-    local detection_method="$2"
-    
-    local report_file="/var/log/dfe-fedora-desktop/vm-optimization-report.txt"
-    
-    cat > "$report_file" <<EOF
-Fedora VM Optimization Report
-Generated: $(date)
-=================================
-
-Virtualization Platform: $vm_type
-Detection Method: $detection_method
-
-Optimizations Applied:
-----------------------
-1. Disabled Services:
-   - Bluetooth
-   - CUPS (printing)
-   - Avahi (mDNS)
-   - ModemManager
-   - Thermald
-   - Bolt (Thunderbolt)
-   - fwupd (firmware updates)
-   - PackageKit
-
-2. Kernel Parameters:
-   - Reduced swappiness to 10
-   - Optimized dirty page ratios
-   - Disabled IPv6 (if not needed)
-   - Network optimizations (BBR congestion control)
-   - Memory pressure tuning
-
-3. VM-Specific Tools:
-EOF
-    
-    case "$vm_type" in
-        vmware)
-            echo "   - open-vm-tools installed" >> "$report_file"
-            ;;
-        kvm)
-            echo "   - qemu-guest-agent installed" >> "$report_file"
-            echo "   - spice-vdagent installed" >> "$report_file"
-            ;;
-        vbox)
-            echo "   - VirtualBox Guest Additions dependencies installed" >> "$report_file"
-            ;;
-        hyperv)
-            echo "   - Hyper-V integration services installed" >> "$report_file"
-            ;;
-        ec2)
-            echo "   - AWS EC2 tools installed" >> "$report_file"
-            echo "   - cloud-init configured" >> "$report_file"
-            ;;
-    esac
-    
-    cat >> "$report_file" <<EOF
-
-4. GRUB Optimizations:
-   - Reduced timeout to 1 second
-   - Added VM-specific kernel parameters
-   - I/O scheduler set to noop
-
-5. Disk I/O:
-   - Scheduler set to noop for virtual disks
-   - Disabled unnecessary disk features
-   - Created persistent udev rules
-
-6. Memory Optimizations:
-   - Reduced systemd journal size to 100MB
-   - Disabled DNF makecache timer
-   - Optimized cache pressure
-
-Performance Impact:
-------------------
-- Reduced boot time
-- Lower memory usage
-- Improved disk I/O performance
-- Better CPU scheduling
-- Reduced background services
-
-To Uninstall:
--------------
-Run: sudo $0 --uninstall
-
-Compatibility:
--------------
-This optimization works alongside:
-- install-dfe-fedora (development environment)
-- install-ghostty (terminal emulator)
-- install-rdp-optimizer (RDP optimizations)
-
-EOF
-    
-    print_info "Optimization report saved to $report_file"
-}
 
 # Uninstall optimizations
 uninstall_optimizations() {
@@ -779,8 +682,8 @@ uninstall_optimizations() {
     fi
     
     # Reload settings
-    sysctl --system >/dev/null 2>&1
-    systemctl daemon-reload
+    sudo sysctl --system >/dev/null 2>&1
+    sudo systemctl daemon-reload
 
     print_info "VM optimizations uninstalled"
     print_info "Reboot required to fully restore settings"
@@ -849,20 +752,15 @@ main() {
     configure_vm_memory
     configure_vm_gui_optimizations
     
-    # Create report
-    echo ""
-    create_report "$vm_type" "$detection_method"
-    
     # Run verification
     echo ""
     verify_optimizations
-    
+
     # Final message
     echo ""
     print_info "VM optimization complete!"
     echo ""
     print_info "Optimizations applied for: $vm_type"
-    print_info "Report saved to: /var/log/dfe-fedora-desktop/vm-optimization-report.txt"
     print_warning "Reboot recommended to apply all optimizations"
     echo ""
 }
