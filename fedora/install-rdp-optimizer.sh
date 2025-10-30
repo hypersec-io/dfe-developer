@@ -41,10 +41,38 @@ require_distro "fedora" "Fedora Linux"
 # Script metadata
 SCRIPT_NAME="$(basename "$0")"
 SCRIPT_DESCRIPTION="Gnome Shell RDP optimiser"
+STATE_FILE="$HOME/.rdp-optimizer.state"
+BACKUP_DIR="$HOME/.rdp-optimizer-backup-$(date +%Y%m%d-%H%M%S)"
 
 # Export for common functions
 export SCRIPT_NAME SCRIPT_DESCRIPTION
 
+
+# Helper function to update dconf database
+dconf_update_safe() {
+    sudo dconf update || true
+}
+
+# Helper function to create sysctl config
+create_sysctl_config() {
+    local filename="$1"
+    shift
+    local description="$1"
+    shift
+    local settings=("$@")
+
+    sudo tee "/etc/sysctl.d/${filename}.conf" >/dev/null <<EOF
+# ${description}
+$(printf '%s\n' "${settings[@]}")
+EOF
+    sudo sysctl --system >/dev/null 2>&1 || true
+}
+
+# Helper function to reload service
+reload_service_safe() {
+    local service="$1"
+    sudo systemctl daemon-reload || true
+}
 
 # Create backup directory
 create_backup() {

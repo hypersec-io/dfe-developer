@@ -519,6 +519,43 @@ if [ "$HAS_GNOME" = "true" ]; then
     fi
 fi
 
+# Install Ghostty terminal emulator (optional but recommended)
+print_info "Installing Ghostty terminal emulator..."
+sudo dnf install -y jetbrains-mono-fonts || true
+sudo dnf copr enable -y scottames/ghostty || true
+sudo dnf install -y ghostty || print_info "Ghostty installation skipped"
+
+# Create Ghostty configuration
+CONFIG_DIR="$HOME/.config/ghostty"
+mkdir -p "$CONFIG_DIR"
+if [ ! -f "$CONFIG_DIR/config" ]; then
+    cat > "$CONFIG_DIR/config" << 'EOF'
+# Ghostty Configuration
+font-family = JetBrains Mono
+font-size = 12
+font-feature = -liga
+font-feature = -calt
+gtk-single-instance = true
+window-padding-x = 8
+window-padding-y = 8
+window-save-state = always
+theme = dark
+scrollback-limit = 10000
+cursor-style = block
+cursor-style-blink = true
+shell-integration = detect
+shell-integration-features = cursor,sudo,title
+copy-on-select = true
+renderer = auto
+background-opacity = 1.0
+EOF
+    # Adjust for RDP/remote sessions
+    if [ -n "${SSH_CONNECTION:-}" ] || [ -n "${RDP_SESSION:-}" ] || [ -n "${REMOTE_DESKTOP_SESSION:-}" ]; then
+        sed -i 's/renderer = auto/renderer = software/' "$CONFIG_DIR/config"
+        sed -i 's/gtk-single-instance = true/gtk-single-instance = false/' "$CONFIG_DIR/config"
+    fi
+fi
+
 print_info "Installation Complete"
 
 # Simple verification - check if key tools actually work
@@ -535,6 +572,11 @@ if [ "$HAS_GNOME" = "true" ]; then
     code --version &>/dev/null && echo "  [OK] VS Code" || echo "  [FAIL] VS Code"
     google-chrome --version &>/dev/null && echo "  [OK] Chrome" || echo "  [FAIL] Chrome"
 fi
+
+echo ""
+echo "Terminal:"
+ghostty --version &>/dev/null && echo "  [OK] Ghostty" || echo "  [FAIL] Ghostty"
+fc-list | grep -q "JetBrains Mono" && echo "  [OK] JetBrains Mono font" || echo "  [FAIL] JetBrains Mono font"
 
 echo ""
 echo "Cloud/DevOps Tools:"

@@ -93,12 +93,6 @@ else
     print_info "Not in RDP session - skipping RDP optimizer"
 fi
 
-# 5. Ghostty Terminal (optional)
-print_info "Installing Ghostty terminal (optional component)..."
-if ! run_installer "install-ghostty.sh"; then
-    print_warning "Ghostty installation failed - this is optional"
-fi
-
 # Final summary
 print_header "Installation Summary"
 
@@ -109,11 +103,10 @@ else
 fi
 
 print_info "Completed installations:"
-echo "  [OK] DFE Developer Environment"
+echo "  [OK] DFE Developer Environment (includes Ghostty terminal)"
 [ -f "$SCRIPT_DIR/install-dfe-developer-core.sh" ] && echo "  [OK] Core Development Tools"
 [ -n "$(systemd-detect-virt 2>/dev/null || echo '')" ] && [ "$(systemd-detect-virt)" != "none" ] && echo "  [OK] VM Optimizations"
 [ -n "${SSH_CONNECTION:-}${RDP_SESSION:-}${REMOTE_DESKTOP_SESSION:-}" ] && echo "  [OK] RDP Optimizations"
-[ -f "$SCRIPT_DIR/install-ghostty.sh" ] && echo "  [OK] Ghostty Terminal"
 
 echo ""
 print_header "Next Steps"
