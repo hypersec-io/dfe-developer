@@ -16,18 +16,15 @@ To be installed onto Fedora Linux 42+
 git clone https://github.com/hypersec-io/dfe-developer
 cd dfe-developer/fedora
 
-# Run main installer
-./install-dfe-developer.sh
+# Complete installation (recommended)
+./install-all.sh 2>&1 | tee install.log
 
-# Optional: Add advanced tools
-./install-dfe-developer-core.sh
-
-# Optional: Optimise for VM/RDP
-./install-vm-optimizer.sh
-./install-rdp-optimizer.sh
-
-# Optional: Install Ghostty
-./install-ghostty.sh
+# OR install components individually:
+./install-dfe-developer.sh      # Base developer tools
+./install-dfe-developer-core.sh # Core DFE tools
+./install-vm-optimizer.sh       # VM optimizations
+./install-rdp-optimizer.sh      # RDP optimizations
+./install-ghostty.sh            # Ghostty terminal
 
 ```
 
