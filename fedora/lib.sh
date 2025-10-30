@@ -29,6 +29,13 @@ is_ubuntu() { [[ -f /etc/lsb-release ]] && grep -q Ubuntu /etc/lsb-release 2>/de
 is_debian() { [[ -f /etc/debian_version ]]; }
 is_macos() { [[ "$(uname)" == "Darwin" ]]; }
 
+# Check if GNOME desktop is running
+is_gnome() {
+    [[ "${XDG_CURRENT_DESKTOP:-}" == *"GNOME"* ]] || \
+    [[ "${GDMSESSION:-}" == "gnome"* ]] || \
+    pgrep -x gnome-shell >/dev/null 2>&1
+}
+
 # Require specific distro
 require_distro() {
     local required="$1"

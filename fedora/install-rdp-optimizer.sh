@@ -880,7 +880,7 @@ verify_optimizations() {
 init_script "RDP Performance Optimization"
 
 # RDP optimization requires GNOME desktop
-if [ "$HAS_GNOME" != "true" ]; then
+if ! is_gnome; then
     print_info "RDP optimizer requires GNOME desktop environment which is not running"
     print_info "Skipping RDP optimization"
     exit 0

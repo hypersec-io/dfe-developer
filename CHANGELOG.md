@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.4] - 2025-10-30
+
+### Fixed
+- **[Fedora]** Added is_gnome() function to lib.sh for reliable GNOME detection
+- **[Fedora]** Fixed missing HAS_GNOME initialization in all installer scripts
+- **[Fedora]** GNOME detection now uses XDG_CURRENT_DESKTOP, GDMSESSION, and gnome-shell process check
+- **[Fedora]** Fixes GUI tools (Firefox, VS Code, extensions) not installing when GNOME is present
+
 ## [2.2.3] - 2025-10-30
 
 ### Fixed

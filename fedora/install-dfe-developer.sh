@@ -63,6 +63,15 @@ done
 # Initialize script with common setup
 init_script "DFE Developer Environment Setup"
 
+# Detect if GNOME desktop is running
+if is_gnome; then
+    HAS_GNOME="true"
+    print_info "GNOME desktop detected - GUI tools will be installed"
+else
+    HAS_GNOME="false"
+    print_info "GNOME not detected - skipping GUI tools"
+fi
+
 # Configure passwordless sudo if requested
 if [[ "$ENABLE_SUDOERS" = true ]]; then
     print_info "Configuring passwordless sudo as requested..."
