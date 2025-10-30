@@ -510,12 +510,6 @@ if [ "$HAS_GNOME" = "true" ]; then
     fi
 fi
 
-# Call install-dfe-developer-core.sh for additional tools
-if [ -f "$SCRIPT_DIR/install-dfe-developer-core.sh" ]; then
-    print_info "Installing core developer tools..."
-    "$SCRIPT_DIR/install-dfe-developer-core.sh"
-fi
-
 print_info "Installation Complete"
 
 # Simple verification - check if key tools actually work
