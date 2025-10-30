@@ -20,11 +20,10 @@ cd dfe-developer/fedora
 ./install-all.sh 2>&1 | tee install.log
 
 # OR install components individually:
-./install-dfe-developer.sh      # Base developer tools
+./install-dfe-developer.sh      # Base developer tools (includes Ghostty terminal)
 ./install-dfe-developer-core.sh # Core DFE tools
 ./install-vm-optimizer.sh       # VM optimizations
 ./install-rdp-optimizer.sh      # RDP optimizations
-./install-ghostty.sh            # Ghostty terminal
 
 ```
 

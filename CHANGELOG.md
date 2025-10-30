@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.6] - 2025-10-30
+
+### Added
+- **[Fedora]** Ghostty terminal emulator now installed via scottames/ghostty COPR repository
+- **[Fedora]** Ghostty integrated into main install-dfe-developer.sh script
+- **[Fedora]** Automatic Ghostty configuration with JetBrains Mono font
+
+### Fixed
+- **[Fedora]** Fixed missing BACKUP_DIR and STATE_FILE variables in install-rdp-optimizer.sh
+- **[Fedora]** Added missing helper functions: dconf_update_safe, create_sysctl_config, reload_service_safe
+
+### Removed
+- **[Fedora]** Removed install-ghostty.sh (now integrated into main installer)
+- **[Fedora]** Removed build-from-source option for Ghostty (now uses COPR)
+
 ## [2.2.5] - 2025-10-30
 
 ### Fixed
