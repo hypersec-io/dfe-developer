@@ -42,6 +42,13 @@ fi
 # Initialize script with common setup
 init_script "Core Development Tools Installation"
 
+# Detect if GNOME desktop is running
+if is_gnome; then
+    HAS_GNOME="true"
+else
+    HAS_GNOME="false"
+fi
+
 # Install C development tools
 print_info "Installing C development tools..."
 sudo dnf group install -y "c-development"
