@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.9] - 2025-10-30
+
+### Fixed
+- **[Fedora]** Added complete verification function library to lib.sh (verify_sysctl_setting, verify_command_exists, etc.)
+- **[Fedora]** Fixed VM and RDP optimizer scripts to use sudo properly for system file operations
+- **[Fedora]** Fixed apply_system_dconf function to use sudo for /etc/dconf/ operations
+- **[Fedora]** All optimizer scripts now work as regular user with passwordless sudo
+
+### Removed
+- **[Project]** Removed windows/VERSION file (using root VERSION only for unified versioning)
+
+## [2.2.8] - 2025-10-30
+
+### Fixed
+- **[Fedora]** Fixed journald configuration in install-vm-optimizer.sh to use sudo
+- **[Fedora]** Added missing verification helper function stubs
+
 ## [2.2.7] - 2025-10-30
 
 ### Fixed

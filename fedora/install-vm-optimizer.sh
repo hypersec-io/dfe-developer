@@ -46,7 +46,6 @@ SCRIPT_DESCRIPTION="VM Optimiser"
 # Export for common functions
 export SCRIPT_NAME SCRIPT_DESCRIPTION
 
-
 # Function to show usage
 show_usage() {
     cat <<EOF
@@ -295,13 +294,13 @@ optimize_memory() {
     journalctl --vacuum-size=100M 2>/dev/null || true
     
     # Configure journal to use less memory (if not exists)
-    mkdir -p /etc/systemd/journald.conf.d/
+    sudo mkdir -p /etc/systemd/journald.conf.d/
     if [ ! -f /etc/systemd/journald.conf.d/vm-optimizer.conf ]; then
-        cat > /etc/systemd/journald.conf.d/vm-optimizer.conf <<EOF
+        sudo bash -c 'cat > /etc/systemd/journald.conf.d/vm-optimizer.conf <<EOF
 [Journal]
 SystemMaxUse=100M
 RuntimeMaxUse=100M
-EOF
+EOF'
         print_info "Journal size limited to 100M (will apply after reboot)"
     else
         print_info "Journal configuration already optimized"
