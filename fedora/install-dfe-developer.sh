@@ -423,7 +423,7 @@ if [ "$HAS_GNOME" = "true" ] && command -v flatpak &>/dev/null; then
     if ! flatpak remote-list --user | grep -q flathub; then
         flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo || true
     fi
-    flatpak install --user -y flathub app.freelens.Freelens || print_info "Freelens installation skipped (may already be installed)"
+    FLATPAK_TTY_PROGRESS=0 flatpak install --user -y flathub app.freelens.Freelens 2>&1 | grep -v "%" || print_info "Freelens installation skipped (may already be installed)"
 fi
 
 # Install Minikube

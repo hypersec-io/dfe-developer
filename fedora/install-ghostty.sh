@@ -43,8 +43,8 @@ if command -v flatpak &>/dev/null; then
     fi
 
     # Try to install Ghostty from Flathub
-    if flatpak install -y flathub com.mitchellh.ghostty 2>/dev/null || \
-       flatpak install -y com.mitchellh.ghostty 2>/dev/null; then
+    if FLATPAK_TTY_PROGRESS=0 flatpak install -y flathub com.mitchellh.ghostty 2>&1 | grep -v "%" || \
+       FLATPAK_TTY_PROGRESS=0 flatpak install -y com.mitchellh.ghostty 2>&1 | grep -v "%"; then
         print_success "Ghostty installed via Flatpak"
         INSTALL_METHOD="flatpak"
     else

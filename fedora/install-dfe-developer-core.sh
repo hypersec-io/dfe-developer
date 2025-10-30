@@ -156,7 +156,7 @@ if [ "$HAS_GNOME" = "true" ] && command -v flatpak &>/dev/null; then
         flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo || true
     fi
     # Install Slack (non-fatal if it fails)
-    flatpak install --user -y flathub com.slack.Slack || print_info "Slack installation skipped (may already be installed system-wide)"
+    FLATPAK_TTY_PROGRESS=0 flatpak install --user -y flathub com.slack.Slack 2>&1 | grep -v "%" || print_info "Slack installation skipped (may already be installed system-wide)"
 fi
 
 print_info "Core Development Tools Installation Complete"
