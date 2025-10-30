@@ -234,14 +234,14 @@ configure_mtu_settings() {
     fi
     
     backup_file_to_rdp_dir "/etc/NetworkManager/conf.d/99-rdp-mtu.conf"
-    
-    cat > /etc/NetworkManager/conf.d/99-rdp-mtu.conf << EOF
+
+    sudo bash -c "cat > /etc/NetworkManager/conf.d/99-rdp-mtu.conf << EOF
 # RDP Optimizer MTU Configuration
 # Prevents packet fragmentation for RDP traffic
 [connection]
 eth.mtu = $mtu_size
 wifi.mtu = $mtu_size
-EOF
+EOF"
 
     # Apply immediately if NetworkManager is running
     reload_service_safe "NetworkManager"

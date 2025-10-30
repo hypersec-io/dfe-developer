@@ -53,6 +53,25 @@ cd dfe-developer/fedora
 - 20GB available disk space
 - Internet connection
 
+## Optional: Passwordless Sudo
+
+**WARNING:** Only configure passwordless sudo on development machines. NOT for admin, bastion, or production systems.
+
+The installation scripts use sudo internally for system operations. To avoid password prompts during installation:
+
+```bash
+# Create passwordless sudo configuration for current user
+echo "$USER ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/99-developer-$USER
+sudo chmod 0440 /etc/sudoers.d/99-developer-$USER
+```
+
+**Important:** The file MUST have `0440` permissions or sudo will ignore it for security reasons.
+
+To remove passwordless sudo later:
+```bash
+sudo rm /etc/sudoers.d/99-developer-$USER
+```
+
 ## Testing
 
 The project includes comprehensive testing:
