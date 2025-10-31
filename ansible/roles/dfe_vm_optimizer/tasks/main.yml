@@ -1,0 +1,33 @@
+---
+# DFE VM Optimizer - Main Tasks
+# Maps to: fedora/install-vm-optimizer.sh
+
+- name: Optimize services
+  ansible.builtin.include_tasks:
+    file: services.yml
+  tags: ['services']
+
+- name: Optimize kernel parameters
+  ansible.builtin.include_tasks:
+    file: kernel.yml
+  tags: ['kernel']
+
+- name: Optimize GRUB configuration
+  ansible.builtin.include_tasks:
+    file: grub.yml
+  tags: ['grub']
+
+- name: Optimize disk I/O
+  ansible.builtin.include_tasks:
+    file: disk.yml
+  tags: ['disk']
+
+- name: Install VM platform tools
+  ansible.builtin.include_tasks:
+    file: vm_tools.yml
+  tags: ['vm_tools']
+
+- name: Optimize memory usage
+  ansible.builtin.include_tasks:
+    file: memory.yml
+  tags: ['memory']

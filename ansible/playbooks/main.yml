@@ -8,7 +8,7 @@
 #   ansible-playbook playbooks/main.yml --tags docker   # Specific tags
 
 - name: DFE Developer Environment Setup
-  hosts: localhost
+  hosts: all
   become: true
   gather_facts: true
 
@@ -29,24 +29,17 @@
         (ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('24.04', '<'))
 
   roles:
-    - role: dfe_docker
-      tags: ['docker', 'core']
+    - role: dfe_developer
+      tags: ['developer', 'base']
 
-    # TODO: Add remaining roles as they are created
-    # - role: dfe_python
-    #   tags: ['python', 'core']
-    # - role: dfe_git
-    #   tags: ['git', 'core']
-    # - role: dfe_cloud_tools
-    #   tags: ['cloud', 'kubectl', 'helm', 'terraform']
-    # - role: dfe_k8s_tools
-    #   tags: ['k8s', 'kubernetes']
-    # - role: dfe_vscode
-    #   tags: ['vscode', 'ide']
-    #   when: ansible_env.DISPLAY is defined or ansible_env.WAYLAND_DISPLAY is defined
-    # - role: dfe_ghostty
-    #   tags: ['ghostty', 'terminal']
-    #   when: dfe_install_ghostty | default(true) | bool
+    - role: dfe_developer_core
+      tags: ['core', 'advanced']
+
+    - role: dfe_vm_optimizer
+      tags: ['vm', 'optimizer']
+
+    - role: dfe_rdp_optimizer
+      tags: ['rdp', 'optimizer']
 
   post_tasks:
     - name: Display completion message
