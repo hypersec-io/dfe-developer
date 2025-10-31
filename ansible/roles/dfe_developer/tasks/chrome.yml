@@ -1,3 +1,48 @@
 ---
-# TODO: Implement chrome installation tasks
+# Google Chrome installation
 
+# Fedora
+- name: Add Google Chrome repository (Fedora)
+  ansible.builtin.yum_repository:
+    name: google-chrome
+    description: Google Chrome
+    baseurl: https://dl.google.com/linux/chrome/rpm/stable/x86_64
+    enabled: true
+    gpgcheck: true
+    gpgkey: https://dl.google.com/linux/linux_signing_key.pub
+  when: ansible_distribution == 'Fedora'
+
+- name: Install Google Chrome (Fedora)
+  ansible.builtin.dnf:
+    name: google-chrome-stable
+    state: present
+  when: ansible_distribution == 'Fedora'
+
+# Ubuntu
+- name: Add Google Chrome GPG key (Ubuntu)
+  ansible.builtin.get_url:
+    url: https://dl.google.com/linux/linux_signing_key.pub
+    dest: /etc/apt/keyrings/google-chrome.asc
+    mode: '0644'
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Add Google Chrome repository (Ubuntu)
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/google-chrome.asc] https://dl.google.com/linux/chrome/deb/ stable main"
+    filename: google-chrome
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install Google Chrome (Ubuntu)
+  ansible.builtin.apt:
+    name: google-chrome-stable
+    state: present
+    update_cache: true
+  when: ansible_distribution == 'Ubuntu'
+
+# macOS
+- name: Install Google Chrome (macOS)
+  community.general.homebrew_cask:
+    name: google-chrome
+    state: present
+  when: ansible_distribution == 'MacOSX'

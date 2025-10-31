@@ -1,55 +1,94 @@
 ---
-# Add Docker repository for all supported platforms
+# Configure OS package repositories (mirrors, performance settings)
+# Does NOT add vendor repos (Docker, VS Code, etc.) - those are in individual task files
 
-# Fedora
-- name: Add Docker repository for Fedora
-  ansible.builtin.command:
-    cmd: dnf config-manager addrepo --from-repofile=https://download.docker.com/linux/fedora/docker-ce.repo --overwrite
-  args:
-    creates: /etc/yum.repos.d/docker-ce.repo
+# ============================================================================
+# FEDORA REPOSITORY CONFIGURATION
+# ============================================================================
+
+- name: Configure Fedora mirrors (AARNET)
+  block:
+    - name: Disable metalink in fedora.repo
+      ansible.builtin.replace:
+        path: /etc/yum.repos.d/fedora.repo
+        regexp: '^metalink='
+        replace: '#metalink='
+
+    - name: Add AARNET mirror to fedora.repo
+      ansible.builtin.lineinfile:
+        path: /etc/yum.repos.d/fedora.repo
+        insertafter: '^\[fedora\]'
+        line: "baseurl={{ dfe_mirror_url }}/fedora/linux/releases/$releasever/Everything/$basearch/os/"
+        state: present
+
+    - name: Disable metalink in fedora-updates.repo
+      ansible.builtin.replace:
+        path: /etc/yum.repos.d/fedora-updates.repo
+        regexp: '^metalink='
+        replace: '#metalink='
+
+    - name: Add AARNET mirror to fedora-updates.repo
+      ansible.builtin.lineinfile:
+        path: /etc/yum.repos.d/fedora-updates.repo
+        insertafter: '^\[updates\]'
+        line: "baseurl={{ dfe_mirror_url }}/fedora/linux/updates/$releasever/Everything/$basearch/"
+        state: present
+
+    - name: Configure DNF performance settings
+      ansible.builtin.copy:
+        dest: /etc/dnf/dnf.conf.d/99-performance.conf
+        content: |
+          # Performance optimizations
+          max_parallel_downloads=20
+          fastestmirror=False
+          deltarpm=True
+          timeout=30
+          retries=10
+          skip_if_unavailable=True
+          metadata_expire=7200
+        mode: '0644'
+
+    - name: Clean DNF cache
+      ansible.builtin.command: dnf clean all
+      changed_when: false
+
+    - name: Update DNF cache
+      ansible.builtin.command: dnf makecache
+      changed_when: false
   when: ansible_distribution == 'Fedora'
 
-# Ubuntu
-- name: Install prerequisites for Docker repository (Ubuntu)
-  ansible.builtin.apt:
-    name:
-      - apt-transport-https
-      - ca-certificates
-      - curl
-      - gnupg
-    state: present
-    update_cache: true
-  when: ansible_distribution == 'Ubuntu'
+# ============================================================================
+# UBUNTU REPOSITORY CONFIGURATION
+# ============================================================================
 
-- name: Create Docker GPG keyring directory (Ubuntu)
-  ansible.builtin.file:
-    path: /etc/apt/keyrings
-    state: directory
-    mode: '0755'
-  when: ansible_distribution == 'Ubuntu'
+- name: Configure Ubuntu mirrors (AARNET)
+  block:
+    - name: Configure AARNET mirror for Ubuntu
+      ansible.builtin.replace:
+        path: /etc/apt/sources.list
+        regexp: 'http://[a-z]{2}\.archive\.ubuntu\.com/ubuntu'
+        replace: "{{ dfe_mirror_url }}/ubuntu"
+        backup: true
 
-- name: Add Docker GPG key (Ubuntu)
-  ansible.builtin.get_url:
-    url: "{{ dfe_docker_gpg_url }}"
-    dest: /etc/apt/keyrings/docker.asc
-    mode: '0644'
-  when: ansible_distribution == 'Ubuntu'
+    - name: Configure AARNET security mirror for Ubuntu
+      ansible.builtin.replace:
+        path: /etc/apt/sources.list
+        regexp: 'http://security\.ubuntu\.com/ubuntu'
+        replace: "{{ dfe_mirror_url }}/ubuntu"
+        backup: true
 
-- name: Add Docker repository (Ubuntu)
-  ansible.builtin.apt_repository:
-    repo: "deb [arch={{ dfe_docker_arch }} signed-by=/etc/apt/keyrings/docker.asc] {{ dfe_docker_repo_url }} {{ ansible_distribution_release }} stable"
-    filename: docker
-    state: present
-  when: ansible_distribution == 'Ubuntu'
+    - name: Configure APT performance settings
+      ansible.builtin.copy:
+        dest: /etc/apt/apt.conf.d/99-performance
+        content: |
+          # Performance optimizations
+          Acquire::http::Dl-Limit "0";
+          Acquire::https::Dl-Limit "0";
+          Acquire::Queue-Mode "host";
+          APT::Get::Assume-Yes "false";
+        mode: '0644'
 
-- name: Update APT cache (Ubuntu)
-  ansible.builtin.apt:
-    update_cache: true
+    - name: Update APT cache
+      ansible.builtin.apt:
+        update_cache: true
   when: ansible_distribution == 'Ubuntu'
-
-# macOS - Docker Desktop via Homebrew cask
-- name: Add Docker Desktop cask (macOS)
-  community.general.homebrew_cask:
-    name: docker
-    state: present
-  when: ansible_distribution == 'MacOSX'

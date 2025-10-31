@@ -2,10 +2,20 @@
 # DFE Developer Environment - Main Tasks
 # Maps to: fedora/install-dfe-developer.sh
 
+- name: Configure OS repositories (mirrors, performance)
+  ansible.builtin.include_tasks:
+    file: repository.yml
+  tags: ['repository']
+
 - name: Install Docker
   ansible.builtin.include_tasks:
     file: docker.yml
   tags: ['docker']
+
+- name: Install development utilities
+  ansible.builtin.include_tasks:
+    file: utilities.yml
+  tags: ['utilities']
 
 - name: Install Python development tools
   ansible.builtin.include_tasks:
@@ -16,11 +26,6 @@
   ansible.builtin.include_tasks:
     file: git.yml
   tags: ['git']
-
-- name: Install development utilities
-  ansible.builtin.include_tasks:
-    file: utilities.yml
-  tags: ['utilities']
 
 - name: Install cloud tools
   ansible.builtin.include_tasks:

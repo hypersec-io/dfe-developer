@@ -1,2 +1,119 @@
 ---
-# TODO: Implement Ghostty terminal installation
+# Ghostty terminal emulator installation
+
+# Install JetBrains Mono font (all platforms)
+- name: Install JetBrains Mono font (Fedora)
+  ansible.builtin.dnf:
+    name: jetbrains-mono-fonts
+    state: present
+  when: ansible_distribution == 'Fedora'
+
+- name: Install JetBrains Mono font (Ubuntu)
+  ansible.builtin.apt:
+    name: fonts-jetbrains-mono
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+# Fedora - COPR repository
+- name: Enable scottames/ghostty COPR (Fedora)
+  community.general.copr:
+    name: scottames/ghostty
+    state: enabled
+  when: ansible_distribution == 'Fedora'
+
+- name: Install Ghostty (Fedora)
+  ansible.builtin.dnf:
+    name: ghostty
+    state: present
+  when: ansible_distribution == 'Fedora'
+
+# Ubuntu - mkasberg PPA
+- name: Add Ghostty PPA (Ubuntu)
+  ansible.builtin.apt_repository:
+    repo: ppa:mkasberg/ghostty-ubuntu
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install Ghostty (Ubuntu)
+  ansible.builtin.apt:
+    name: ghostty
+    state: present
+    update_cache: true
+  when: ansible_distribution == 'Ubuntu'
+
+# Configure Ghostty with Solarized Dark theme (system-wide default)
+- name: Create Ghostty config directory in /etc/skel
+  ansible.builtin.file:
+    path: /etc/skel/.config/ghostty
+    state: directory
+    mode: '0755'
+
+- name: Deploy Ghostty system-wide default configuration
+  ansible.builtin.copy:
+    dest: /etc/skel/.config/ghostty/config
+    content: |
+      # Ghostty Configuration - Fedora Optimized
+      # Font Configuration
+      font-family = JetBrains Mono
+      font-size = 11
+      font-feature = calt
+      font-feature = liga
+
+      # Theme - Solarized Dark
+      theme = iTerm2 Solarized Dark
+
+      # Window Configuration
+      window-height = 35
+      window-width = 140
+      window-padding-x = 8
+      window-padding-y = 8
+      window-save-state = always
+
+      # Transparency - disabled for RDP optimization
+      background-opacity = 1.0
+      unfocused-split-opacity = 1.0
+
+      # Performance - VSync disabled for RDP
+      window-vsync = false
+      gtk-single-instance = false
+
+      # Scrollback
+      scrollback-limit = 10000
+
+      # Cursor
+      cursor-style = block
+      cursor-style-blink = true
+
+      # Shell Integration
+      shell-integration = detect
+      shell-integration-features = cursor,sudo,title
+
+      # Mouse Behavior
+      mouse-hide-while-typing = true
+
+      # Keybindings
+      keybind = ctrl+shift+c=copy_to_clipboard
+      keybind = ctrl+shift+v=paste_from_clipboard
+      keybind = ctrl+shift+t=new_tab
+      keybind = ctrl+shift+n=new_window
+      keybind = ctrl+plus=increase_font_size:1
+      keybind = ctrl+minus=decrease_font_size:1
+      keybind = ctrl+zero=reset_font_size
+    mode: '0644'
+
+# Also deploy to current user if running for first time
+- name: Create Ghostty config directory for current user
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.config/ghostty"
+    state: directory
+    mode: '0755'
+  become: false
+
+- name: Deploy Ghostty configuration for current user
+  ansible.builtin.copy:
+    src: /etc/skel/.config/ghostty/config
+    dest: "{{ ansible_env.HOME }}/.config/ghostty/config"
+    mode: '0644'
+    remote_src: true
+    force: false
+  become: false
