@@ -29,7 +29,7 @@
     msg: |
       UV installed successfully
       Usage:
-        uv python install 3.12      # Install Python 3.12
+        uv python install 3.11      # Install Python 3.11
         uv python list               # List available Python versions
         uv venv                      # Create virtual environment
         uv pip install <package>     # Install packages

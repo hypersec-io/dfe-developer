@@ -27,12 +27,46 @@
     state: present
   when: ansible_distribution == 'Fedora'
 
-# Ubuntu - Skip for now (PPA doesn't support noble yet)
-# TODO: Enable when mkasberg PPA supports Ubuntu 24.04
-- name: Skip Ghostty on Ubuntu (PPA not ready)
-  ansible.builtin.debug:
-    msg: "Ghostty skipped on Ubuntu (PPA doesn't support 24.04 noble yet)"
+# Ubuntu - Use pre-built .deb from mkasberg/ghostty-ubuntu
+- name: Get latest Ghostty release
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/mkasberg/ghostty-ubuntu/releases/latest
+    return_content: true
+  register: ghostty_latest
   when: ansible_distribution == 'Ubuntu'
+
+- name: Find .deb file for detected Ubuntu version
+  ansible.builtin.set_fact:
+    ghostty_deb_url: "{{ item.browser_download_url }}"
+  loop: "{{ ghostty_latest.json.assets }}"
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - "'_amd64_' + ansible_distribution_version + '.deb' in item.name"
+
+- name: Download Ghostty .deb
+  ansible.builtin.get_url:
+    url: "{{ ghostty_deb_url }}"
+    dest: /tmp/ghostty.deb
+    mode: '0644'
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - ghostty_deb_url is defined
+
+- name: Install Ghostty (Ubuntu)
+  ansible.builtin.apt:
+    deb: /tmp/ghostty.deb
+    state: present
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - ghostty_deb_url is defined
+
+- name: Remove Ghostty .deb
+  ansible.builtin.file:
+    path: /tmp/ghostty.deb
+    state: absent
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - ghostty_deb_url is defined
 
 # Configure Ghostty with Solarized Dark theme (system-wide default)
 - name: Create Ghostty config directory in /etc/skel

@@ -1,5 +1,68 @@
 ---
-# Kubernetes tools installation (k9s, kubectx/kubens, Minikube, ArgoCD, Freelens, dive)
+# Kubernetes tools installation (kubectl, k9s, kubectx/kubens, Minikube, ArgoCD, Freelens, dive)
+
+# ============================================================================
+# KUBECTL - Dynamic version detection
+# ============================================================================
+
+- name: Detect latest stable Kubernetes version
+  ansible.builtin.uri:
+    url: https://dl.k8s.io/release/stable.txt
+    return_content: true
+  register: k8s_stable_version
+  delegate_to: localhost
+  become: false
+
+- name: Extract Kubernetes minor version
+  ansible.builtin.set_fact:
+    k8s_version: "{{ k8s_stable_version.content | trim | regex_replace('^v([0-9]+\\.[0-9]+).*', '\\1') }}"
+
+- name: Display detected Kubernetes version
+  ansible.builtin.debug:
+    msg: "Using Kubernetes {{ k8s_version }}"
+
+# Fedora
+- name: Add Kubernetes repository (Fedora)
+  ansible.builtin.yum_repository:
+    name: kubernetes
+    description: Kubernetes
+    baseurl: "https://pkgs.k8s.io/core:/stable:/v{{ k8s_version }}/rpm/"
+    enabled: true
+    gpgcheck: true
+    gpgkey: "https://pkgs.k8s.io/core:/stable:/v{{ k8s_version }}/rpm/repodata/repomd.xml.key"
+  when: ansible_distribution == 'Fedora'
+
+- name: Install kubectl (Fedora)
+  ansible.builtin.dnf:
+    name: kubectl
+    state: present
+  when: ansible_distribution == 'Fedora'
+
+# Ubuntu
+- name: Add Kubernetes GPG key (Ubuntu)
+  ansible.builtin.get_url:
+    url: "https://pkgs.k8s.io/core:/stable:/v{{ k8s_version }}/deb/Release.key"
+    dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
+    mode: '0644'
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Add Kubernetes repository (Ubuntu)
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v{{ k8s_version }}/deb/ /"
+    filename: kubernetes
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install kubectl (Ubuntu)
+  ansible.builtin.apt:
+    name: kubectl
+    state: present
+    update_cache: true
+  when: ansible_distribution == 'Ubuntu'
+
+# ============================================================================
+# K9S - Binary download
+# ============================================================================
 
 # k9s - Binary download
 - name: Get latest k9s version
