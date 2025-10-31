@@ -1,0 +1,54 @@
+---
+# Install Docker Desktop (GUI application)
+
+- name: Check if GNOME is running
+  ansible.builtin.command: pgrep -x gnome-shell
+  register: gnome_check
+  failed_when: false
+  changed_when: false
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+# Fedora - Docker Desktop
+- block:
+    - name: Download Docker Desktop RPM (Fedora)
+      ansible.builtin.get_url:
+        url: "{{ dfe_docker_desktop_url_fedora }}"
+        dest: /tmp/docker-desktop.rpm
+        mode: '0644'
+
+    - name: Install Docker Desktop (Fedora)
+      ansible.builtin.dnf:
+        name: /tmp/docker-desktop.rpm
+        state: present
+        disable_gpg_check: true
+
+    - name: Remove Docker Desktop RPM (Fedora)
+      ansible.builtin.file:
+        path: /tmp/docker-desktop.rpm
+        state: absent
+  when:
+    - ansible_distribution == 'Fedora'
+    - gnome_check.rc == 0
+
+# Ubuntu - Docker Desktop
+- block:
+    - name: Download Docker Desktop DEB (Ubuntu)
+      ansible.builtin.get_url:
+        url: "{{ dfe_docker_desktop_url_ubuntu }}"
+        dest: /tmp/docker-desktop.deb
+        mode: '0644'
+
+    - name: Install Docker Desktop (Ubuntu)
+      ansible.builtin.apt:
+        deb: /tmp/docker-desktop.deb
+        state: present
+
+    - name: Remove Docker Desktop DEB (Ubuntu)
+      ansible.builtin.file:
+        path: /tmp/docker-desktop.deb
+        state: absent
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - gnome_check.rc == 0
+
+# macOS - Docker Desktop already installed via Homebrew cask in repository.yml

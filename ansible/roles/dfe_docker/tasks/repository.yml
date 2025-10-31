@@ -1,0 +1,55 @@
+---
+# Add Docker repository for all supported platforms
+
+# Fedora
+- name: Add Docker repository for Fedora
+  ansible.builtin.command:
+    cmd: dnf config-manager addrepo --from-repofile=https://download.docker.com/linux/fedora/docker-ce.repo --overwrite
+  args:
+    creates: /etc/yum.repos.d/docker-ce.repo
+  when: ansible_distribution == 'Fedora'
+
+# Ubuntu
+- name: Install prerequisites for Docker repository (Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+    state: present
+    update_cache: true
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Create Docker GPG keyring directory (Ubuntu)
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Add Docker GPG key (Ubuntu)
+  ansible.builtin.get_url:
+    url: "{{ dfe_docker_gpg_url }}"
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Add Docker repository (Ubuntu)
+  ansible.builtin.apt_repository:
+    repo: "deb [arch={{ dfe_docker_arch }} signed-by=/etc/apt/keyrings/docker.asc] {{ dfe_docker_repo_url }} {{ ansible_distribution_release }} stable"
+    filename: docker
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Update APT cache (Ubuntu)
+  ansible.builtin.apt:
+    update_cache: true
+  when: ansible_distribution == 'Ubuntu'
+
+# macOS - Docker Desktop via Homebrew cask
+- name: Add Docker Desktop cask (macOS)
+  community.general.homebrew_cask:
+    name: docker
+    state: present
+  when: ansible_distribution == 'MacOSX'
