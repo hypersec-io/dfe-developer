@@ -1,3 +1,135 @@
 ---
-# TODO: Implement cloud installation tasks
+# Cloud tools installation (AWS CLI, kubectl, Helm, Terraform, Vault)
 
+# AWS CLI v2 (binary install - no apt repo available)
+- name: Download AWS CLI v2 installer
+  ansible.builtin.get_url:
+    url: https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+    dest: /tmp/awscliv2.zip
+    mode: '0644'
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+- name: Install unzip for AWS CLI
+  ansible.builtin.package:
+    name: unzip
+    state: present
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+- name: Unzip AWS CLI installer
+  ansible.builtin.unarchive:
+    src: /tmp/awscliv2.zip
+    dest: /tmp/
+    remote_src: true
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+- name: Install AWS CLI v2
+  ansible.builtin.command:
+    cmd: /tmp/aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update
+  args:
+    creates: /usr/local/bin/aws
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+- name: Remove AWS CLI installer files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /tmp/awscliv2.zip
+    - /tmp/aws
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+# kubectl - Official repos for both Ubuntu and Fedora
+- name: Add Kubernetes APT repository GPG key (Ubuntu)
+  ansible.builtin.get_url:
+    url: https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key
+    dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
+    mode: '0644'
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Add Kubernetes APT repository (Ubuntu)
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /"
+    filename: kubernetes
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install kubectl (Ubuntu)
+  ansible.builtin.apt:
+    name: kubectl
+    state: present
+    update_cache: true
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Add Kubernetes repository (Fedora)
+  ansible.builtin.yum_repository:
+    name: kubernetes
+    description: Kubernetes
+    baseurl: https://pkgs.k8s.io/core:/stable:/v1.31/rpm/
+    enabled: true
+    gpgcheck: true
+    gpgkey: https://pkgs.k8s.io/core:/stable:/v1.31/rpm/repodata/repomd.xml.key
+  when: ansible_distribution == 'Fedora'
+
+- name: Install kubectl (Fedora)
+  ansible.builtin.dnf:
+    name: kubectl
+    state: present
+  when: ansible_distribution == 'Fedora'
+
+# Helm - Script install (works for all Linux)
+- name: Download Helm installer script
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+    dest: /tmp/get_helm.sh
+    mode: '0700'
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+- name: Install Helm via script
+  ansible.builtin.command: /tmp/get_helm.sh
+  args:
+    creates: /usr/local/bin/helm
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+- name: Remove Helm installer
+  ansible.builtin.file:
+    path: /tmp/get_helm.sh
+    state: absent
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+- name: Install Helm Dashboard plugin
+  ansible.builtin.command: helm plugin install https://github.com/komodorio/helm-dashboard.git
+  become: false
+  failed_when: false
+  changed_when: false
+
+# Terraform - Official repos for both
+- name: Add HashiCorp GPG key (Ubuntu)
+  ansible.builtin.get_url:
+    url: https://apt.releases.hashicorp.com/gpg
+    dest: /usr/share/keyrings/hashicorp-archive-keyring.asc
+    mode: '0644'
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Add HashiCorp repository (Ubuntu)
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.asc] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main"
+    filename: hashicorp
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install Terraform and Vault (Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - terraform
+      - vault
+    state: present
+    update_cache: true
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install Terraform and Vault (Fedora)
+  ansible.builtin.dnf:
+    name:
+      - terraform
+      - vault
+    state: present
+  when: ansible_distribution == 'Fedora'
