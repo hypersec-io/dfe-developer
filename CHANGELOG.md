@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.4] - 2025-10-31
+
+### Fixed
+- **[Fedora]** RDP optimizer now auto-generates system certificates for gnome-remote-desktop
+- **[Fedora]** Certificates properly configured via grdctl for Remote Login mode
+- **[Fedora]** Desktop now auto-resizes to match RDP client window size
+- **[Fedora]** Certificate ownership and permissions set correctly for gnome-remote-desktop user
+
+### Added
+- **[Fedora]** Interactive password prompt for RDP credentials during installation
+- **[Fedora]** --password and --username flags for automated/scripted deployments
+- **[Fedora]** Automatic service restart after credential configuration
+- **[Fedora]** Ready-to-use RDP setup (no manual credential configuration needed)
+
 ## [2.3.2] - 2025-10-30
 
 ### Added
