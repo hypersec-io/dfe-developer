@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.2] - 2025-10-31
+
+### Fixed
+- **[Ansible]** git-subtree not available as separate package on Ubuntu (included in git)
+- **[Ansible]** Ghostty uses dynamic Ubuntu version (ansible_distribution_version)
+- **[Ansible]** kubectl moved to k8s.yml with dynamic K8s version detection
+- **[Ansible]** Added HashiCorp repository for Fedora (Terraform/Vault not in default repos)
+- **[Ansible]** Ghostty Ubuntu uses pre-built .deb from mkasberg/ghostty-ubuntu
+
+### Changed
+- **[Ansible]** Dynamic Kubernetes version from https://dl.k8s.io/release/stable.txt
+- **[Ansible]** Both Ubuntu and Fedora fully working (0 failures on both)
+
 ## [2.4.1] - 2025-10-31
 
 ### Added
