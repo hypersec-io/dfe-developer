@@ -3,11 +3,51 @@
 # Does NOT add vendor repos (Docker, VS Code, etc.) - those are in individual task files
 
 # ============================================================================
+# VALIDATE MIRROR CONNECTIVITY
+# ============================================================================
+
+- name: Validate mirror is reachable (Fedora)
+  ansible.builtin.uri:
+    url: "{{ dfe_mirror_url }}/fedora/linux/releases/"
+    method: HEAD
+    timeout: 10
+  delegate_to: localhost
+  become: false
+  when:
+    - ansible_distribution == 'Fedora'
+    - dfe_use_mirrors | default(true)
+
+- name: Validate mirror is reachable (Ubuntu)
+  ansible.builtin.uri:
+    url: "{{ dfe_mirror_url }}/ubuntu/archive/dists/{{ ansible_distribution_release }}/"
+    method: HEAD
+    timeout: 10
+  delegate_to: localhost
+  become: false
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - dfe_use_mirrors | default(true)
+
+# ============================================================================
 # FEDORA REPOSITORY CONFIGURATION
 # ============================================================================
 
-- name: Configure Fedora mirrors (AARNET)
+- name: Configure Fedora mirrors
   block:
+    - name: Backup original fedora.repo
+      ansible.builtin.copy:
+        src: /etc/yum.repos.d/fedora.repo
+        dest: /etc/yum.repos.d/fedora.repo.orig
+        remote_src: true
+        force: false
+
+    - name: Backup original fedora-updates.repo
+      ansible.builtin.copy:
+        src: /etc/yum.repos.d/fedora-updates.repo
+        dest: /etc/yum.repos.d/fedora-updates.repo.orig
+        remote_src: true
+        force: false
+
     - name: Disable metalink in fedora.repo
       ansible.builtin.replace:
         path: /etc/yum.repos.d/fedora.repo
@@ -61,27 +101,36 @@
     - name: Update DNF cache
       ansible.builtin.command: dnf makecache
       changed_when: false
-  when: ansible_distribution == 'Fedora'
+  when:
+    - ansible_distribution == 'Fedora'
+    - dfe_use_mirrors | default(true)
 
 # ============================================================================
 # UBUNTU REPOSITORY CONFIGURATION
 # ============================================================================
 
-- name: Configure Ubuntu mirrors (AARNET)
+- name: Configure Ubuntu mirrors
   block:
-    - name: Configure AARNET mirror for Ubuntu
+    - name: Backup original sources.list
+      ansible.builtin.copy:
+        src: /etc/apt/sources.list
+        dest: /etc/apt/sources.list.orig
+        remote_src: true
+        force: false
+
+    - name: Configure mirror for Ubuntu
       ansible.builtin.replace:
         path: /etc/apt/sources.list
         regexp: 'http://[a-z]{2}\.archive\.ubuntu\.com/ubuntu'
-        replace: "{{ dfe_mirror_url }}/ubuntu"
-        backup: true
+        replace: "{{ dfe_mirror_url }}/ubuntu/archive"
+        backup: false
 
-    - name: Configure AARNET security mirror for Ubuntu
+    - name: Configure security mirror for Ubuntu
       ansible.builtin.replace:
         path: /etc/apt/sources.list
         regexp: 'http://security\.ubuntu\.com/ubuntu'
-        replace: "{{ dfe_mirror_url }}/ubuntu"
-        backup: true
+        replace: "{{ dfe_mirror_url }}/ubuntu/archive"
+        backup: false
 
     - name: Configure APT performance settings
       ansible.builtin.copy:
@@ -97,4 +146,6 @@
     - name: Update APT cache
       ansible.builtin.apt:
         update_cache: true
-  when: ansible_distribution == 'Ubuntu'
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - dfe_use_mirrors | default(true)
