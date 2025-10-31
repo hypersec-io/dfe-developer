@@ -32,25 +32,21 @@
     - role: dfe_docker
       tags: ['docker', 'core']
 
-    - role: dfe_python
-      tags: ['python', 'core']
-
-    - role: dfe_git
-      tags: ['git', 'core']
-
-    - role: dfe_cloud_tools
-      tags: ['cloud', 'kubectl', 'helm', 'terraform']
-
-    - role: dfe_k8s_tools
-      tags: ['k8s', 'kubernetes']
-
-    - role: dfe_vscode
-      tags: ['vscode', 'ide']
-      when: ansible_env.DISPLAY is defined or ansible_env.WAYLAND_DISPLAY is defined
-
-    - role: dfe_ghostty
-      tags: ['ghostty', 'terminal']
-      when: dfe_install_ghostty | default(true) | bool
+    # TODO: Add remaining roles as they are created
+    # - role: dfe_python
+    #   tags: ['python', 'core']
+    # - role: dfe_git
+    #   tags: ['git', 'core']
+    # - role: dfe_cloud_tools
+    #   tags: ['cloud', 'kubectl', 'helm', 'terraform']
+    # - role: dfe_k8s_tools
+    #   tags: ['k8s', 'kubernetes']
+    # - role: dfe_vscode
+    #   tags: ['vscode', 'ide']
+    #   when: ansible_env.DISPLAY is defined or ansible_env.WAYLAND_DISPLAY is defined
+    # - role: dfe_ghostty
+    #   tags: ['ghostty', 'terminal']
+    #   when: dfe_install_ghostty | default(true) | bool
 
   post_tasks:
     - name: Display completion message
