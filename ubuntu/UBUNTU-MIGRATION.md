@@ -161,7 +161,7 @@ Add vendor-specific APT repositories when needed:
   - Git and GitHub CLI
   - Development utilities (jq, yq, bat, fzf, ripgrep, dive)
   - VS Code from Microsoft repository
-  - Ghostty terminal (mkasberg PPA) - REQUIRED
+  - Ghostty terminal (mkasberg PPA) - installed by default, --no-ghostty to skip
   - Automatic security updates configuration
 
 ### Phase 2: Advanced Tools
@@ -259,6 +259,14 @@ Ubuntu's GNOME extensions may differ from Fedora.
 - Test extension packages
 - Use gnome-shell-extension-manager if needed
 - Document Ubuntu-specific extensions
+
+### Ghostty Terminal Installation
+Ghostty is installed by default via mkasberg PPA.
+
+**Opt-out option**: `--no-ghostty` flag
+- Users who don't want Ghostty can skip installation
+- Usage: `./install-dfe-developer.sh --no-ghostty`
+- Default: Ghostty IS installed (matches Fedora behavior)
 
 ## Testing Plan - Script by Script
 
