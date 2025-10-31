@@ -1,3 +1,61 @@
 ---
-# TODO: Implement git installation tasks
+# Git and version control tools installation
 
+# Install Git (all platforms)
+- name: Install Git (Fedora)
+  ansible.builtin.dnf:
+    name:
+      - git
+      - git-lfs
+      - git-subtree
+    state: present
+  when: ansible_distribution == 'Fedora'
+
+- name: Add official Git PPA for latest version (Ubuntu)
+  ansible.builtin.apt_repository:
+    repo: ppa:git-core/ppa
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install Git (Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - git
+      - git-lfs
+    state: present
+    update_cache: true
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install Git (macOS)
+  community.general.homebrew:
+    name:
+      - git
+      - git-lfs
+    state: present
+  when: ansible_distribution == 'MacOSX'
+
+# Install GitHub CLI
+- name: Install GitHub CLI (Fedora)
+  ansible.builtin.dnf:
+    name: gh
+    state: present
+  when: ansible_distribution == 'Fedora'
+
+- name: Install GitHub CLI (Ubuntu)
+  ansible.builtin.apt:
+    name: gh
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install GitHub CLI (macOS)
+  community.general.homebrew:
+    name: gh
+    state: present
+  when: ansible_distribution == 'MacOSX'
+
+# Configure Git LFS
+- name: Install Git LFS hooks
+  ansible.builtin.command: git lfs install
+  become: false
+  changed_when: false
+  failed_when: false
