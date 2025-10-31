@@ -1,0 +1,29 @@
+---
+# DFE Developer Core - Main Tasks
+# Maps to: fedora/install-dfe-developer-core.sh
+
+- name: Install JFrog CLI
+  ansible.builtin.include_tasks:
+    file: jfrog.yml
+  tags: ['jfrog']
+
+- name: Install Azure CLI
+  ansible.builtin.include_tasks:
+    file: azure.yml
+  tags: ['azure']
+
+- name: Install Node.js and semantic-release
+  ansible.builtin.include_tasks:
+    file: nodejs.yml
+  tags: ['nodejs']
+
+- name: Install Linear CLI
+  ansible.builtin.include_tasks:
+    file: linear.yml
+  tags: ['linear']
+
+- name: Install Slack
+  ansible.builtin.include_tasks:
+    file: slack.yml
+  tags: ['slack']
+  when: ansible_env.DISPLAY is defined or ansible_env.WAYLAND_DISPLAY is defined

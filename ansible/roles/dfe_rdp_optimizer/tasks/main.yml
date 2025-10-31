@@ -1,0 +1,28 @@
+---
+# DFE RDP Optimizer - Main Tasks
+# Maps to: fedora/install-rdp-optimizer.sh
+
+- name: Configure RDP certificates
+  ansible.builtin.include_tasks:
+    file: certificates.yml
+  tags: ['certificates']
+
+- name: Configure GNOME Remote Desktop
+  ansible.builtin.include_tasks:
+    file: dconf.yml
+  tags: ['dconf']
+
+- name: Configure TCP optimizations
+  ansible.builtin.include_tasks:
+    file: tcp.yml
+  tags: ['tcp']
+
+- name: Configure MTU settings
+  ansible.builtin.include_tasks:
+    file: mtu.yml
+  tags: ['mtu']
+
+- name: Enable RDP service
+  ansible.builtin.include_tasks:
+    file: service.yml
+  tags: ['service']

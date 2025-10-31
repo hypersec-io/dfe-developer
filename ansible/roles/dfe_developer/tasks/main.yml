@@ -1,0 +1,51 @@
+---
+# DFE Developer Environment - Main Tasks
+# Maps to: fedora/install-dfe-developer.sh
+
+- name: Install Docker
+  ansible.builtin.include_tasks:
+    file: docker.yml
+  tags: ['docker']
+
+- name: Install Python development tools
+  ansible.builtin.include_tasks:
+    file: python.yml
+  tags: ['python']
+
+- name: Install Git and version control tools
+  ansible.builtin.include_tasks:
+    file: git.yml
+  tags: ['git']
+
+- name: Install cloud tools
+  ansible.builtin.include_tasks:
+    file: cloud.yml
+  tags: ['cloud']
+
+- name: Install Kubernetes tools
+  ansible.builtin.include_tasks:
+    file: k8s.yml
+  tags: ['k8s']
+
+- name: Install VS Code
+  ansible.builtin.include_tasks:
+    file: vscode.yml
+  tags: ['vscode']
+  when: ansible_env.DISPLAY is defined or ansible_env.WAYLAND_DISPLAY is defined
+
+- name: Install Google Chrome
+  ansible.builtin.include_tasks:
+    file: chrome.yml
+  tags: ['chrome']
+  when: ansible_env.DISPLAY is defined or ansible_env.WAYLAND_DISPLAY is defined
+
+- name: Install Ghostty terminal
+  ansible.builtin.include_tasks:
+    file: ghostty.yml
+  tags: ['ghostty']
+  when: dfe_install_ghostty | default(true) | bool
+
+- name: Install development utilities
+  ansible.builtin.include_tasks:
+    file: utilities.yml
+  tags: ['utilities']

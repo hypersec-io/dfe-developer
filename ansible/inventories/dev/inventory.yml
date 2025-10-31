@@ -1,0 +1,18 @@
+---
+all:
+  children:
+    test_vms:
+      hosts:
+        ubuntu-test:
+          ansible_host: dfe-dev-u.tyrell.com.au
+          ansible_user: dfe
+          ansible_python_interpreter: /usr/bin/python3
+          ansible_become: true
+          ansible_become_method: sudo
+
+        fedora-test:
+          ansible_host: dfe-dev.tyrell.com.au
+          ansible_user: dfe
+          ansible_python_interpreter: /usr/bin/python3
+          ansible_become: true
+          ansible_become_method: sudo
