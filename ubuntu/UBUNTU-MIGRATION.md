@@ -206,6 +206,35 @@ Add vendor-specific APT repositories when needed:
 - **Add Debian support later if there's demand**
 - **Effort**: 2-3 days for Ubuntu, +1 day for Debian adaptation
 
+## Test Environment
+
+**Ubuntu 24.04 LTS VM - Proxmox**
+
+- **Hostname**: dfe-dev-u.tyrell.com.au
+- **VM ID**: 2006
+- **User**: dfe
+- **Password**: dfe
+- **SSH**: SSH keys configured (no password needed)
+- **Proxmox Host**: root@proxmox.tyrell.com.au
+- **Snapshot**: initial_build
+
+**Reset VM Command:**
+```bash
+ssh root@proxmox.tyrell.com.au "qm rollback 2006 initial_build && qm start 2006"
+```
+
+**SSH to Test VM:**
+```bash
+ssh dfe@dfe-dev-u.tyrell.com.au
+```
+
+**Test Workflow:**
+1. Reset VM to initial_build snapshot
+2. Deploy Ubuntu scripts
+3. Verify all tools install correctly
+4. Test functionality
+5. Reset and iterate
+
 ## Implementation Approach
 
 ### 1. Extend lib.sh (Shared Functions)
