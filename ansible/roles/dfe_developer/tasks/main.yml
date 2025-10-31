@@ -17,6 +17,11 @@
     file: git.yml
   tags: ['git']
 
+- name: Install development utilities
+  ansible.builtin.include_tasks:
+    file: utilities.yml
+  tags: ['utilities']
+
 - name: Install cloud tools
   ansible.builtin.include_tasks:
     file: cloud.yml
@@ -44,8 +49,3 @@
     file: ghostty.yml
   tags: ['ghostty']
   when: dfe_install_ghostty | default(true) | bool
-
-- name: Install development utilities
-  ansible.builtin.include_tasks:
-    file: utilities.yml
-  tags: ['utilities']

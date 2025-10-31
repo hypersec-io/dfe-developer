@@ -1,3 +1,78 @@
 ---
-# TODO: Implement utilities installation tasks
+# Development utilities installation (jq, yq, bat, fzf, ripgrep, flatpak, etc.)
 
+# Install Flatpak first (needed for GUI apps)
+- name: Install Flatpak (Ubuntu)
+  ansible.builtin.apt:
+    name: flatpak
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install Flatpak (Fedora)
+  ansible.builtin.dnf:
+    name: flatpak
+    state: present
+  when: ansible_distribution == 'Fedora'
+
+# Common development utilities
+- name: Install development utilities (Fedora)
+  ansible.builtin.dnf:
+    name:
+      - jq
+      - bat
+      - fzf
+      - ripgrep
+      - fd-find
+      - httpie
+      - tmux
+      - htop
+      - lsof
+      - tree
+      - wget
+      - bind-utils
+      - net-tools
+      - traceroute
+      - nmap
+      - telnet
+      - nc
+      - whois
+      - ShellCheck
+      - postgresql
+      - ansible
+    state: present
+  when: ansible_distribution == 'Fedora'
+
+- name: Install development utilities (Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - jq
+      - bat
+      - fzf
+      - ripgrep
+      - fd-find
+      - httpie
+      - tmux
+      - htop
+      - lsof
+      - tree
+      - wget
+      - dnsutils
+      - net-tools
+      - traceroute
+      - nmap
+      - telnet
+      - netcat-openbsd
+      - whois
+      - shellcheck
+      - postgresql-client
+      - ansible
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+# yq - Binary download
+- name: Download yq
+  ansible.builtin.get_url:
+    url: https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+    dest: /usr/local/bin/yq
+    mode: '0755'
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
