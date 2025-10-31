@@ -20,13 +20,13 @@
 
 - name: Add Docker GPG key
   ansible.builtin.get_url:
-    url: "{{ dfe_docker_gpg_url_ubuntu }}"
+    url: "{{ dfe_docker_gpg_url }}"
     dest: /etc/apt/keyrings/docker.asc
     mode: '0644'
 
 - name: Add Docker repository
   ansible.builtin.apt_repository:
-    repo: "deb [arch={{ dfe_docker_arch }} signed-by=/etc/apt/keyrings/docker.asc] {{ dfe_docker_repo_base_url }}/ubuntu {{ ansible_distribution_release }} stable"
+    repo: "deb [arch={{ dfe_docker_arch }} signed-by=/etc/apt/keyrings/docker.asc] {{ dfe_docker_repo_url }} {{ ansible_distribution_release }} stable"
     filename: docker
     state: present
 
