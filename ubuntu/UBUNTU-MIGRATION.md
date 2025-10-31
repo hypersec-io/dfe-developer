@@ -175,37 +175,6 @@ Add vendor-specific APT repositories when needed:
 - Ghostty (primarily Fedora COPR, may not have Ubuntu equivalent)
 - Fedora-specific optimizations
 
-## Debian Support Effort Estimation
-
-**Adding Debian support after Ubuntu: +25-40% effort**
-
-### Why Similar (+25% effort):
-- ✅ Same package manager (apt)
-- ✅ Same package format (.deb)
-- ✅ Similar systemd implementation
-- ✅ Most packages have same names
-- ✅ Can reuse Ubuntu scripts with minor changes
-
-### Key Differences (+15% complexity):
-- ❌ No PPA support (must use vendor repos or build from source)
-- ❌ Older package versions in Debian Stable
-- ❌ Different release cycle (Debian is more conservative)
-- ❌ AppArmor may not be enabled by default
-- ❌ Some proprietary drivers harder to install
-
-### Risk Areas:
-- **Package availability**: Some packages in Ubuntu repos don't exist in Debian
-- **Version mismatches**: Debian Stable has older versions
-- **Repository compatibility**: Ubuntu repos NOT compatible with Debian
-- **Testing burden**: Need separate test environment for Debian
-- **Documentation**: Debian-specific quirks and workarounds
-
-### Recommendation:
-- **Start with Ubuntu 24.04 LTS only**
-- **Prove the concept works well**
-- **Add Debian support later if there's demand**
-- **Effort**: 2-3 days for Ubuntu, +1 day for Debian adaptation
-
 ## Test Environment
 
 **Ubuntu 24.04 LTS VM - Proxmox**
@@ -282,33 +251,134 @@ Ubuntu's GNOME extensions may differ from Fedora.
 - Use gnome-shell-extension-manager if needed
 - Document Ubuntu-specific extensions
 
+## Testing Plan - Script by Script
+
+Each script will be tested in order on fresh VM snapshots (VM 2006).
+
+### 1. install-dfe-developer.sh
+
+**Test Procedure:**
+1. Reset VM: `ssh root@proxmox.tyrell.com.au "qm rollback 2006 initial_build && qm start 2006"`
+2. Deploy: `ssh dfe@dfe-dev-u.tyrell.com.au "cd ~/dfe-developer/ubuntu && ./install-dfe-developer.sh"`
+3. Verify installations:
+   - Docker Engine running
+   - Docker group membership
+   - Python (pyenv, pipx, UV)
+   - Git and Git LFS
+   - Cloud tools (kubectl, Helm, Terraform from APT repos)
+   - VS Code installed
+   - GNOME extensions (if GUI present)
+4. Test Docker: `docker run hello-world`
+5. Test kubectl: `kubectl version --client`
+6. Test Helm: `helm version`
+
+**Success Criteria:**
+- [ ] All tools install without errors
+- [ ] Docker works without sudo (after re-login)
+- [ ] All verification checks pass
+- [ ] Script is idempotent (can re-run)
+
+### 2. install-dfe-developer-core.sh
+
+**Test Procedure:**
+1. Continue from previous test (don't reset VM)
+2. Deploy: `ssh dfe@dfe-dev-u.tyrell.com.au "cd ~/dfe-developer/ubuntu && ./install-dfe-developer-core.sh"`
+3. Verify installations:
+   - JFrog CLI
+   - Azure CLI (from Microsoft APT repo)
+   - Node.js (from NodeSource repo)
+   - semantic-release and plugins
+   - Linear CLI
+   - Slack (Flatpak)
+4. Test tools: `az --version`, `jf --version`, `node --version`
+
+**Success Criteria:**
+- [ ] All core tools install
+- [ ] Azure CLI works
+- [ ] Node.js and npm available
+- [ ] Flatpak apps install successfully
+
+### 3. install-vm-optimizer.sh
+
+**Test Procedure:**
+1. Reset VM to clean state
+2. Run install-dfe-developer.sh first
+3. Deploy: `ssh dfe@dfe-dev-u.tyrell.com.au "cd ~/dfe-developer/ubuntu && ./install-vm-optimizer.sh"`
+4. Verify optimizations:
+   - VM tools installed (KVM guest agent for Proxmox)
+   - Kernel parameters applied
+   - Services disabled
+   - GRUB optimizations
+5. Check sysctl settings: `sysctl vm.swappiness` (should be 10)
+
+**Success Criteria:**
+- [ ] VM detection works (KVM/QEMU)
+- [ ] Guest agent installed
+- [ ] Kernel optimizations applied
+- [ ] No errors during execution
+
+### 4. install-rdp-optimizer.sh
+
+**Test Procedure:**
+1. Continue from VM optimizer test
+2. Deploy: `ssh dfe@dfe-dev-u.tyrell.com.au "cd ~/dfe-developer/ubuntu && ./install-rdp-optimizer.sh --password dfe --username dfe"`
+3. Verify RDP setup:
+   - gnome-remote-desktop installed
+   - Certificates generated
+   - System service enabled
+   - Port 3389 listening
+4. Test RDP connection from Windows client
+5. **Test auto-resize**: Resize RDP client window, verify desktop resizes
+
+**Success Criteria:**
+- [ ] RDP service starts successfully
+- [ ] Certificates auto-generated
+- [ ] Credentials configured
+- [ ] RDP connection works
+- [ ] **Desktop auto-resizes to client window** (critical!)
+
+### 5. install-all.sh
+
+**Test Procedure:**
+1. Reset VM to completely fresh state
+2. Deploy all-in-one: `ssh dfe@dfe-dev-u.tyrell.com.au "cd ~/dfe-developer/ubuntu && ./install-all.sh 2>&1 | tee install.log"`
+3. Verify complete installation:
+   - All components from scripts 1-4
+   - No duplicate installations
+   - Proper execution order
+   - All services started
+4. Reboot and verify persistence
+5. Full integration test
+
+**Success Criteria:**
+- [ ] Complete installation without errors
+- [ ] No duplicate installations
+- [ ] All verification checks pass
+- [ ] System ready for development work after reboot
+
 ## Success Criteria
 
 Ubuntu port is successful when:
+- [ ] All 5 scripts pass their individual tests
 - [ ] All core development tools install on Ubuntu 24.04 LTS
 - [ ] No manual intervention required after running scripts
 - [ ] Docker, Python, Kubernetes tools working
 - [ ] VS Code and Git configured
 - [ ] Cloud CLIs (AWS, Azure) functional
 - [ ] Flatpak apps install successfully
+- [ ] RDP auto-resize works
 - [ ] Scripts are idempotent (safe to re-run)
 - [ ] Documentation covers Ubuntu-specific steps
 
 ## Timeline Estimate
 
-- **Ubuntu 24.04 port**: 3-4 days
-  - Day 1: lib.sh updates, core script conversion
-  - Day 2: Testing and bug fixes
-  - Day 3: Advanced tools, documentation
-  - Day 4: Final testing, cleanup
+**Ubuntu 24.04 port**: 3-4 days
+- Day 1: lib.sh updates, install-dfe-developer.sh conversion and testing
+- Day 2: install-dfe-developer-core.sh, testing and bug fixes
+- Day 3: VM and RDP optimizers, install-all.sh
+- Day 4: Final integration testing, documentation, cleanup
 
-- **Debian support (optional)**: +1-2 days
-  - Conditional logic for Debian-specific packages
-  - Testing on Debian Stable
-  - Documentation updates
-
-**Total for Ubuntu only**: 3-4 days
-**Total with Debian**: 4-6 days (+25-40% effort)
+**Note:** Debian support is OUT OF SCOPE for this phase.
 
 ## Next Steps
 
