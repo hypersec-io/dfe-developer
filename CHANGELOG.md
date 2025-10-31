@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.3] - 2025-10-31
+
+### Fixed
+- **[Fedora]** RDP optimizer now uses user-session mode for client-controlled desktop resizing
+- **[Fedora]** Desktop now auto-resizes to match RDP client window size
+- **[Fedora]** Added TARGET_USER detection for proper user-scoped operations
+- **[Fedora]** Certificate paths updated to user location (~/.local/share/gnome-remote-desktop/)
+- **[Fedora]** Added loginctl enable-linger for persistent user service
+- **[Fedora]** Automatic remediation of old system-based RDP deployments
+
+### Changed
+- **[Fedora]** Switched from system gnome-remote-desktop to user-session service
+- **[Fedora]** Updated grdctl commands to use user context instead of --system
+
+### Note
+- **[Fedora]** User must be logged into GNOME for RDP to work (linger keeps service running)
+- **[Fedora]** This change enables dynamic resolution that tracks RDP client window size
+
 ## [2.3.2] - 2025-10-30
 
 ### Added
