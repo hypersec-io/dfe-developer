@@ -1,0 +1,6 @@
+---
+# Docker configuration defaults
+dfe_docker_users:
+  - "{{ ansible_user_id }}"
+
+dfe_docker_install_desktop: true  # Install Docker Desktop if GUI present
