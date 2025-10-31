@@ -5,10 +5,11 @@ dfe_docker_users:
 
 dfe_docker_install_desktop: true  # Install Docker Desktop if GUI present
 
-# Docker repository URLs (abstracted for flexibility)
+# Docker repository URLs (abstracted for all distros)
 dfe_docker_repo_base_url: "https://download.docker.com/linux"
-dfe_docker_gpg_url_ubuntu: "{{ dfe_docker_repo_base_url }}/ubuntu/gpg"
-dfe_docker_gpg_url_fedora: "{{ dfe_docker_repo_base_url }}/fedora/gpg"
+dfe_docker_distro_name: "{{ ansible_distribution | lower }}"  # ubuntu, fedora, debian
+dfe_docker_gpg_url: "{{ dfe_docker_repo_base_url }}/{{ dfe_docker_distro_name }}/gpg"
+dfe_docker_repo_url: "{{ dfe_docker_repo_base_url }}/{{ dfe_docker_distro_name }}"
 
 # Docker Desktop download URLs
 dfe_docker_desktop_url_ubuntu: "https://desktop.docker.com/linux/main/amd64/docker-desktop-amd64.deb"

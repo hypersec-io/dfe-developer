@@ -1,0 +1,7 @@
+---
+# Docker CE installation for Debian
+# Debian uses the same process as Ubuntu (both use APT and Docker provides repos for both)
+
+- name: Include Ubuntu Docker tasks (same for Debian)
+  ansible.builtin.include_tasks:
+    file: ubuntu.yml
