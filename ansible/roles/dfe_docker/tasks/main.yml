@@ -1,40 +1,23 @@
 ---
-# Docker CE installation main tasks
+# Docker CE installation - main entry point
 
-- name: Include Fedora Docker tasks
+- name: Add Docker repository
   ansible.builtin.include_tasks:
-    file: fedora.yml
-  when: ansible_distribution == 'Fedora'
+    file: repository.yml
 
-- name: Include Ubuntu Docker tasks
+- name: Install Docker packages
   ansible.builtin.include_tasks:
-    file: ubuntu.yml
-  when: ansible_distribution == 'Ubuntu'
+    file: packages.yml
 
-- name: Include macOS Docker tasks
+- name: Install Docker Desktop (GUI)
   ansible.builtin.include_tasks:
-    file: macos.yml
-  when: ansible_distribution == 'MacOSX'
+    file: desktop.yml
+  when: dfe_docker_install_desktop | default(true)
 
-- name: Add user to docker group
-  ansible.builtin.user:
-    name: "{{ item }}"
-    groups: docker
-    append: true
-  loop: "{{ dfe_docker_users }}"
-  notify: Inform user to logout
-
-- name: Enable and start Docker service
-  ansible.builtin.systemd:
-    name: docker
-    enabled: true
-    state: started
+- name: Configure Docker
+  ansible.builtin.include_tasks:
+    file: configure.yml
 
 - name: Verify Docker installation
-  ansible.builtin.command: docker --version
-  register: docker_version
-  changed_when: false
-
-- name: Display Docker version
-  ansible.builtin.debug:
-    msg: "Docker installed: {{ docker_version.stdout }}"
+  ansible.builtin.include_tasks:
+    file: verify.yml
