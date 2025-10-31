@@ -38,18 +38,24 @@ fi
 
 # Parse command line options
 ENABLE_SUDOERS=false
+INSTALL_GHOSTTY=true
 while [[ $# -gt 0 ]]; do
     case $1 in
         --sudoers)
             ENABLE_SUDOERS=true
             shift
             ;;
+        --no-ghostty)
+            INSTALL_GHOSTTY=false
+            shift
+            ;;
         --help)
-            echo "Usage: $0 [--sudoers] [--help]"
+            echo "Usage: $0 [--sudoers] [--no-ghostty] [--help]"
             echo ""
             echo "Options:"
-            echo "  --sudoers    Configure passwordless sudo for the current user (optional)"
-            echo "  --help       Show this help message"
+            echo "  --sudoers      Configure passwordless sudo for the current user (optional)"
+            echo "  --no-ghostty   Skip Ghostty terminal installation (optional)"
+            echo "  --help         Show this help message"
             exit 0
             ;;
         *)
@@ -525,13 +531,14 @@ if [ "$HAS_GNOME" = "true" ]; then
     fi
 fi
 
-# Install Ghostty terminal emulator (optional but recommended)
-print_info "Installing Ghostty terminal emulator..."
-sudo dnf install -y jetbrains-mono-fonts || true
-sudo dnf copr enable -y scottames/ghostty || true
-sudo dnf install -y ghostty || print_info "Ghostty installation skipped"
+# Install Ghostty terminal emulator
+if [ "$INSTALL_GHOSTTY" = true ]; then
+    print_info "Installing Ghostty terminal emulator..."
+    sudo dnf install -y jetbrains-mono-fonts || true
+    sudo dnf copr enable -y scottames/ghostty || true
+    sudo dnf install -y ghostty || print_info "Ghostty installation skipped"
 
-# Create Ghostty configuration
+    # Create Ghostty configuration
     CONFIG_DIR="$HOME/.config/ghostty"
     mkdir -p "$CONFIG_DIR"
     if [ ! -f "$CONFIG_DIR/config" ]; then
@@ -584,6 +591,9 @@ sudo dnf install -y ghostty || print_info "Ghostty installation skipped"
     keybind = ctrl+minus=decrease_font_size:1
     keybind = ctrl+zero=reset_font_size
 EOF
+    fi
+else
+    print_info "Ghostty installation skipped (--no-ghostty flag)"
 fi
 
 print_info "Installation Complete"
@@ -603,10 +613,12 @@ if [ "$HAS_GNOME" = "true" ]; then
     google-chrome --version &>/dev/null && echo "  [OK] Chrome" || echo "  [FAIL] Chrome"
 fi
 
-echo ""
-echo "Terminal:"
-ghostty --version &>/dev/null && echo "  [OK] Ghostty" || echo "  [FAIL] Ghostty"
-fc-list | grep -q "JetBrains Mono" && echo "  [OK] JetBrains Mono font" || echo "  [FAIL] JetBrains Mono font"
+if [ "$INSTALL_GHOSTTY" = true ]; then
+    echo ""
+    echo "Terminal:"
+    ghostty --version &>/dev/null && echo "  [OK] Ghostty" || echo "  [FAIL] Ghostty"
+    fc-list | grep -q "JetBrains Mono" && echo "  [OK] JetBrains Mono font" || echo "  [FAIL] JetBrains Mono font"
+fi
 
 echo ""
 echo "Cloud/DevOps Tools:"
