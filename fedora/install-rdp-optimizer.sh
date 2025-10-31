@@ -6,7 +6,11 @@
 # Designed for GNOME Remote Login feature (not desktop sharing)
 #
 # USAGE:
-#   ./install-rdp-optimizer.sh
+#   ./install-rdp-optimizer.sh [--password PASSWORD] [--username USERNAME]
+#
+# OPTIONS:
+#   --password PASSWORD    Set RDP password (will prompt if not provided)
+#   --username USERNAME    Set RDP username (defaults to current user)
 #
 # OPTIMIZES:
 #   - TCP BBR congestion control for mobile performance
@@ -35,17 +39,51 @@ else
     exit 1
 fi
 
+# Parse command line arguments
+RDP_PASSWORD=""
+RDP_USERNAME=""
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --password)
+            RDP_PASSWORD="$2"
+            shift 2
+            ;;
+        --username)
+            RDP_USERNAME="$2"
+            shift 2
+            ;;
+        --help)
+            echo "Usage: $0 [--password PASSWORD] [--username USERNAME]"
+            echo ""
+            echo "Options:"
+            echo "  --password PASSWORD    Set RDP password (will prompt if not provided)"
+            echo "  --username USERNAME    Set RDP username (defaults to current user)"
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
+done
+
 # Check OS immediately - must be Fedora
 require_distro "fedora" "Fedora Linux"
+
+# Detect target user (the one running the desktop session)
+TARGET_USER="${SUDO_USER:-$USER}"
+RDP_USERNAME="${RDP_USERNAME:-$TARGET_USER}"
 
 # Script metadata
 SCRIPT_NAME="$(basename "$0")"
 SCRIPT_DESCRIPTION="Gnome Shell RDP optimiser"
-STATE_FILE="$HOME/.rdp-optimizer.state"
-BACKUP_DIR="$HOME/.rdp-optimizer-backup-$(date +%Y%m%d-%H%M%S)"
+STATE_FILE="/home/$TARGET_USER/.rdp-optimizer.state"
+BACKUP_DIR="/home/$TARGET_USER/.rdp-optimizer-backup-$(date +%Y%m%d-%H%M%S)"
 
 # Export for common functions
-export SCRIPT_NAME SCRIPT_DESCRIPTION
+export SCRIPT_NAME SCRIPT_DESCRIPTION TARGET_USER
 
 
 # Helper function to update dconf database
@@ -250,38 +288,48 @@ EOF"
 }
 
 
-# Configure RDP certificate trust
+# Configure RDP certificates for system service
 configure_rdp_certificate() {
-    print_info "Step 5: Configuring RDP certificate trust..."
-    
-    local cert_file="/var/lib/gnome-remote-desktop/.local/share/gnome-remote-desktop/certificates/rdp-tls.crt"
-    local system_cert="/etc/pki/ca-trust/source/anchors/gnome-remote-desktop-rdp.crt"
-    local info_file="/etc/gnome-remote-desktop-cert-info.txt"
-    
-    if [[ -f "$cert_file" ]]; then
-        # Copy certificate to system trust store
-        cp "$cert_file" "$system_cert"
-        update_ca_trust_safe
-        
-        # Create certificate info file
-        create_certificate_info "$info_file" "$cert_file"
-        
-        print_info "  [OK] RDP certificate added to system trust store"
-        print_info "  [OK] Certificate info saved to $info_file"
+    print_info "Step 5: Configuring RDP certificates..."
+
+    local sys_cert_dir="/var/lib/gnome-remote-desktop/.local/share/gnome-remote-desktop/certificates"
+    local sys_cert="$sys_cert_dir/rdp-tls.crt"
+    local sys_key="$sys_cert_dir/rdp-tls.key"
+
+    # Create certificate directory
+    sudo mkdir -p "$sys_cert_dir"
+    sudo chown gnome-remote-desktop:gnome-remote-desktop "$sys_cert_dir"
+
+    # Generate self-signed certificates if missing or empty
+    if [[ ! -f "$sys_cert" ]] || [[ ! -s "$sys_cert" ]]; then
+        print_info "  Generating system RDP certificates..."
+        sudo openssl req -x509 -newkey rsa:4096 \
+            -keyout "$sys_key" \
+            -out "$sys_cert" \
+            -days 365 -nodes \
+            -subj "/CN=gnome-remote-desktop" 2>&1 | grep -v "+" || true
+        sudo chown gnome-remote-desktop:gnome-remote-desktop "$sys_cert" "$sys_key"
+        sudo chmod 600 "$sys_cert" "$sys_key"
+        print_info "  [OK] Certificates generated"
     else
-        print_warning "  RDP certificate not found - will be created when RDP is first enabled"
-        print_info "  Run 'sudo grdctl --system rdp enable' to generate certificate"
+        print_info "  [OK] Certificates already exist"
     fi
+
+    # Configure grdctl to use the certificates
+    sudo grdctl --system rdp set-tls-cert "$sys_cert" 2>&1 | grep -v "TPM" || true
+    sudo grdctl --system rdp set-tls-key "$sys_key" 2>&1 | grep -v "TPM" || true
+
+    print_info "  [OK] System certificates configured"
 }
 
 install_optimizations() {
     print_info "========================================="
-    print_info "Starting SYSTEM-WIDE optimization installation..."
-    print_info "Target: gnome-remote-desktop (Fedora Remote Login)"
+    print_info "Starting RDP optimization installation..."
+    print_info "Target: gnome-remote-desktop (System Service - Auto-Resize)"
     print_info "Ported from Ansible configurations for Terraform/Kubernetes-friendly deployments"
-    
+
     create_backup
-    
+
     # Check if gnome-remote-desktop is installed
     if ! rpm -q gnome-remote-desktop &>/dev/null; then
         print_warning "gnome-remote-desktop not installed. Installing..."
@@ -297,9 +345,31 @@ install_optimizations() {
     configure_mtu_settings
     configure_rdp_certificate
 
-    # Enable gnome-remote-desktop service
-    print_info "Enabling gnome-remote-desktop service..."
-    systemctl --user enable gnome-remote-desktop.service || true
+    # Enable system service
+    print_info "Enabling gnome-remote-desktop system service..."
+    sudo systemctl enable --now gnome-remote-desktop.service || true
+    sudo grdctl --system rdp enable 2>&1 | grep -v "TPM" || true
+    print_info "  [OK] System service enabled (supports auto-resize)"
+
+    # Set RDP credentials
+    if [ -z "$RDP_PASSWORD" ]; then
+        echo ""
+        print_info "RDP credentials required for Remote Login"
+        read -p "Enter RDP username [$RDP_USERNAME]: " input_user
+        RDP_USERNAME="${input_user:-$RDP_USERNAME}"
+        read -s -p "Enter RDP password for $RDP_USERNAME: " RDP_PASSWORD
+        echo ""
+    fi
+
+    if [ -n "$RDP_PASSWORD" ]; then
+        print_info "Setting RDP credentials for $RDP_USERNAME..."
+        sudo grdctl --system rdp set-credentials "$RDP_USERNAME" "$RDP_PASSWORD" 2>&1 | grep -v "TPM" || true
+        sudo systemctl restart gnome-remote-desktop.service 2>/dev/null || true
+        print_info "  [OK] Credentials configured"
+    else
+        print_warning "No password provided - RDP credentials must be set manually"
+        print_info "  Run: sudo grdctl --system rdp set-credentials <user> <password>"
+    fi
 
     # Record installation state
     echo "INSTALLATION_DATE=$(date)" >> "$STATE_FILE"
@@ -315,9 +385,17 @@ install_optimizations() {
     print_info "• Certificate: Added to system trust store"
     print_info ""
     print_info "Next steps:"
-    print_info "Enable RDP: sudo grdctl --system rdp enable"
-    print_info "Set user credentials: sudo grdctl --system rdp set-credentials username password"
+    if [ -n "$RDP_PASSWORD" ]; then
+        print_info "RDP is ready - connect to this machine via RDP"
+        print_info "  Hostname: $(hostname)"
+        print_info "  Port: 3389"
+        print_info "  Username: $RDP_USERNAME"
+    else
+        print_info "Set RDP credentials: sudo grdctl --system rdp set-credentials <user> <password>"
+    fi
     print_info "Reboot to apply all optimizations: sudo reboot"
+    print_info ""
+    print_info "Note: Remote Login mode supports auto-resize to RDP client window size"
     print_info ""
     print_info "Running verification..."
     
