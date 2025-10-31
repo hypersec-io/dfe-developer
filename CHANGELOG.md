@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.1] - 2025-10-31
+
+### Added
+- **[Ansible]** Complete dfe_developer role with Docker, Python (UV), Git, Cloud tools, K8s tools, Utilities
+- **[Ansible]** Mirror validation before system modification
+- **[Ansible]** GNOME detection in pre_tasks as dfe_has_gnome fact
+- **[Ansible]** Repository backups before modification
+- **[Ansible]** git-core PPA for latest Git on Ubuntu
+
+### Changed
+- **[Ansible]** Simplified Python to UV only (no pyenv/pipx)
+- **[Ansible]** Task ordering: repository → utilities → Docker → Python → Git → cloud → k8s
+- **[Ansible]** Renamed dfe_use_aarnet_mirrors → dfe_use_mirrors
+- **[Ansible]** Consolidated Docker into single task file
+- **[Ansible]** Ghostty skipped on Ubuntu (PPA doesn't support noble)
+- **[Ansible]** Each task file adds its own vendor repositories
+
+### Fixed
+- **[Ansible]** Ubuntu 24.04 fully working (78 tasks, 0 failures, fully tested)
+- **[Ansible]** Correct Ubuntu mirror path (/ubuntu/archive/)
+- **[Ansible]** Podman removal ignores errors if not installed
+
 ## [2.4.0] - 2025-10-31
 
 ### Added
