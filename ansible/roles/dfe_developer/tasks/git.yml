@@ -27,6 +27,8 @@
     update_cache: true
   when: ansible_distribution == 'Ubuntu'
 
+# Note: git-subtree is included in git package on Ubuntu, separate on Fedora
+
 - name: Install Git (macOS)
   community.general.homebrew:
     name:

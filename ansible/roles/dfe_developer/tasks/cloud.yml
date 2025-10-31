@@ -1,38 +1,9 @@
 ---
-# Cloud tools installation (AWS CLI, kubectl, Helm, Terraform, Vault)
+# Cloud tools installation (AWS CLI, Helm, Terraform, Vault)
+# Note: kubectl moved to k8s.yml
 
 # ============================================================================
-# ADD KUBERNETES REPOSITORY
-# ============================================================================
-
-# Fedora
-- name: Add Kubernetes repository (Fedora)
-  ansible.builtin.yum_repository:
-    name: kubernetes
-    description: Kubernetes
-    baseurl: https://pkgs.k8s.io/core:/stable:/v1.31/rpm/
-    enabled: true
-    gpgcheck: true
-    gpgkey: https://pkgs.k8s.io/core:/stable:/v1.31/rpm/repodata/repomd.xml.key
-  when: ansible_distribution == 'Fedora'
-
-# Ubuntu
-- name: Add Kubernetes GPG key (Ubuntu)
-  ansible.builtin.get_url:
-    url: https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key
-    dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
-    mode: '0644'
-  when: ansible_distribution == 'Ubuntu'
-
-- name: Add Kubernetes repository (Ubuntu)
-  ansible.builtin.apt_repository:
-    repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /"
-    filename: kubernetes
-    state: present
-  when: ansible_distribution == 'Ubuntu'
-
-# ============================================================================
-# ADD HASHICORP REPOSITORY
+# ADD HASHICORP REPOSITORY (for Terraform, Vault)
 # ============================================================================
 
 # Ubuntu
@@ -50,7 +21,22 @@
     state: present
   when: ansible_distribution == 'Ubuntu'
 
-# Note: Fedora has Terraform/Vault in default repos
+# Fedora - HashiCorp repository
+- name: Import HashiCorp GPG key (Fedora)
+  ansible.builtin.rpm_key:
+    state: present
+    key: https://rpm.releases.hashicorp.com/gpg
+  when: ansible_distribution == 'Fedora'
+
+- name: Add HashiCorp repository (Fedora)
+  ansible.builtin.yum_repository:
+    name: hashicorp
+    description: HashiCorp Stable
+    baseurl: https://rpm.releases.hashicorp.com/fedora/$releasever/$basearch/stable
+    enabled: true
+    gpgcheck: true
+    gpgkey: https://rpm.releases.hashicorp.com/gpg
+  when: ansible_distribution == 'Fedora'
 
 # ============================================================================
 # INSTALL AWS CLI V2
@@ -92,20 +78,6 @@
     - /tmp/awscliv2.zip
     - /tmp/aws
   when: ansible_distribution in ['Fedora', 'Ubuntu']
-
-# kubectl - Installed from repos configured in repository.yml
-- name: Install kubectl (Ubuntu)
-  ansible.builtin.apt:
-    name: kubectl
-    state: present
-    update_cache: true
-  when: ansible_distribution == 'Ubuntu'
-
-- name: Install kubectl (Fedora)
-  ansible.builtin.dnf:
-    name: kubectl
-    state: present
-  when: ansible_distribution == 'Fedora'
 
 # Helm - Script install (works for all Linux)
 - name: Download Helm installer script
