@@ -1,15 +1,20 @@
 ---
 # Docker CE installation main tasks
 
-- name: Include RHEL-based Docker tasks (Fedora, RHEL, CentOS)
+- name: Include Fedora Docker tasks
   ansible.builtin.include_tasks:
     file: fedora.yml
-  when: ansible_os_family == 'RedHat'
+  when: ansible_distribution == 'Fedora'
 
-- name: Include Debian-based Docker tasks (Ubuntu, Debian)
+- name: Include Ubuntu Docker tasks
   ansible.builtin.include_tasks:
     file: ubuntu.yml
-  when: ansible_os_family == 'Debian'
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Include macOS Docker tasks
+  ansible.builtin.include_tasks:
+    file: macos.yml
+  when: ansible_distribution == 'MacOSX'
 
 - name: Add user to docker group
   ansible.builtin.user:
