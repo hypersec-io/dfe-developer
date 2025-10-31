@@ -1,87 +1,8 @@
 ---
 # Python development tools installation
-# Installs: pyenv, pipx, UV package manager
+# UV package manager only - manages Python versions and packages (replaces pip, pyenv, pipx)
 
-# Install Python build dependencies
-- name: Install Python build dependencies (Fedora)
-  ansible.builtin.dnf:
-    name:
-      - make
-      - gcc
-      - zlib-devel
-      - bzip2-devel
-      - readline-devel
-      - sqlite-devel
-      - openssl-devel
-      - tk-devel
-      - libffi-devel
-      - xz-devel
-    state: present
-  when: ansible_distribution == 'Fedora'
-
-- name: Install Python build dependencies (Ubuntu)
-  ansible.builtin.apt:
-    name:
-      - make
-      - build-essential
-      - libssl-dev
-      - zlib1g-dev
-      - libbz2-dev
-      - libreadline-dev
-      - libsqlite3-dev
-      - curl
-      - git
-      - libncursesw5-dev
-      - xz-utils
-      - tk-dev
-      - libxml2-dev
-      - libxmlsec1-dev
-      - libffi-dev
-      - liblzma-dev
-    state: present
-  when: ansible_distribution == 'Ubuntu'
-
-# Install pyenv
-- name: Check if pyenv is already installed
-  ansible.builtin.stat:
-    path: "{{ ansible_env.HOME }}/.pyenv"
-  register: pyenv_installed
-  become: false
-
-- name: Install pyenv via installer
-  ansible.builtin.shell: |
-    curl https://pyenv.run | bash
-  args:
-    creates: "{{ ansible_env.HOME }}/.pyenv/bin/pyenv"
-  become: false
-  when: not pyenv_installed.stat.exists
-
-# Install pipx
-- name: Install pipx (Fedora)
-  ansible.builtin.dnf:
-    name: pipx
-    state: present
-  when: ansible_distribution == 'Fedora'
-
-- name: Install pipx (Ubuntu)
-  ansible.builtin.apt:
-    name: pipx
-    state: present
-  when: ansible_distribution == 'Ubuntu'
-
-- name: Install pipx (macOS)
-  community.general.homebrew:
-    name: pipx
-    state: present
-  when: ansible_distribution == 'MacOSX'
-
-- name: Ensure pipx binaries are in PATH
-  ansible.builtin.command: pipx ensurepath
-  become: false
-  changed_when: false
-  failed_when: false
-
-# Install UV package manager
+# Install UV package manager (standalone, no dependencies needed)
 - name: Download UV installer
   ansible.builtin.get_url:
     url: https://astral.sh/uv/install.sh
@@ -102,3 +23,14 @@
     path: /tmp/uv-install.sh
     state: absent
   become: false
+
+- name: Display UV installation info
+  ansible.builtin.debug:
+    msg: |
+      UV installed successfully
+      Usage:
+        uv python install 3.12      # Install Python 3.12
+        uv python list               # List available Python versions
+        uv venv                      # Create virtual environment
+        uv pip install <package>     # Install packages
+      UV replaces: pip, pyenv, pipx, virtualenv
