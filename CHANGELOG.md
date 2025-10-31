@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2025-10-31
+
+### Added
+- **[Ansible]** Ansible-based deployment system for cross-platform support
+- **[Ansible]** install.sh bootstrap script for Ubuntu, Fedora, and macOS
+- **[Ansible]** Role-based architecture (4 roles matching bash scripts)
+- **[Ansible]** dfe_developer role (Docker installation working on Ubuntu + Fedora)
+- **[Ansible]** Task-based organization with distro conditionals inside tasks
+- **[Ansible]** Complete role structure for all components (stubs created)
+- **[Ansible]** Ansible 12+ compatibility with modern callback plugins
+- **[Ansible]** Tested successfully on Ubuntu 24.04 and Fedora 42
+
+### Changed
+- **[Project]** Multi-platform support via Ansible (Ubuntu, Fedora, macOS)
+- **[Project]** Declarative infrastructure-as-code approach
+- **[Project]** Idempotent deployments (safe to re-run)
+
 ## [2.3.4] - 2025-10-31
 
 ### Fixed
