@@ -92,13 +92,6 @@
 # INSTALL DOCKER DESKTOP (GUI)
 # ============================================================================
 
-- name: Check if GNOME is running
-  ansible.builtin.command: pgrep -x gnome-shell
-  register: gnome_check
-  failed_when: false
-  changed_when: false
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
-
 # Fedora Docker Desktop
 - block:
     - name: Download Docker Desktop RPM (Fedora)
@@ -119,7 +112,7 @@
         state: absent
   when:
     - ansible_distribution == 'Fedora'
-    - gnome_check.rc == 0
+    - dfe_has_gnome | default(false)
     - dfe_docker_install_desktop | default(true)
 
 # Ubuntu Docker Desktop
@@ -141,7 +134,7 @@
         state: absent
   when:
     - ansible_distribution == 'Ubuntu'
-    - gnome_check.rc == 0
+    - dfe_has_gnome | default(false)
     - dfe_docker_install_desktop | default(true)
 
 # ============================================================================

@@ -34,6 +34,12 @@
         line: "baseurl={{ dfe_mirror_url }}/fedora/linux/updates/$releasever/Everything/$basearch/"
         state: present
 
+    - name: Create DNF conf.d directory
+      ansible.builtin.file:
+        path: /etc/dnf/dnf.conf.d
+        state: directory
+        mode: '0755'
+
     - name: Configure DNF performance settings
       ansible.builtin.copy:
         dest: /etc/dnf/dnf.conf.d/99-performance.conf

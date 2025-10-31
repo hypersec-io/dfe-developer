@@ -1,6 +1,61 @@
 ---
 # Cloud tools installation (AWS CLI, kubectl, Helm, Terraform, Vault)
 
+# ============================================================================
+# ADD KUBERNETES REPOSITORY
+# ============================================================================
+
+# Fedora
+- name: Add Kubernetes repository (Fedora)
+  ansible.builtin.yum_repository:
+    name: kubernetes
+    description: Kubernetes
+    baseurl: https://pkgs.k8s.io/core:/stable:/v1.31/rpm/
+    enabled: true
+    gpgcheck: true
+    gpgkey: https://pkgs.k8s.io/core:/stable:/v1.31/rpm/repodata/repomd.xml.key
+  when: ansible_distribution == 'Fedora'
+
+# Ubuntu
+- name: Add Kubernetes GPG key (Ubuntu)
+  ansible.builtin.get_url:
+    url: https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key
+    dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
+    mode: '0644'
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Add Kubernetes repository (Ubuntu)
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /"
+    filename: kubernetes
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+# ============================================================================
+# ADD HASHICORP REPOSITORY
+# ============================================================================
+
+# Ubuntu
+- name: Add HashiCorp GPG key (Ubuntu)
+  ansible.builtin.get_url:
+    url: https://apt.releases.hashicorp.com/gpg
+    dest: /usr/share/keyrings/hashicorp-archive-keyring.asc
+    mode: '0644'
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Add HashiCorp repository (Ubuntu)
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.asc] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main"
+    filename: hashicorp
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+# Note: Fedora has Terraform/Vault in default repos
+
+# ============================================================================
+# INSTALL AWS CLI V2
+# ============================================================================
+
 # AWS CLI v2 (binary install - no apt repo available)
 - name: Download AWS CLI v2 installer
   ansible.builtin.get_url:

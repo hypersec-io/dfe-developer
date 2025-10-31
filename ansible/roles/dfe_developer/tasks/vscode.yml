@@ -8,7 +8,14 @@
     state: present
   when: ansible_distribution == 'Fedora'
 
-# Ubuntu
+# Ubuntu - Add Microsoft repository
+- name: Create APT keyrings directory (Ubuntu)
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+  when: ansible_distribution == 'Ubuntu'
+
 - name: Add Microsoft GPG key (Ubuntu)
   ansible.builtin.get_url:
     url: https://packages.microsoft.com/keys/microsoft.asc

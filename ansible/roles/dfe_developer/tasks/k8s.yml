@@ -77,14 +77,7 @@
     mode: '0755'
   when: ansible_distribution in ['Fedora', 'Ubuntu']
 
-# Freelens - Flatpak
-- name: Check if GNOME is running
-  ansible.builtin.command: pgrep -x gnome-shell
-  register: gnome_check
-  failed_when: false
-  changed_when: false
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
-
+# Freelens - Flatpak (GUI only)
 - name: Ensure Flathub remote configured
   community.general.flatpak_remote:
     name: flathub
@@ -94,7 +87,7 @@
   become: false
   when:
     - ansible_distribution in ['Fedora', 'Ubuntu']
-    - gnome_check.rc == 0
+    - dfe_has_gnome | default(false)
 
 - name: Install Freelens
   community.general.flatpak:
@@ -106,7 +99,7 @@
     FLATPAK_TTY_PROGRESS: "0"
   when:
     - ansible_distribution in ['Fedora', 'Ubuntu']
-    - gnome_check.rc == 0
+    - dfe_has_gnome | default(false)
 
 # dive - Docker image analyzer
 - name: Get latest dive version

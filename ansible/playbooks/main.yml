@@ -28,18 +28,32 @@
         (ansible_distribution == 'Fedora' and ansible_distribution_major_version|int < 42) or
         (ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('24.04', '<'))
 
+    - name: Detect if GNOME is running
+      ansible.builtin.command: pgrep -x gnome-shell
+      register: gnome_running_check
+      failed_when: false
+      changed_when: false
+
+    - name: Set GNOME availability fact
+      ansible.builtin.set_fact:
+        dfe_has_gnome: "{{ gnome_running_check.rc == 0 }}"
+
+    - name: Display GNOME status
+      ansible.builtin.debug:
+        msg: "GNOME desktop: {{ 'Detected' if dfe_has_gnome else 'Not detected' }}"
+
   roles:
     - role: dfe_developer
       tags: ['developer', 'base']
 
-    - role: dfe_developer_core
-      tags: ['core', 'advanced']
+    # - role: dfe_developer_core
+    #   tags: ['core', 'advanced']
 
-    - role: dfe_vm_optimizer
-      tags: ['vm', 'optimizer']
+    # - role: dfe_vm_optimizer
+    #   tags: ['vm', 'optimizer']
 
-    - role: dfe_rdp_optimizer
-      tags: ['rdp', 'optimizer']
+    # - role: dfe_rdp_optimizer
+    #   tags: ['rdp', 'optimizer']
 
   post_tasks:
     - name: Display completion message
