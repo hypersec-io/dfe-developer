@@ -38,14 +38,17 @@ fi
 # Check OS immediately - must be Fedora
 require_distro "fedora" "Fedora Linux"
 
+# Detect target user (the one running the desktop session)
+TARGET_USER="${SUDO_USER:-$USER}"
+
 # Script metadata
 SCRIPT_NAME="$(basename "$0")"
 SCRIPT_DESCRIPTION="Gnome Shell RDP optimiser"
-STATE_FILE="$HOME/.rdp-optimizer.state"
-BACKUP_DIR="$HOME/.rdp-optimizer-backup-$(date +%Y%m%d-%H%M%S)"
+STATE_FILE="/home/$TARGET_USER/.rdp-optimizer.state"
+BACKUP_DIR="/home/$TARGET_USER/.rdp-optimizer-backup-$(date +%Y%m%d-%H%M%S)"
 
 # Export for common functions
-export SCRIPT_NAME SCRIPT_DESCRIPTION
+export SCRIPT_NAME SCRIPT_DESCRIPTION TARGET_USER
 
 
 # Helper function to update dconf database
@@ -253,35 +256,43 @@ EOF"
 # Configure RDP certificate trust
 configure_rdp_certificate() {
     print_info "Step 5: Configuring RDP certificate trust..."
-    
-    local cert_file="/var/lib/gnome-remote-desktop/.local/share/gnome-remote-desktop/certificates/rdp-tls.crt"
+
+    local user_cert="/home/$TARGET_USER/.local/share/gnome-remote-desktop/certificates/rdp-tls.crt"
     local system_cert="/etc/pki/ca-trust/source/anchors/gnome-remote-desktop-rdp.crt"
     local info_file="/etc/gnome-remote-desktop-cert-info.txt"
-    
-    if [[ -f "$cert_file" ]]; then
+
+    if [[ -f "$user_cert" ]]; then
         # Copy certificate to system trust store
-        cp "$cert_file" "$system_cert"
+        sudo cp "$user_cert" "$system_cert"
         update_ca_trust_safe
-        
+
         # Create certificate info file
-        create_certificate_info "$info_file" "$cert_file"
-        
+        create_certificate_info "$user_cert" "$info_file"
+
         print_info "  [OK] RDP certificate added to system trust store"
         print_info "  [OK] Certificate info saved to $info_file"
     else
         print_warning "  RDP certificate not found - will be created when RDP is first enabled"
-        print_info "  Run 'sudo grdctl --system rdp enable' to generate certificate"
+        print_info "  Certificate will be at: $user_cert"
     fi
 }
 
 install_optimizations() {
     print_info "========================================="
-    print_info "Starting SYSTEM-WIDE optimization installation..."
-    print_info "Target: gnome-remote-desktop (Fedora Remote Login)"
+    print_info "Starting USER-SESSION optimization installation..."
+    print_info "Target: gnome-remote-desktop (User Session - Auto-Resize)"
     print_info "Ported from Ansible configurations for Terraform/Kubernetes-friendly deployments"
-    
+
     create_backup
-    
+
+    # Remediate old system-based deployment if detected
+    if systemctl is-enabled gnome-remote-desktop.service &>/dev/null 2>&1; then
+        print_warning "Old system-based RDP deployment detected - remediating..."
+        print_info "  Disabling system service..."
+        sudo systemctl disable --now gnome-remote-desktop.service 2>/dev/null || true
+        print_info "  [OK] Old system service disabled"
+    fi
+
     # Check if gnome-remote-desktop is installed
     if ! rpm -q gnome-remote-desktop &>/dev/null; then
         print_warning "gnome-remote-desktop not installed. Installing..."
@@ -297,9 +308,11 @@ install_optimizations() {
     configure_mtu_settings
     configure_rdp_certificate
 
-    # Enable gnome-remote-desktop service
-    print_info "Enabling gnome-remote-desktop service..."
-    systemctl --user enable gnome-remote-desktop.service || true
+    # Enable gnome-remote-desktop user service (not system service)
+    print_info "Enabling gnome-remote-desktop user service for $TARGET_USER..."
+    sudo loginctl enable-linger "$TARGET_USER" || true
+    sudo -u "$TARGET_USER" XDG_RUNTIME_DIR="/run/user/$(id -u "$TARGET_USER")" systemctl --user enable --now gnome-remote-desktop.service || true
+    print_info "  [OK] User service enabled (will auto-resize to RDP client window)"
 
     # Record installation state
     echo "INSTALLATION_DATE=$(date)" >> "$STATE_FILE"
@@ -315,8 +328,11 @@ install_optimizations() {
     print_info "• Certificate: Added to system trust store"
     print_info ""
     print_info "Next steps:"
-    print_info "Enable RDP: sudo grdctl --system rdp enable"
-    print_info "Set user credentials: sudo grdctl --system rdp set-credentials username password"
+    print_info "Enable RDP: sudo -u $TARGET_USER XDG_RUNTIME_DIR=/run/user/\$(id -u $TARGET_USER) grdctl rdp enable"
+    print_info "Set credentials: sudo -u $TARGET_USER XDG_RUNTIME_DIR=/run/user/\$(id -u $TARGET_USER) grdctl rdp set-credentials <user> <password>"
+    print_info ""
+    print_info "Note: User-session RDP will auto-resize to match RDP client window size"
+    print_info "Note: User must be logged into GNOME (linger keeps service running after logout)"
     print_info "Reboot to apply all optimizations: sudo reboot"
     print_info ""
     print_info "Running verification..."
