@@ -61,6 +61,7 @@
       - toolbox
     state: absent
   when: ansible_distribution == 'Fedora'
+  failed_when: false  # OK if packages don't exist
 
 # ============================================================================
 # INSTALL DOCKER PACKAGES
