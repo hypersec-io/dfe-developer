@@ -37,7 +37,7 @@
 
     - name: Download Docker Desktop RPM
       ansible.builtin.get_url:
-        url: https://desktop.docker.com/linux/main/amd64/docker-desktop-x86_64.rpm
+        url: "{{ dfe_docker_desktop_url_fedora }}"
         dest: /tmp/docker-desktop.rpm
         mode: '0644'
       when: gnome_check.rc == 0 and dfe_docker_install_desktop

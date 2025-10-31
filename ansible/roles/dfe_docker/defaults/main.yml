@@ -4,3 +4,15 @@ dfe_docker_users:
   - "{{ ansible_user_id }}"
 
 dfe_docker_install_desktop: true  # Install Docker Desktop if GUI present
+
+# Docker repository URLs (abstracted for flexibility)
+dfe_docker_repo_base_url: "https://download.docker.com/linux"
+dfe_docker_gpg_url_ubuntu: "{{ dfe_docker_repo_base_url }}/ubuntu/gpg"
+dfe_docker_gpg_url_fedora: "{{ dfe_docker_repo_base_url }}/fedora/gpg"
+
+# Docker Desktop download URLs
+dfe_docker_desktop_url_ubuntu: "https://desktop.docker.com/linux/main/amd64/docker-desktop-amd64.deb"
+dfe_docker_desktop_url_fedora: "https://desktop.docker.com/linux/main/amd64/docker-desktop-x86_64.rpm"
+
+# Architecture (use dpkg for Ubuntu/Debian, uname for others)
+dfe_docker_arch: "amd64"
