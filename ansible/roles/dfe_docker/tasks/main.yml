@@ -1,0 +1,40 @@
+---
+# Docker CE installation main tasks
+
+- name: Include Fedora Docker tasks
+  ansible.builtin.include_tasks:
+    file: fedora.yml
+  when: ansible_distribution == 'Fedora'
+
+- name: Include Ubuntu Docker tasks
+  ansible.builtin.include_tasks:
+    file: ubuntu.yml
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Include Debian Docker tasks
+  ansible.builtin.include_tasks:
+    file: debian.yml
+  when: ansible_distribution == 'Debian'
+
+- name: Add user to docker group
+  ansible.builtin.user:
+    name: "{{ item }}"
+    groups: docker
+    append: true
+  loop: "{{ dfe_docker_users }}"
+  notify: Inform user to logout
+
+- name: Enable and start Docker service
+  ansible.builtin.systemd:
+    name: docker
+    enabled: true
+    state: started
+
+- name: Verify Docker installation
+  ansible.builtin.command: docker --version
+  register: docker_version
+  changed_when: false
+
+- name: Display Docker version
+  ansible.builtin.debug:
+    msg: "Docker installed: {{ docker_version.stdout }}"

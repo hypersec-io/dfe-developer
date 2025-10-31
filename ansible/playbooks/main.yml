@@ -1,0 +1,64 @@
+---
+# DFE Developer Environment - Main Playbook
+# Installs and configures complete development environment
+#
+# Usage:
+#   ansible-playbook playbooks/main.yml
+#   ansible-playbook playbooks/main.yml --check         # Dry-run
+#   ansible-playbook playbooks/main.yml --tags docker   # Specific tags
+
+- name: DFE Developer Environment Setup
+  hosts: localhost
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    - name: Display system information
+      ansible.builtin.debug:
+        msg: |
+          OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+          Architecture: {{ ansible_architecture }}
+          Python: {{ ansible_python_version }}
+
+    - name: Validate supported operating system
+      ansible.builtin.fail:
+        msg: "Unsupported OS: {{ ansible_distribution }} {{ ansible_distribution_version }}"
+      when: >
+        (ansible_distribution not in ['Fedora', 'Ubuntu', 'Debian']) or
+        (ansible_distribution == 'Fedora' and ansible_distribution_major_version|int < 42) or
+        (ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('24.04', '<'))
+
+  roles:
+    - role: dfe_docker
+      tags: ['docker', 'core']
+
+    - role: dfe_python
+      tags: ['python', 'core']
+
+    - role: dfe_git
+      tags: ['git', 'core']
+
+    - role: dfe_cloud_tools
+      tags: ['cloud', 'kubectl', 'helm', 'terraform']
+
+    - role: dfe_k8s_tools
+      tags: ['k8s', 'kubernetes']
+
+    - role: dfe_vscode
+      tags: ['vscode', 'ide']
+      when: ansible_env.DISPLAY is defined or ansible_env.WAYLAND_DISPLAY is defined
+
+    - role: dfe_ghostty
+      tags: ['ghostty', 'terminal']
+      when: dfe_install_ghostty | default(true) | bool
+
+  post_tasks:
+    - name: Display completion message
+      ansible.builtin.debug:
+        msg: |
+          DFE Developer Environment installation complete!
+
+          Next steps:
+          1. Log out and back in for Docker group membership
+          2. Verify: docker --version, kubectl version, python3 --version
+          3. Configure your tools (Git, AWS CLI, etc.)
