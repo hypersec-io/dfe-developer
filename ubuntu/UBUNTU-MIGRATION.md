@@ -156,32 +156,33 @@ Add vendor-specific APT repositories when needed:
 - [ ] install-dfe-developer.sh Ubuntu port
   - Docker CE from official repository
   - Python development (pyenv, pipx, UV)
-  - Cloud tools (AWS CLI, kubectl, Helm, Terraform)
+  - Cloud tools (kubectl, Helm, Terraform from APT repos; AWS CLI binary)
+  - Kubernetes tools (k9s, kubectx, Minikube, ArgoCD - binary downloads)
   - Git and GitHub CLI
-  - Development utilities (jq, yq, bat, fzf, ripgrep)
+  - Development utilities (jq, yq, bat, fzf, ripgrep, dive)
   - VS Code from Microsoft repository
+  - Ghostty terminal (mkasberg PPA) - REQUIRED
+  - Automatic security updates configuration
 
 ### Phase 2: Advanced Tools
 - [ ] install-dfe-developer-core.sh Ubuntu port
   - JFrog CLI
-  - Azure CLI
+  - Azure CLI (Microsoft APT repo)
   - Node.js (NodeSource repository)
   - Linear CLI
+  - Slack (Flatpak)
 
-### Phase 3: Optimizations (If Applicable)
-- [ ] VM optimizer (if applicable to Ubuntu VMs)
-- [ ] RDP optimizer (if using gnome-remote-desktop on Ubuntu)
+### Phase 3: Optimizations
+- [ ] install-vm-optimizer.sh Ubuntu port
+- [ ] install-rdp-optimizer.sh Ubuntu port
 
-### Phase 4: Terminal (Optional)
-- [ ] Ghostty terminal emulator
-  - Available via mkasberg/ghostty-ubuntu PPA
-  - Latest version 1.2.3 for Ubuntu 24.04
-  - Install command: Quick install script or PPA
-  - Same Solarized Dark config as Fedora
+### Phase 4: Integration
+- [ ] install-all.sh Ubuntu port (runs all scripts in order)
 
 ### Out of Scope
 - Fedora-specific COPR repositories
 - Fedora-specific kernel optimizations
+- Debian support (future consideration)
 
 ## Test Environment
 
