@@ -1,7 +1,14 @@
 ---
 # Git and version control tools installation
 
-# Install Git (all platforms)
+# Add git-core PPA for latest version (Ubuntu)
+- name: Add git-core PPA for latest Git (Ubuntu)
+  ansible.builtin.apt_repository:
+    repo: ppa:git-core/ppa
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+# Install Git
 - name: Install Git (Fedora)
   ansible.builtin.dnf:
     name:
@@ -10,12 +17,6 @@
       - git-subtree
     state: present
   when: ansible_distribution == 'Fedora'
-
-- name: Add official Git PPA for latest version (Ubuntu)
-  ansible.builtin.apt_repository:
-    repo: ppa:git-core/ppa
-    state: present
-  when: ansible_distribution == 'Ubuntu'
 
 - name: Install Git (Ubuntu)
   ansible.builtin.apt:

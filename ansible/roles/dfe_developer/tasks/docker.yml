@@ -1,23 +1,179 @@
 ---
-# Docker CE installation - main entry point
+# Docker CE installation
 
-- name: Add Docker repository
-  ansible.builtin.include_tasks:
-    file: repository.yml
+# ============================================================================
+# ADD DOCKER REPOSITORY
+# ============================================================================
 
-- name: Install Docker packages
-  ansible.builtin.include_tasks:
-    file: packages.yml
+# Fedora
+- name: Add Docker repository (Fedora)
+  ansible.builtin.command:
+    cmd: dnf config-manager addrepo --from-repofile=https://download.docker.com/linux/fedora/docker-ce.repo --overwrite
+  args:
+    creates: /etc/yum.repos.d/docker-ce.repo
+  when: ansible_distribution == 'Fedora'
 
-- name: Install Docker Desktop (GUI)
-  ansible.builtin.include_tasks:
-    file: desktop.yml
-  when: dfe_docker_install_desktop | default(true)
+# Ubuntu
+- name: Create Docker GPG keyring directory (Ubuntu)
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+  when: ansible_distribution == 'Ubuntu'
 
-- name: Configure Docker
-  ansible.builtin.include_tasks:
-    file: configure.yml
+- name: Add Docker GPG key (Ubuntu)
+  ansible.builtin.get_url:
+    url: "{{ dfe_docker_gpg_url }}"
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+  when: ansible_distribution == 'Ubuntu'
 
-- name: Verify Docker installation
-  ansible.builtin.include_tasks:
-    file: verify.yml
+- name: Add Docker repository (Ubuntu)
+  ansible.builtin.apt_repository:
+    repo: "deb [arch={{ dfe_docker_arch }} signed-by=/etc/apt/keyrings/docker.asc] {{ dfe_docker_repo_url }} {{ ansible_distribution_release }} stable"
+    filename: docker
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Update APT cache (Ubuntu)
+  ansible.builtin.apt:
+    update_cache: true
+  when: ansible_distribution == 'Ubuntu'
+
+# macOS
+- name: Install Docker Desktop via Homebrew (macOS)
+  community.general.homebrew_cask:
+    name: docker
+    state: present
+  when: ansible_distribution == 'MacOSX'
+
+# ============================================================================
+# REMOVE CONFLICTING PACKAGES
+# ============================================================================
+
+- name: Remove Podman (conflicts with Docker on Fedora)
+  ansible.builtin.dnf:
+    name:
+      - podman
+      - podman-docker
+      - buildah
+      - skopeo
+      - toolbox
+    state: absent
+  when: ansible_distribution == 'Fedora'
+
+# ============================================================================
+# INSTALL DOCKER PACKAGES
+# ============================================================================
+
+- name: Install Docker CE (Fedora)
+  ansible.builtin.dnf:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+  when: ansible_distribution == 'Fedora'
+
+- name: Install Docker CE (Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+# ============================================================================
+# INSTALL DOCKER DESKTOP (GUI)
+# ============================================================================
+
+- name: Check if GNOME is running
+  ansible.builtin.command: pgrep -x gnome-shell
+  register: gnome_check
+  failed_when: false
+  changed_when: false
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+# Fedora Docker Desktop
+- block:
+    - name: Download Docker Desktop RPM (Fedora)
+      ansible.builtin.get_url:
+        url: "{{ dfe_docker_desktop_url_fedora }}"
+        dest: /tmp/docker-desktop.rpm
+        mode: '0644'
+
+    - name: Install Docker Desktop (Fedora)
+      ansible.builtin.dnf:
+        name: /tmp/docker-desktop.rpm
+        state: present
+        disable_gpg_check: true
+
+    - name: Remove Docker Desktop RPM (Fedora)
+      ansible.builtin.file:
+        path: /tmp/docker-desktop.rpm
+        state: absent
+  when:
+    - ansible_distribution == 'Fedora'
+    - gnome_check.rc == 0
+    - dfe_docker_install_desktop | default(true)
+
+# Ubuntu Docker Desktop
+- block:
+    - name: Download Docker Desktop DEB (Ubuntu)
+      ansible.builtin.get_url:
+        url: "{{ dfe_docker_desktop_url_ubuntu }}"
+        dest: /tmp/docker-desktop.deb
+        mode: '0644'
+
+    - name: Install Docker Desktop (Ubuntu)
+      ansible.builtin.apt:
+        deb: /tmp/docker-desktop.deb
+        state: present
+
+    - name: Remove Docker Desktop DEB (Ubuntu)
+      ansible.builtin.file:
+        path: /tmp/docker-desktop.deb
+        state: absent
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - gnome_check.rc == 0
+    - dfe_docker_install_desktop | default(true)
+
+# ============================================================================
+# CONFIGURE DOCKER
+# ============================================================================
+
+- name: Add users to docker group
+  ansible.builtin.user:
+    name: "{{ item }}"
+    groups: docker
+    append: true
+  loop: "{{ dfe_docker_users }}"
+  notify: Inform user to logout
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+- name: Enable and start Docker service
+  ansible.builtin.systemd:
+    name: docker
+    enabled: true
+    state: started
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+# ============================================================================
+# VERIFY INSTALLATION
+# ============================================================================
+
+- name: Verify Docker is installed
+  ansible.builtin.command: docker --version
+  register: docker_version
+  changed_when: false
+  failed_when: docker_version.rc != 0
+
+- name: Display Docker version
+  ansible.builtin.debug:
+    msg: "Docker installed: {{ docker_version.stdout }}"

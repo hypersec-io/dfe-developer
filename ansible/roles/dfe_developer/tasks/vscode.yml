@@ -1,3 +1,38 @@
 ---
-# TODO: Implement vscode installation tasks
+# VS Code installation
+# Repository configured in repository.yml
 
+- name: Install VS Code (Fedora)
+  ansible.builtin.dnf:
+    name: code
+    state: present
+  when: ansible_distribution == 'Fedora'
+
+# Ubuntu
+- name: Add Microsoft GPG key (Ubuntu)
+  ansible.builtin.get_url:
+    url: https://packages.microsoft.com/keys/microsoft.asc
+    dest: /etc/apt/keyrings/packages.microsoft.asc
+    mode: '0644'
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Add VS Code repository (Ubuntu)
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/packages.microsoft.asc] https://packages.microsoft.com/repos/code stable main"
+    filename: vscode
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install VS Code (Ubuntu)
+  ansible.builtin.apt:
+    name: code
+    state: present
+    update_cache: true
+  when: ansible_distribution == 'Ubuntu'
+
+# macOS
+- name: Install VS Code (macOS)
+  community.general.homebrew_cask:
+    name: visual-studio-code
+    state: present
+  when: ansible_distribution == 'MacOSX'
