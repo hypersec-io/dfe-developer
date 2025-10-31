@@ -1,12 +1,13 @@
 # Ubuntu Migration Planning
 
-This document outlines the migration of DFE developer environment from Fedora to Ubuntu 24.04 LTS (Noble Numbat).
+This document outlines the migration of DFE developer environment from Fedora to Ubuntu 24+.
 
 ## Target Platform
 
-**Ubuntu 24.04 LTS (Noble Numbat)**
-- Desktop Edition with GNOME 46
+**Ubuntu 24.04 LTS (Noble Numbat) and later**
+- Desktop Edition with GNOME 46+
 - LTS support until 2029
+- Supports Ubuntu 24.04, 24.10, and future 24+ releases
 - Existing manually installed system (VM or physical)
 
 ## Package Management Strategy
@@ -288,11 +289,17 @@ Each script will be tested in order on fresh VM snapshots (VM 2006).
 4. Test Docker: `docker run hello-world`
 5. Test kubectl: `kubectl version --client`
 6. Test Helm: `helm version`
+7. **Reboot VM**: `ssh dfe@dfe-dev-u.tyrell.com.au "sudo reboot"`
+8. Wait 30s, reconnect and re-verify all tools work
+9. Re-run script to verify idempotency
 
 **Success Criteria:**
 - [ ] All tools install without errors
 - [ ] Docker works without sudo (after re-login)
 - [ ] All verification checks pass
+- [ ] **VM reboots successfully**
+- [ ] **All services start after reboot**
+- [ ] **All tools still work post-reboot**
 - [ ] Script is idempotent (can re-run)
 
 ### 2. install-dfe-developer-core.sh
@@ -364,14 +371,22 @@ Each script will be tested in order on fresh VM snapshots (VM 2006).
    - No duplicate installations
    - Proper execution order
    - All services started
-4. Reboot and verify persistence
-5. Full integration test
+4. **Reboot VM**: `ssh dfe@dfe-dev-u.tyrell.com.au "sudo reboot"`
+5. Wait 30s, reconnect and verify persistence:
+   - Docker service running
+   - All tools available
+   - RDP service running (if installed)
+   - All verifications pass
+6. Full integration test
 
 **Success Criteria:**
 - [ ] Complete installation without errors
 - [ ] No duplicate installations
 - [ ] All verification checks pass
-- [ ] System ready for development work after reboot
+- [ ] **VM reboots successfully**
+- [ ] **All services auto-start after reboot**
+- [ ] **Docker, RDP, and all tools work post-reboot**
+- [ ] System ready for development work
 
 ## Success Criteria
 
@@ -389,13 +404,13 @@ Ubuntu port is successful when:
 
 ## Timeline Estimate
 
-**Ubuntu 24.04 port**: 3-4 days
+**Ubuntu 24+ port**: 3-4 days
 - Day 1: lib.sh updates, install-dfe-developer.sh conversion and testing
 - Day 2: install-dfe-developer-core.sh, testing and bug fixes
 - Day 3: VM and RDP optimizers, install-all.sh
-- Day 4: Final integration testing, documentation, cleanup
+- Day 4: Final integration testing with reboots, documentation, cleanup
 
-**Note:** Debian support is OUT OF SCOPE for this phase.
+**Note:** Supports Ubuntu 24.04 LTS and later releases (24.10, future 24.x). Debian support is OUT OF SCOPE.
 
 ## Next Steps
 
