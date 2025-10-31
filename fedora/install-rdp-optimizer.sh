@@ -6,7 +6,11 @@
 # Designed for GNOME Remote Login feature (not desktop sharing)
 #
 # USAGE:
-#   ./install-rdp-optimizer.sh
+#   ./install-rdp-optimizer.sh [--password PASSWORD] [--username USERNAME]
+#
+# OPTIONS:
+#   --password PASSWORD    Set RDP password (will prompt if not provided)
+#   --username USERNAME    Set RDP username (defaults to current user)
 #
 # OPTIMIZES:
 #   - TCP BBR congestion control for mobile performance
@@ -35,11 +39,42 @@ else
     exit 1
 fi
 
+# Parse command line arguments
+RDP_PASSWORD=""
+RDP_USERNAME=""
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --password)
+            RDP_PASSWORD="$2"
+            shift 2
+            ;;
+        --username)
+            RDP_USERNAME="$2"
+            shift 2
+            ;;
+        --help)
+            echo "Usage: $0 [--password PASSWORD] [--username USERNAME]"
+            echo ""
+            echo "Options:"
+            echo "  --password PASSWORD    Set RDP password (will prompt if not provided)"
+            echo "  --username USERNAME    Set RDP username (defaults to current user)"
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
+done
+
 # Check OS immediately - must be Fedora
 require_distro "fedora" "Fedora Linux"
 
 # Detect target user (the one running the desktop session)
 TARGET_USER="${SUDO_USER:-$USER}"
+RDP_USERNAME="${RDP_USERNAME:-$TARGET_USER}"
 
 # Script metadata
 SCRIPT_NAME="$(basename "$0")"
@@ -313,8 +348,28 @@ install_optimizations() {
     # Enable system service
     print_info "Enabling gnome-remote-desktop system service..."
     sudo systemctl enable --now gnome-remote-desktop.service || true
-    sudo grdctl --system rdp enable >/dev/null 2>&1 || true
+    sudo grdctl --system rdp enable 2>&1 | grep -v "TPM" || true
     print_info "  [OK] System service enabled (supports auto-resize)"
+
+    # Set RDP credentials
+    if [ -z "$RDP_PASSWORD" ]; then
+        echo ""
+        print_info "RDP credentials required for Remote Login"
+        read -p "Enter RDP username [$RDP_USERNAME]: " input_user
+        RDP_USERNAME="${input_user:-$RDP_USERNAME}"
+        read -s -p "Enter RDP password for $RDP_USERNAME: " RDP_PASSWORD
+        echo ""
+    fi
+
+    if [ -n "$RDP_PASSWORD" ]; then
+        print_info "Setting RDP credentials for $RDP_USERNAME..."
+        sudo grdctl --system rdp set-credentials "$RDP_USERNAME" "$RDP_PASSWORD" 2>&1 | grep -v "TPM" || true
+        sudo systemctl restart gnome-remote-desktop.service 2>/dev/null || true
+        print_info "  [OK] Credentials configured"
+    else
+        print_warning "No password provided - RDP credentials must be set manually"
+        print_info "  Run: sudo grdctl --system rdp set-credentials <user> <password>"
+    fi
 
     # Record installation state
     echo "INSTALLATION_DATE=$(date)" >> "$STATE_FILE"
@@ -330,7 +385,14 @@ install_optimizations() {
     print_info "• Certificate: Added to system trust store"
     print_info ""
     print_info "Next steps:"
-    print_info "Set RDP credentials: sudo grdctl --system rdp set-credentials <user> <password>"
+    if [ -n "$RDP_PASSWORD" ]; then
+        print_info "RDP is ready - connect to this machine via RDP"
+        print_info "  Hostname: $(hostname)"
+        print_info "  Port: 3389"
+        print_info "  Username: $RDP_USERNAME"
+    else
+        print_info "Set RDP credentials: sudo grdctl --system rdp set-credentials <user> <password>"
+    fi
     print_info "Reboot to apply all optimizations: sudo reboot"
     print_info ""
     print_info "Note: Remote Login mode supports auto-resize to RDP client window size"
