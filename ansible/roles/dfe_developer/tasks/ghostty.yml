@@ -27,18 +27,11 @@
     state: present
   when: ansible_distribution == 'Fedora'
 
-# Ubuntu - mkasberg PPA
-- name: Add Ghostty PPA (Ubuntu)
-  ansible.builtin.apt_repository:
-    repo: ppa:mkasberg/ghostty-ubuntu
-    state: present
-  when: ansible_distribution == 'Ubuntu'
-
-- name: Install Ghostty (Ubuntu)
-  ansible.builtin.apt:
-    name: ghostty
-    state: present
-    update_cache: true
+# Ubuntu - Skip for now (PPA doesn't support noble yet)
+# TODO: Enable when mkasberg PPA supports Ubuntu 24.04
+- name: Skip Ghostty on Ubuntu (PPA not ready)
+  ansible.builtin.debug:
+    msg: "Ghostty skipped on Ubuntu (PPA doesn't support 24.04 noble yet)"
   when: ansible_distribution == 'Ubuntu'
 
 # Configure Ghostty with Solarized Dark theme (system-wide default)
