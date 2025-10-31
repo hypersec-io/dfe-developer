@@ -110,6 +110,7 @@ Add vendor-specific APT repositories when needed:
 | VS Code | RPM repo | DEB repo | Microsoft's repo |
 | Slack | Flatpak | Flatpak | Consistent with Fedora |
 | Freelens | Flatpak | Flatpak | Consistent with Fedora |
+| Ghostty | COPR (scottames) | PPA (mkasberg) | Terminal emulator with same Solarized config |
 
 ### System Utilities
 
@@ -171,9 +172,16 @@ Add vendor-specific APT repositories when needed:
 - [ ] VM optimizer (if applicable to Ubuntu VMs)
 - [ ] RDP optimizer (if using gnome-remote-desktop on Ubuntu)
 
-### Out of Scope (Initially)
-- Ghostty (primarily Fedora COPR, may not have Ubuntu equivalent)
-- Fedora-specific optimizations
+### Phase 4: Terminal (Optional)
+- [ ] Ghostty terminal emulator
+  - Available via mkasberg/ghostty-ubuntu PPA
+  - Latest version 1.2.3 for Ubuntu 24.04
+  - Install command: Quick install script or PPA
+  - Same Solarized Dark config as Fedora
+
+### Out of Scope
+- Fedora-specific COPR repositories
+- Fedora-specific kernel optimizations
 
 ## Test Environment
 
