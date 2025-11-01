@@ -34,6 +34,18 @@
 
 - name: Configure Fedora mirrors
   block:
+    - name: Ensure DNF vars directory exists
+      ansible.builtin.file:
+        path: /etc/dnf/vars
+        state: directory
+        mode: '0755'
+
+    - name: Set releasever variable (fixes DNF5 truncation to major version only)
+      ansible.builtin.copy:
+        dest: /etc/dnf/vars/releasever
+        content: "{{ ansible_distribution_major_version }}"
+        mode: '0644'
+
     - name: Backup original fedora.repo
       ansible.builtin.copy:
         src: /etc/yum.repos.d/fedora.repo
