@@ -14,6 +14,15 @@
     state: present
   when: ansible_distribution == 'Fedora'
 
+# Configure Flathub repository (system-wide)
+- name: Add Flathub repository (system-wide)
+  community.general.flatpak_remote:
+    name: flathub
+    state: present
+    flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
+    method: system
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
 # Common development utilities
 - name: Install development utilities (Fedora)
   ansible.builtin.dnf:
