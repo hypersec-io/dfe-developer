@@ -12,6 +12,11 @@
     file: repository.yml
   tags: ['repository']
 
+- name: Configure security (automatic updates)
+  ansible.builtin.include_tasks:
+    file: security.yml
+  tags: ['security']
+
 - name: Install Docker
   ansible.builtin.include_tasks:
     file: docker.yml

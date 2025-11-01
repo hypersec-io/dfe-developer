@@ -67,6 +67,9 @@
     # - role: dfe_rdp_optimizer
     #   tags: ['rdp', 'optimizer']
 
+    - role: dfe_system_cleanup
+      tags: ['always']
+
   post_tasks:
     - name: Display completion message
       ansible.builtin.debug:
