@@ -6,7 +6,7 @@ dfe_use_mirrors: true  # Set to false to use OS default mirrors
 # Per-distro mirror URLs (AARNET in Australia)
 dfe_fedora_mirror_base: "https://mirror.aarnet.edu.au/pub/fedora/linux"
 dfe_ubuntu_mirror_base: "https://mirror.aarnet.edu.au/pub/ubuntu/archive"
-# Note: Mirrors improve download speeds in Australia
+# Note: Mirrors improve download speeds
 
 # Ghostty installation
 dfe_install_ghostty: true
