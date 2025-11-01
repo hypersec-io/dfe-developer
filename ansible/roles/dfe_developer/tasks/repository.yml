@@ -6,158 +6,43 @@
 # VALIDATE MIRROR CONNECTIVITY
 # ============================================================================
 
-- name: Validate Fedora mirror is reachable
-  ansible.builtin.uri:
-    url: "{{ dfe_fedora_mirror_base }}/releases/"
-    method: HEAD
-    timeout: 10
-  delegate_to: localhost
-  become: false
-  when:
-    - ansible_distribution == 'Fedora'
-    - dfe_use_mirrors | default(true)
-
-- name: Validate Ubuntu mirror is reachable
-  ansible.builtin.uri:
-    url: "{{ dfe_ubuntu_mirror_base }}/dists/{{ ansible_distribution_release }}/"
-    method: HEAD
-    timeout: 10
-  delegate_to: localhost
-  become: false
-  when:
-    - ansible_distribution == 'Ubuntu'
-    - dfe_use_mirrors | default(true)
+# No validation needed - using OS default repos with fastestmirror
 
 # ============================================================================
 # FEDORA REPOSITORY CONFIGURATION
 # ============================================================================
 
-- name: Enable Fedora fastestmirror
-  block:
-    - name: Ensure DNF vars directory exists
-      ansible.builtin.file:
-        path: /etc/dnf/vars
-        state: directory
-        mode: '0755'
-
-    - name: Set releasever variable (fixes DNF5 truncation to major version only)
-      ansible.builtin.copy:
-        dest: /etc/dnf/vars/releasever
-        content: "{{ ansible_distribution_major_version }}"
-        mode: '0644'
-
-    - name: Backup original fedora.repo
-      ansible.builtin.copy:
-        src: /etc/yum.repos.d/fedora.repo
-        dest: /etc/yum.repos.d/fedora.repo.orig
-        remote_src: true
-        force: false
-
-    - name: Backup original fedora-updates.repo
-      ansible.builtin.copy:
-        src: /etc/yum.repos.d/fedora-updates.repo
-        dest: /etc/yum.repos.d/fedora-updates.repo.orig
-        remote_src: true
-        force: false
-
-    - name: Disable metalink in fedora.repo
-      ansible.builtin.replace:
-        path: /etc/yum.repos.d/fedora.repo
-        regexp: '^metalink='
-        replace: '#metalink='
-
-    - name: Add mirror to fedora.repo (use exact version to avoid DNF5 $releasever bug)
-      ansible.builtin.lineinfile:
-        path: /etc/yum.repos.d/fedora.repo
-        insertafter: '^\[fedora\]'
-        line: "baseurl={{ dfe_fedora_mirror_base }}/releases/{{ ansible_distribution_major_version }}/Everything/$basearch/os/"
-        state: present
-
-    - name: Disable metalink in fedora-updates.repo
-      ansible.builtin.replace:
-        path: /etc/yum.repos.d/fedora-updates.repo
-        regexp: '^metalink='
-        replace: '#metalink='
-
-    - name: Add mirror to fedora-updates.repo (use exact version to avoid DNF5 $releasever bug)
-      ansible.builtin.lineinfile:
-        path: /etc/yum.repos.d/fedora-updates.repo
-        insertafter: '^\[updates\]'
-        line: "baseurl={{ dfe_fedora_mirror_base }}/updates/{{ ansible_distribution_major_version }}/Everything/$basearch/"
-        state: present
-
-    - name: Create DNF conf.d directory
-      ansible.builtin.file:
-        path: /etc/dnf/dnf.conf.d
-        state: directory
-        mode: '0755'
-
-    - name: Configure DNF performance settings
-      ansible.builtin.copy:
-        dest: /etc/dnf/dnf.conf.d/99-performance.conf
-        content: |
-          # Performance optimizations
-          max_parallel_downloads=20
-          fastestmirror=False
-          deltarpm=True
-          timeout=30
-          retries=10
-          skip_if_unavailable=True
-          metadata_expire=7200
-        mode: '0644'
-
-    - name: Clean DNF cache completely (removes corrupt metadata)
-      ansible.builtin.command: dnf clean all
-      changed_when: false
-
-    - name: Update DNF cache with new mirror
-      ansible.builtin.command: dnf makecache
-      changed_when: false
+- name: Configure Fedora fastestmirror
+  ansible.builtin.copy:
+    dest: /etc/dnf/dnf.conf.d/99-performance.conf
+    content: |
+      # Performance optimizations
+      max_parallel_downloads=20
+      fastestmirror=True
+      deltarpm=True
+      timeout=30
+      retries=10
+      skip_if_unavailable=True
+      metadata_expire=7200
+    mode: '0644'
   when:
     - ansible_distribution == 'Fedora'
-    - dfe_use_mirrors | default(true)
+    - dfe_use_fastestmirror | default(true)
 
 # ============================================================================
 # UBUNTU REPOSITORY CONFIGURATION
 # ============================================================================
 
-- name: Configure Ubuntu mirrors
-  block:
-    - name: Backup original sources.list
-      ansible.builtin.copy:
-        src: /etc/apt/sources.list
-        dest: /etc/apt/sources.list.orig
-        remote_src: true
-        force: false
-
-    - name: Configure mirror for Ubuntu
-      ansible.builtin.replace:
-        path: /etc/apt/sources.list
-        regexp: 'http://[a-z]{2}\.archive\.ubuntu\.com/ubuntu'
-        replace: "{{ dfe_ubuntu_mirror_base }}"
-        backup: false
-
-    - name: Configure security mirror for Ubuntu
-      ansible.builtin.replace:
-        path: /etc/apt/sources.list
-        regexp: 'http://security\.ubuntu\.com/ubuntu'
-        replace: "{{ dfe_ubuntu_mirror_base }}"
-        backup: false
-
-    - name: Configure APT performance settings
-      ansible.builtin.copy:
-        dest: /etc/apt/apt.conf.d/99-performance
-        content: |
-          # Performance optimizations
-          Acquire::http::Dl-Limit "0";
-          Acquire::https::Dl-Limit "0";
-          Acquire::Queue-Mode "host";
-          APT::Get::Assume-Yes "false";
-        mode: '0644'
-
-    - name: Update APT cache
-      ansible.builtin.apt:
-        update_cache: true
+- name: Configure Ubuntu APT performance
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/99-performance
+    content: |
+      # Performance optimizations
+      Acquire::http::Dl-Limit "0";
+      Acquire::https::Dl-Limit "0";
+      Acquire::Queue-Mode "host";
+      APT::Get::Assume-Yes "false";
+    mode: '0644'
   when:
     - ansible_distribution == 'Ubuntu'
-    - dfe_use_mirrors | default(true)
+    - dfe_use_fastestmirror | default(true)
