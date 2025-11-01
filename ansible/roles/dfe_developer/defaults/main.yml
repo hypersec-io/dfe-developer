@@ -2,11 +2,12 @@
 # DFE Developer Environment - Defaults
 
 # Mirror configuration (validated before use)
-dfe_use_mirrors: true  # Set to false to use OS default mirrors
+dfe_use_mirrors: false  # Set to true to enable mirrors (default: OS mirrors more reliable)
 # Per-distro mirror URLs (AARNET in Australia)
 dfe_fedora_mirror_base: "https://mirror.aarnet.edu.au/pub/fedora/linux"
 dfe_ubuntu_mirror_base: "https://mirror.aarnet.edu.au/pub/ubuntu/archive"
-# Note: Different distros use different root paths
+# Note: AARNET Fedora updates mirror has connectivity issues - use OS defaults
+# Ubuntu mirrors work fine - can enable with -e dfe_use_mirrors=true
 
 # Ghostty installation
 dfe_install_ghostty: true
