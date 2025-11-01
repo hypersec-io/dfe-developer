@@ -2,12 +2,12 @@
 # DFE Developer Environment - Defaults
 
 # Mirror configuration (validated before use)
-dfe_use_mirrors: true  # Mirrors enabled (DNF5 $releasever bug fixed by using exact version)
+dfe_use_mirrors: false  # Disabled: AARNET Fedora mirror has persistent zchunk/metalink issues
 # Per-distro mirror URLs (default: AARNET - change to your local mirror)
 dfe_fedora_mirror_base: "https://mirror.aarnet.edu.au/pub/fedora/linux"
 dfe_ubuntu_mirror_base: "https://mirror.aarnet.edu.au/pub/ubuntu/archive"
-# Note: Ubuntu mirrors work fine. Fedora mirrors conflict with RPMFusion/COPR metalinks in DNF5.
-# Use OS defaults for Fedora or find a mirror without metalink conflicts.
+# Note: Ubuntu mirrors work perfectly. Fedora AARNET mirror has corrupt zchunk metadata.
+# TODO: Test with different Fedora mirror (US/EU mirrors may work)
 
 # Ghostty installation
 dfe_install_ghostty: true
