@@ -94,11 +94,11 @@
           metadata_expire=7200
         mode: '0644'
 
-    - name: Clean DNF metadata cache
-      ansible.builtin.command: dnf clean metadata
+    - name: Clean DNF cache completely (removes corrupt metadata)
+      ansible.builtin.command: dnf clean all
       changed_when: false
 
-    - name: Update DNF cache
+    - name: Update DNF cache with new mirror
       ansible.builtin.command: dnf makecache
       changed_when: false
   when:
