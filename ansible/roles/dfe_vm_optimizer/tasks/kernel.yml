@@ -6,6 +6,7 @@
     name: "{{ item.name }}"
     value: "{{ item.value }}"
     state: present
+    sysctl_set: true
     sysctl_file: /etc/sysctl.d/98-vm-optimizer.conf
     reload: false
   loop:
