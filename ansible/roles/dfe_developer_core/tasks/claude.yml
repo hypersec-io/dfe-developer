@@ -1,0 +1,20 @@
+---
+# Claude Code CLI installation (user-specific via npm)
+
+- name: Install Claude Code CLI globally for user
+  community.general.npm:
+    name: '@anthropic-ai/claude-code'
+    global: true
+    state: present
+  environment:
+    NPM_CONFIG_PREFIX: "{{ dfe_user_home }}/.npm-global"
+  become: false
+  become_user: "{{ dfe_actual_user }}"
+
+- name: Enable Claude Code auto-update
+  ansible.builtin.command:
+    cmd: "{{ dfe_user_home }}/.npm-global/bin/claude config set auto_update true"
+  become: false
+  become_user: "{{ dfe_actual_user }}"
+  failed_when: false
+  changed_when: false
