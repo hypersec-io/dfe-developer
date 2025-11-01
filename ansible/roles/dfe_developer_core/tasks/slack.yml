@@ -1,3 +1,32 @@
 ---
-# TODO: Implement slack installation
+# Slack installation (Flatpak for Linux with GUI, Homebrew for macOS)
 
+# Linux (Fedora/Ubuntu) - via Flatpak
+- name: Ensure Flathub remote configured for user
+  ansible.builtin.command:
+    cmd: flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+  become: false
+  become_user: "{{ dfe_actual_user }}"
+  failed_when: false
+  changed_when: false
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - dfe_has_gnome
+
+- name: Install Slack via Flatpak (user-specific)
+  community.general.flatpak:
+    name: com.slack.Slack
+    state: present
+    method: user
+  become: false
+  become_user: "{{ dfe_actual_user }}"
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - dfe_has_gnome
+
+# macOS
+- name: Install Slack via Homebrew Cask (macOS)
+  community.general.homebrew_cask:
+    name: slack
+    state: present
+  when: ansible_distribution == 'MacOSX'

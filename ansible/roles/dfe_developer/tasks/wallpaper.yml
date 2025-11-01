@@ -1,0 +1,56 @@
+---
+# Optional wallpaper installation
+# Checks for default-background.{svg,png,jpg} and applies it if found
+
+- name: Check for wallpaper files
+  ansible.builtin.find:
+    paths: "{{ playbook_dir }}"
+    patterns:
+      - 'default-background.svg'
+      - 'default-background.png'
+      - 'default-background.jpg'
+      - 'default-background.jpeg'
+  register: wallpaper_files
+  delegate_to: localhost
+  become: false
+
+- name: Set wallpaper file path if found
+  ansible.builtin.set_fact:
+    dfe_wallpaper_file: "{{ wallpaper_files.files[0].path }}"
+    dfe_wallpaper_name: "{{ wallpaper_files.files[0].path | basename }}"
+  when: wallpaper_files.matched > 0
+
+- name: Copy wallpaper to system backgrounds directory
+  ansible.builtin.copy:
+    src: "{{ dfe_wallpaper_file }}"
+    dest: "/usr/share/backgrounds/{{ dfe_wallpaper_name }}"
+    mode: '0644'
+  when:
+    - wallpaper_files.matched > 0
+    - dfe_has_gnome
+
+- name: Set GNOME wallpaper (light mode)
+  ansible.builtin.command:
+    cmd: gsettings set org.gnome.desktop.background picture-uri "file:///usr/share/backgrounds/{{ dfe_wallpaper_name }}"
+  become: false
+  become_user: "{{ dfe_actual_user }}"
+  failed_when: false
+  changed_when: false
+  when:
+    - wallpaper_files.matched > 0
+    - dfe_has_gnome
+
+- name: Set GNOME wallpaper (dark mode)
+  ansible.builtin.command:
+    cmd: gsettings set org.gnome.desktop.background picture-uri-dark "file:///usr/share/backgrounds/{{ dfe_wallpaper_name }}"
+  become: false
+  become_user: "{{ dfe_actual_user }}"
+  failed_when: false
+  changed_when: false
+  when:
+    - wallpaper_files.matched > 0
+    - dfe_has_gnome
+
+- name: Display wallpaper status
+  ansible.builtin.debug:
+    msg: "{{ 'Wallpaper set: ' + dfe_wallpaper_name if wallpaper_files.matched > 0 else 'No wallpaper file found - skipping' }}"

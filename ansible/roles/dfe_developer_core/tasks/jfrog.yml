@@ -1,3 +1,50 @@
 ---
-# TODO: Implement jfrog installation
+# JFrog CLI installation
 
+# Fedora
+- name: Add JFrog CLI repository (Fedora)
+  ansible.builtin.yum_repository:
+    name: jfrog-cli
+    description: JFrog CLI
+    baseurl: https://releases.jfrog.io/artifactory/jfrog-rpms
+    enabled: true
+    gpgcheck: true
+    gpgkey: |
+      https://releases.jfrog.io/artifactory/api/v2/repositories/jfrog-rpms/keyPairs/primary/public
+      https://releases.jfrog.io/artifactory/api/v2/repositories/jfrog-rpms/keyPairs/secondary/public
+  when: ansible_distribution == 'Fedora'
+
+- name: Install JFrog CLI (Fedora)
+  ansible.builtin.dnf:
+    name: jfrog-cli-v2-jf
+    state: present
+  when: ansible_distribution == 'Fedora'
+
+# Ubuntu
+- name: Download JFrog CLI GPG key (Ubuntu)
+  ansible.builtin.get_url:
+    url: https://releases.jfrog.io/artifactory/api/v2/repositories/jfrog-rpms/keyPairs/primary/public
+    dest: /usr/share/keyrings/jfrog-cli.asc
+    mode: '0644'
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Add JFrog CLI repository (Ubuntu)
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/jfrog-cli.asc] https://releases.jfrog.io/artifactory/jfrog-debs xenial contrib"
+    filename: jfrog-cli
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install JFrog CLI (Ubuntu)
+  ansible.builtin.apt:
+    name: jfrog-cli-v2-jf
+    state: present
+    update_cache: true
+  when: ansible_distribution == 'Ubuntu'
+
+# macOS
+- name: Install JFrog CLI via Homebrew (macOS)
+  community.general.homebrew:
+    name: jfrog-cli
+    state: present
+  when: ansible_distribution == 'MacOSX'
