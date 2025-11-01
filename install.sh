@@ -8,11 +8,16 @@
 # 3. Running the Ansible playbook to configure the system
 #
 # USAGE:
-#   ./install.sh [--check] [--tags TAGS]
+#   ./install.sh [OPTIONS]
 #
 # OPTIONS:
-#   --check    Run in check mode (dry-run, no changes)
-#   --tags     Run specific Ansible tags (e.g., docker,python)
+#   --check         Run in check mode (dry-run, no changes)
+#   --tags TAGS     Run specific Ansible tags (e.g., docker,python)
+#   --no-ghostty    Skip Ghostty terminal installation
+#   --core          Install core developer tools (JFrog, Azure, Node.js, etc.)
+#   --vm            Install VM optimizer tools
+#   --rdp           Install RDP optimizer (GNOME Remote Desktop auto-resize)
+#   --all           Install everything (base + core + VM + RDP)
 #
 # SUPPORTED PLATFORMS:
 #   - Ubuntu 24.04 LTS and later
@@ -41,6 +46,8 @@ print_warning() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 # Parse arguments
 ANSIBLE_CHECK=""
 ANSIBLE_TAGS=""
+ANSIBLE_SKIP_TAGS=""
+ANSIBLE_EXTRA_VARS=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -52,13 +59,40 @@ while [[ $# -gt 0 ]]; do
             ANSIBLE_TAGS="--tags $2"
             shift 2
             ;;
+        --no-ghostty)
+            ANSIBLE_EXTRA_VARS="$ANSIBLE_EXTRA_VARS -e dfe_install_ghostty=false"
+            shift
+            ;;
+        --core)
+            ANSIBLE_TAGS="--tags developer,base,core,advanced"
+            shift
+            ;;
+        --vm)
+            ANSIBLE_TAGS="--tags developer,base,vm,optimizer"
+            shift
+            ;;
+        --rdp)
+            ANSIBLE_TAGS="--tags developer,base,rdp,optimizer"
+            shift
+            ;;
+        --all)
+            ANSIBLE_TAGS="--tags developer,base,core,advanced,vm,optimizer,rdp"
+            shift
+            ;;
         --help)
-            echo "Usage: $0 [--check] [--tags TAGS]"
+            echo "Usage: $0 [OPTIONS]"
             echo ""
             echo "Options:"
             echo "  --check         Run in check mode (dry-run, no changes)"
             echo "  --tags TAGS     Run specific Ansible tags (comma-separated)"
+            echo "  --no-ghostty    Skip Ghostty terminal installation"
+            echo "  --core          Install core developer tools (JFrog, Azure, Node.js, etc.)"
+            echo "  --vm            Install VM optimizer tools"
+            echo "  --rdp           Install RDP optimizer (GNOME Remote Desktop auto-resize)"
+            echo "  --all           Install everything (base + core + VM + RDP)"
             echo "  --help          Show this help message"
+            echo ""
+            echo "Default: Base developer environment only (Docker, K8s, Python, Git, VS Code, Chrome, Ghostty)"
             exit 0
             ;;
         *)
@@ -168,7 +202,7 @@ fi
 
 # Run Ansible playbook
 print_info "Running Ansible playbook..."
-print_info "Command: ansible-playbook ansible/playbooks/main.yml -i ansible/inventories/localhost/inventory.yml $ANSIBLE_CHECK $ANSIBLE_TAGS"
+print_info "Command: ansible-playbook ansible/playbooks/main.yml -i ansible/inventories/localhost/inventory.yml $ANSIBLE_CHECK $ANSIBLE_TAGS $ANSIBLE_EXTRA_VARS"
 
 cd ansible || exit 1
 
@@ -176,7 +210,8 @@ ansible-playbook \
     playbooks/main.yml \
     -i inventories/localhost/inventory.yml \
     $ANSIBLE_CHECK \
-    $ANSIBLE_TAGS || {
+    $ANSIBLE_TAGS \
+    $ANSIBLE_EXTRA_VARS || {
     print_error "Ansible playbook failed"
     exit 1
 }
