@@ -2,23 +2,15 @@
 # MTU settings to prevent packet fragmentation
 
 - name: Configure MTU settings for RDP
-  ansible.posix.sysctl:
-    name: "{{ item.name }}"
-    value: "{{ item.value }}"
-    state: present
-    sysctl_set: true
-    sysctl_file: /etc/sysctl.d/99-rdp-mtu.conf
-    reload: false
-  loop:
-    - { name: 'net.ipv4.tcp_mtu_probing', value: '1' }
-    - { name: 'net.ipv4.ip_no_pmtu_disc', value: '0' }
-  when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
-    - dfe_has_gnome
+  ansible.builtin.copy:
+    dest: /etc/sysctl.d/99-rdp-mtu.conf
+    content: |
+      # RDP MTU Settings
 
-- name: Reload sysctl settings for MTU
-  ansible.builtin.command: sysctl --system
-  changed_when: false
+      # Enable MTU probing to prevent fragmentation
+      net.ipv4.tcp_mtu_probing = 1
+      net.ipv4.ip_no_pmtu_disc = 0
+    mode: '0644'
   when:
     - ansible_distribution in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
