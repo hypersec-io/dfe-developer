@@ -1,3 +1,27 @@
 ---
-# TODO: Implement service configuration
+# Enable and configure GNOME Remote Desktop system service
 
+- name: Enable gnome-remote-desktop system service
+  ansible.builtin.systemd:
+    name: gnome-remote-desktop.service
+    enabled: true
+    state: started
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - dfe_has_gnome
+
+- name: Enable RDP via grdctl
+  ansible.builtin.command:
+    cmd: grdctl --system rdp enable
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - dfe_has_gnome
+  failed_when: false
+  changed_when: false
+
+- name: Display RDP status
+  ansible.builtin.debug:
+    msg: "GNOME Remote Desktop enabled with auto-resize support on port 3389"
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - dfe_has_gnome

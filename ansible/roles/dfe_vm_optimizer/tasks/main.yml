@@ -2,6 +2,32 @@
 # DFE VM Optimizer - Main Tasks
 # Maps to: fedora/install-vm-optimizer.sh
 
+# Skip on macOS (not applicable)
+- name: Skip VM optimizer on macOS
+  ansible.builtin.debug:
+    msg: "VM optimizer not applicable on macOS - skipping"
+  when: ansible_distribution == 'MacOSX'
+
+- name: Detect virtualization platform
+  ansible.builtin.set_fact:
+    dfe_vm_type: "{{ ansible_virtualization_type }}"
+    dfe_vm_role: "{{ ansible_virtualization_role }}"
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+- name: Display VM detection
+  ansible.builtin.debug:
+    msg: "Virtualization: {{ dfe_vm_type }} (role: {{ dfe_vm_role }})"
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - dfe_vm_role == 'guest'
+
+- name: Skip if not a VM
+  ansible.builtin.debug:
+    msg: "Not running in a VM - skipping optimizations"
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - dfe_vm_role != 'guest'
+
 - name: Optimize services
   ansible.builtin.include_tasks:
     file: services.yml

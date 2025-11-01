@@ -1,3 +1,101 @@
 ---
-# TODO: Implement vm_tools optimization
+# Install VM-specific guest tools based on detected platform
 
+# VMware
+- name: Install VMware tools (Fedora)
+  ansible.builtin.dnf:
+    name:
+      - open-vm-tools
+      - open-vm-tools-desktop
+    state: present
+  when:
+    - ansible_distribution == 'Fedora'
+    - ansible_virtualization_type == 'VMware'
+
+- name: Install VMware tools (Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - open-vm-tools
+      - open-vm-tools-desktop
+    state: present
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - ansible_virtualization_type == 'VMware'
+
+- name: Enable VMware tools service
+  ansible.builtin.systemd:
+    name: vmtoolsd.service
+    enabled: true
+    state: started
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_virtualization_type == 'VMware'
+
+# QEMU/KVM
+- name: Install QEMU/KVM guest agent (Fedora)
+  ansible.builtin.dnf:
+    name:
+      - qemu-guest-agent
+      - spice-vdagent
+    state: present
+  when:
+    - ansible_distribution == 'Fedora'
+    - ansible_virtualization_type in ['kvm', 'qemu']
+
+- name: Install QEMU/KVM guest agent (Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - qemu-guest-agent
+      - spice-vdagent
+    state: present
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - ansible_virtualization_type in ['kvm', 'qemu']
+
+- name: Enable QEMU guest agent services
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop:
+    - qemu-guest-agent.service
+    - spice-vdagentd.service
+  failed_when: false
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_virtualization_type in ['kvm', 'qemu']
+
+# Hyper-V
+- name: Install Hyper-V integration services (Fedora)
+  ansible.builtin.dnf:
+    name:
+      - hyperv-daemons
+      - hyperv-tools
+    state: present
+  when:
+    - ansible_distribution == 'Fedora'
+    - ansible_virtualization_type == 'microsoft'
+
+- name: Install Hyper-V integration services (Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - linux-tools-virtual
+      - linux-cloud-tools-virtual
+    state: present
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - ansible_virtualization_type == 'microsoft'
+
+# VirtualBox
+- name: Install VirtualBox guest additions dependencies
+  ansible.builtin.package:
+    name:
+      - kernel-devel
+      - kernel-headers
+      - gcc
+      - make
+      - perl
+    state: present
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_virtualization_type == 'oracle'
