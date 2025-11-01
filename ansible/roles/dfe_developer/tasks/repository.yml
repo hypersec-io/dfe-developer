@@ -6,9 +6,9 @@
 # VALIDATE MIRROR CONNECTIVITY
 # ============================================================================
 
-- name: Validate mirror is reachable (Fedora)
+- name: Validate Fedora mirror is reachable
   ansible.builtin.uri:
-    url: "{{ dfe_mirror_url }}/fedora/linux/releases/"
+    url: "{{ dfe_fedora_mirror_base }}/releases/"
     method: HEAD
     timeout: 10
   delegate_to: localhost
@@ -17,9 +17,9 @@
     - ansible_distribution == 'Fedora'
     - dfe_use_mirrors | default(true)
 
-- name: Validate mirror is reachable (Ubuntu)
+- name: Validate Ubuntu mirror is reachable
   ansible.builtin.uri:
-    url: "{{ dfe_mirror_url }}/ubuntu/archive/dists/{{ ansible_distribution_release }}/"
+    url: "{{ dfe_ubuntu_mirror_base }}/dists/{{ ansible_distribution_release }}/"
     method: HEAD
     timeout: 10
   delegate_to: localhost
