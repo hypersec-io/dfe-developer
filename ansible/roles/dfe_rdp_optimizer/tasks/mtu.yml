@@ -7,10 +7,17 @@
     value: "{{ item.value }}"
     state: present
     sysctl_file: /etc/sysctl.d/99-rdp-mtu.conf
-    reload: true
+    reload: false
   loop:
     - { name: 'net.ipv4.tcp_mtu_probing', value: '1' }
     - { name: 'net.ipv4.ip_no_pmtu_disc', value: '0' }
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - dfe_has_gnome
+
+- name: Reload sysctl settings for MTU
+  ansible.builtin.command: sysctl --system
+  changed_when: false
   when:
     - ansible_distribution in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
