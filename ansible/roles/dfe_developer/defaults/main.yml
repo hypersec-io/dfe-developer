@@ -2,7 +2,7 @@
 # DFE Developer Environment - Defaults
 
 # Mirror configuration (validated before use)
-dfe_use_mirrors: false  # Disabled by default (Fedora 42 incompatible with AARNET due to DNF5/metalink conflicts)
+dfe_use_mirrors: true  # Mirrors enabled (DNF5 $releasever bug fixed by using exact version)
 # Per-distro mirror URLs (default: AARNET - change to your local mirror)
 dfe_fedora_mirror_base: "https://mirror.aarnet.edu.au/pub/fedora/linux"
 dfe_ubuntu_mirror_base: "https://mirror.aarnet.edu.au/pub/ubuntu/archive"
