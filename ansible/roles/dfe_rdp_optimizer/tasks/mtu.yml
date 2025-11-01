@@ -6,6 +6,7 @@
     name: "{{ item.name }}"
     value: "{{ item.value }}"
     state: present
+    sysctl_set: true
     sysctl_file: /etc/sysctl.d/99-rdp-mtu.conf
     reload: false
   loop:
