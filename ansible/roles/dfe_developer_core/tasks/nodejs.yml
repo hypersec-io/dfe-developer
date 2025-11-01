@@ -1,3 +1,100 @@
 ---
-# TODO: Implement nodejs installation
+# Node.js LTS and semantic-release installation
 
+# Fedora - Add Node.js LTS repository
+- name: Add Node.js LTS repository (Fedora)
+  ansible.builtin.shell: curl -fsSL https://rpm.nodesource.com/setup_lts.x | bash -
+  args:
+    creates: /etc/yum.repos.d/nodesource-*.repo
+  when: ansible_distribution == 'Fedora'
+
+- name: Install Node.js (Fedora)
+  ansible.builtin.dnf:
+    name: nodejs
+    state: present
+  when: ansible_distribution == 'Fedora'
+
+# Ubuntu - Add Node.js LTS repository
+- name: Add Node.js LTS repository (Ubuntu)
+  ansible.builtin.shell: curl -fsSL https://deb.nodesource.com/setup_lts.x | bash -
+  args:
+    creates: /etc/apt/sources.list.d/nodesource.list
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install Node.js (Ubuntu)
+  ansible.builtin.apt:
+    name: nodejs
+    state: present
+    update_cache: true
+  when: ansible_distribution == 'Ubuntu'
+
+# macOS
+- name: Install Node.js via Homebrew (macOS)
+  community.general.homebrew:
+    name: node
+    state: present
+  when: ansible_distribution == 'MacOSX'
+
+# Configure npm for user-specific global packages
+- name: Create npm global directory for user
+  ansible.builtin.file:
+    path: "{{ dfe_user_home }}/.npm-global"
+    state: directory
+    mode: '0755'
+    owner: "{{ dfe_actual_user }}"
+    group: "{{ dfe_actual_user }}"
+
+- name: Configure npm prefix for user
+  ansible.builtin.command:
+    cmd: npm config set prefix "{{ dfe_user_home }}/.npm-global"
+  become: false
+  become_user: "{{ dfe_actual_user }}"
+  changed_when: false
+
+- name: Add npm global bin to PATH in .bashrc
+  ansible.builtin.lineinfile:
+    path: "{{ dfe_user_home }}/.bashrc"
+    regexp: "^export PATH=.*\\.npm-global/bin"
+    line: 'export PATH="{{ dfe_user_home }}/.npm-global/bin:$PATH"'
+    state: present
+    owner: "{{ dfe_actual_user }}"
+    group: "{{ dfe_actual_user }}"
+    create: true
+
+# Install semantic-release and plugins (user-specific)
+- name: Update npm to latest
+  ansible.builtin.command:
+    cmd: npm install -g npm@latest
+  environment:
+    PATH: "{{ dfe_user_home }}/.npm-global/bin:{{ ansible_env.PATH }}"
+  become: false
+  become_user: "{{ dfe_actual_user }}"
+  changed_when: false
+
+- name: Install semantic-release globally
+  community.general.npm:
+    name: semantic-release
+    global: true
+    state: present
+  environment:
+    NPM_CONFIG_PREFIX: "{{ dfe_user_home }}/.npm-global"
+  become: false
+  become_user: "{{ dfe_actual_user }}"
+
+- name: Install semantic-release plugins globally
+  community.general.npm:
+    name: "{{ item }}"
+    global: true
+    state: present
+  loop:
+    - '@semantic-release/changelog'
+    - '@semantic-release/git'
+    - '@semantic-release/github'
+    - '@semantic-release/commit-analyzer'
+    - '@semantic-release/release-notes-generator'
+    - '@semantic-release/exec'
+    - conventional-changelog-conventionalcommits
+  environment:
+    NPM_CONFIG_PREFIX: "{{ dfe_user_home }}/.npm-global"
+  become: false
+  become_user: "{{ dfe_actual_user }}"

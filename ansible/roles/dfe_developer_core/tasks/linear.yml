@@ -1,3 +1,8 @@
 ---
-# TODO: Implement linear installation
+# Linear.app CLI installation (system-wide via npm)
 
+- name: Install Linear CLI system-wide
+  community.general.npm:
+    name: '@digitalstories/linear-cli'
+    global: true
+    state: present

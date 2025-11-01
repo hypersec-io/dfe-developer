@@ -1,3 +1,65 @@
 ---
-# TODO: Implement azure installation
+# Azure CLI installation
 
+# Fedora
+- name: Import Microsoft GPG key (Fedora)
+  ansible.builtin.rpm_key:
+    state: present
+    key: https://packages.microsoft.com/keys/microsoft.asc
+  when: ansible_distribution == 'Fedora'
+
+- name: Add Azure CLI repository (Fedora)
+  ansible.builtin.yum_repository:
+    name: azure-cli
+    description: Azure CLI
+    baseurl: https://packages.microsoft.com/yumrepos/azure-cli
+    enabled: true
+    gpgcheck: true
+    gpgkey: https://packages.microsoft.com/keys/microsoft.asc
+  when: ansible_distribution == 'Fedora'
+
+- name: Install Azure CLI (Fedora)
+  ansible.builtin.dnf:
+    name: azure-cli
+    state: present
+  when: ansible_distribution == 'Fedora'
+
+# Ubuntu
+- name: Install dependencies for Azure CLI (Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - apt-transport-https
+      - lsb-release
+      - gnupg
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Download Microsoft GPG key (Ubuntu)
+  ansible.builtin.get_url:
+    url: https://packages.microsoft.com/keys/microsoft.asc
+    dest: /usr/share/keyrings/microsoft.asc
+    mode: '0644'
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Add Azure CLI repository (Ubuntu)
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft.asc] https://packages.microsoft.com/repos/azure-cli/ {{ ansible_distribution_release }} main"
+    filename: azure-cli
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install Azure CLI (Ubuntu)
+  ansible.builtin.apt:
+    name: azure-cli
+    state: present
+    update_cache: true
+  when: ansible_distribution == 'Ubuntu'
+
+# macOS
+- name: Install Azure CLI via Homebrew (macOS)
+  community.general.homebrew:
+    name: azure-cli
+    state: present
+  when: ansible_distribution == 'MacOSX'
