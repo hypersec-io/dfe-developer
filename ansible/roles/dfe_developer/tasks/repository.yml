@@ -12,6 +12,13 @@
 # FEDORA REPOSITORY CONFIGURATION
 # ============================================================================
 
+- name: Create DNF conf.d directory (Fedora)
+  ansible.builtin.file:
+    path: /etc/dnf/dnf.conf.d
+    state: directory
+    mode: '0755'
+  when: ansible_distribution == 'Fedora'
+
 - name: Configure Fedora fastestmirror
   ansible.builtin.copy:
     dest: /etc/dnf/dnf.conf.d/99-performance.conf
