@@ -1,3 +1,33 @@
 ---
-# TODO: Implement kernel optimization
+# Kernel parameter optimizations for VMs
+
+- name: Configure VM kernel parameters using sysctl module
+  ansible.posix.sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+    sysctl_file: /etc/sysctl.d/98-vm-optimizer.conf
+    reload: true
+  loop:
+    # Memory optimizations
+    - { name: 'vm.swappiness', value: '10' }
+    - { name: 'vm.dirty_ratio', value: '15' }
+    - { name: 'vm.dirty_background_ratio', value: '5' }
+    - { name: 'vm.vfs_cache_pressure', value: '50' }
+    # Scheduler optimizations
+    - { name: 'kernel.sched_min_granularity_ns', value: '10000000' }
+    - { name: 'kernel.sched_wakeup_granularity_ns', value: '15000000' }
+    # Network optimizations
+    - { name: 'net.core.netdev_max_backlog', value: '5000' }
+    - { name: 'net.ipv4.tcp_congestion_control', value: 'bbr' }
+    - { name: 'net.core.default_qdisc', value: 'fq' }
+    # Security
+    - { name: 'net.ipv4.conf.all.accept_source_route', value: '0' }
+    - { name: 'net.ipv6.conf.all.accept_source_route', value: '0' }
+    # IPv6 disable (reduces overhead in VMs)
+    - { name: 'net.ipv6.conf.all.disable_ipv6', value: '1' }
+    - { name: 'net.ipv6.conf.default.disable_ipv6', value: '1' }
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_virtualization_role == 'guest'
 

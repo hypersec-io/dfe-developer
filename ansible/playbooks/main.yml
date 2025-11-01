@@ -61,11 +61,11 @@
     - role: dfe_developer_core
       tags: ['core', 'advanced']
 
-    # - role: dfe_vm_optimizer
-    #   tags: ['vm', 'optimizer']
+    - role: dfe_vm_optimizer
+      tags: ['vm', 'optimizer']
 
-    # - role: dfe_rdp_optimizer
-    #   tags: ['rdp', 'optimizer']
+    - role: dfe_rdp_optimizer
+      tags: ['rdp', 'optimizer']
 
     - role: dfe_system_cleanup
       tags: ['always']

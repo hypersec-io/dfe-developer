@@ -1,3 +1,18 @@
 ---
-# TODO: Implement services optimization
+# Disable unnecessary services for VMs
 
+- name: Disable unnecessary VM services
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: false
+    masked: true
+  loop:
+    - bluetooth.service
+    - cups.service
+    - avahi-daemon.service
+    - ModemManager.service
+    - bolt.service
+  failed_when: false
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_virtualization_role == 'guest'
