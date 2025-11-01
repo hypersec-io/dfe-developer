@@ -1,35 +1,60 @@
 # DFE Developer Environment
 
-Standardised complete developer environment setup for HyperSec DFE developers on Fedora Linux and Windows 11.
+Standardised complete developer environment setup for HyperSec DFE developers across multiple platforms.
 
 ## Platform Support
 
-- **[Fedora Linux](#fedora-linux-quick-start)** - Complete development environment for Fedora 42+
+- **[Multi-Platform (Recommended)](#multi-platform-quick-start)** - Ansible-based setup for Fedora, Ubuntu, and macOS
+- **[Fedora Linux (Legacy)](#fedora-linux-legacy)** - Shell script-based setup (bug fixes only)
 - **[Windows 11](#windows-11-soe)** - Productivity and VM host setup with Hyper-V
 
-## Fedora Linux Quick Start
+## Multi-Platform Quick Start
 
-To be installed onto Fedora Linux 42+
+**Recommended for all new installations.** Supports Fedora 42+, Ubuntu 24.04+, and macOS.
+
+```bash
+# Clone the repository
+git clone https://github.com/hypersec-io/dfe-developer
+cd dfe-developer
+
+# Install base developer environment (default)
+./install.sh
+
+# Install with core developer tools
+./install.sh --core
+
+# Install everything (base + core + VM + RDP optimizers)
+./install.sh --all
+
+# Other options:
+./install.sh --no-ghostty      # Skip Ghostty terminal
+./install.sh --vm              # Add VM optimizations
+./install.sh --rdp             # Add RDP optimizations (Linux only)
+./install.sh --check           # Dry-run (no changes)
+```
+
+The Ansible-based installer automatically detects your OS and installs the appropriate packages.
+
+## Fedora Linux (Legacy)
+
+**Fedora-only shell scripts - bug fixes only, no new features.**
 
 ```bash
 # Clone the repository
 git clone https://github.com/hypersec-io/dfe-developer
 cd dfe-developer/fedora
 
-# Complete installation (recommended)
+# Complete installation
 ./install-all.sh 2>&1 | tee install.log
 
 # OR install components individually:
-./install-dfe-developer.sh      # Base developer tools (includes Ghostty terminal)
+./install-dfe-developer.sh      # Base developer tools
 ./install-dfe-developer-core.sh # Core DFE tools
 ./install-vm-optimizer.sh       # VM optimizations
 ./install-rdp-optimizer.sh      # RDP optimizations
-
-# Optional: Enable passwordless sudo (development machines only)
-./install-dfe-developer.sh --sudoers
 ```
 
-**Note:** Passwordless sudo is NOT configured by default for security. The scripts will prompt for your password when needed. Use `--sudoers` flag only on development machines (NOT on admin, bastion, or production systems).
+**Note:** The `/fedora` scripts are maintained for bug fixes only. All new features and enhancements go into the Ansible playbooks. Use `./install.sh` (Ansible) for new installations.
 
 ## What Gets Installed
 

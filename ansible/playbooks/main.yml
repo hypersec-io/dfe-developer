@@ -58,8 +58,8 @@
     - role: dfe_developer
       tags: ['developer', 'base']
 
-    # - role: dfe_developer_core
-    #   tags: ['core', 'advanced']
+    - role: dfe_developer_core
+      tags: ['core', 'advanced']
 
     # - role: dfe_vm_optimizer
     #   tags: ['vm', 'optimizer']
