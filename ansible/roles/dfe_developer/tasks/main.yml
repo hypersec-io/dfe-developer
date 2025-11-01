@@ -2,6 +2,11 @@
 # DFE Developer Environment - Main Tasks
 # Maps to: fedora/install-dfe-developer.sh
 
+- name: Initialize - Setup common variables
+  ansible.builtin.include_tasks:
+    file: init.yml
+  tags: ['always']
+
 - name: Configure OS repositories (mirrors, performance)
   ansible.builtin.include_tasks:
     file: repository.yml

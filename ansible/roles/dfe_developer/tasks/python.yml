@@ -3,31 +3,70 @@
 # UV package manager only - manages Python versions and packages (replaces pip, pyenv, pipx)
 
 # Install UV package manager (standalone, no dependencies needed)
-- name: Download UV installer
+# Using direct binary download instead of running installer script for security
+
+- name: Get latest UV version from GitHub API
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/astral-sh/uv/releases/latest
+    return_content: true
+  register: uv_latest_release
+
+- name: Set UV version fact
+  ansible.builtin.set_fact:
+    uv_version: "{{ uv_latest_release.json.tag_name }}"
+
+- name: Determine UV binary architecture
+  ansible.builtin.set_fact:
+    uv_arch: >-
+      {%- if ansible_system == 'Linux' and ansible_architecture == 'x86_64' -%}
+      x86_64-unknown-linux-gnu
+      {%- elif ansible_system == 'Darwin' and ansible_architecture == 'x86_64' -%}
+      x86_64-apple-darwin
+      {%- elif ansible_system == 'Darwin' and ansible_architecture == 'arm64' -%}
+      aarch64-apple-darwin
+      {%- else -%}
+      unsupported
+      {%- endif -%}
+
+- name: Fail if unsupported architecture
+  ansible.builtin.fail:
+    msg: "Unsupported architecture: {{ ansible_system }}/{{ ansible_architecture }}"
+  when: uv_arch == 'unsupported'
+
+- name: Download UV binary tarball
   ansible.builtin.get_url:
-    url: https://astral.sh/uv/install.sh
-    dest: /tmp/uv-install.sh
-    mode: '0755'
-  become: false
+    url: "https://github.com/astral-sh/uv/releases/download/{{ uv_version }}/uv-{{ uv_arch }}.tar.gz"
+    dest: "/tmp/uv-{{ uv_arch }}.tar.gz"
+    mode: '0644'
 
-- name: Install UV package manager
-  ansible.builtin.shell: /tmp/uv-install.sh
-  args:
-    creates: "{{ ansible_env.HOME }}/.cargo/bin/uv"
-  become: false
-  environment:
-    CARGO_HOME: "{{ ansible_env.HOME }}/.cargo"
-
-- name: Remove UV installer script
+- name: Create UV directory
   ansible.builtin.file:
-    path: /tmp/uv-install.sh
+    path: "{{ dfe_user_home }}/.cargo/bin"
+    state: directory
+    mode: '0755'
+    owner: "{{ dfe_actual_user }}"
+    group: "{{ dfe_actual_user }}"
+
+- name: Extract UV binary
+  ansible.builtin.unarchive:
+    src: "/tmp/uv-{{ uv_arch }}.tar.gz"
+    dest: "{{ dfe_user_home }}/.cargo/bin"
+    remote_src: true
+    creates: "{{ dfe_user_home }}/.cargo/bin/uv"
+    owner: "{{ dfe_actual_user }}"
+    group: "{{ dfe_actual_user }}"
+    extra_opts:
+      - --strip-components=1
+
+- name: Remove UV tarball
+  ansible.builtin.file:
+    path: "/tmp/uv-{{ uv_arch }}.tar.gz"
     state: absent
-  become: false
 
 - name: Display UV installation info
   ansible.builtin.debug:
     msg: |
-      UV installed successfully
+      UV {{ uv_version }} installed successfully
       Usage:
         uv python install 3.11      # Install Python 3.11
         uv python list               # List available Python versions

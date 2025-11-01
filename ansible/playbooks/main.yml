@@ -28,6 +28,18 @@
         (ansible_distribution == 'Fedora' and ansible_distribution_major_version|int < 42) or
         (ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('24.04', '<'))
 
+    - name: Detect actual user (for sudo operations)
+      ansible.builtin.set_fact:
+        dfe_actual_user: "{{ ansible_env.SUDO_USER | default(ansible_user_id, true) }}"
+
+    - name: Set actual user home directory
+      ansible.builtin.set_fact:
+        dfe_user_home: "{{ '/home/' + dfe_actual_user if dfe_actual_user != 'root' else '/root' }}"
+
+    - name: Display user information
+      ansible.builtin.debug:
+        msg: "Installing for user: {{ dfe_actual_user }} (home: {{ dfe_user_home }})"
+
     - name: Detect if GNOME is running
       ansible.builtin.command: pgrep -x gnome-shell
       register: gnome_running_check
