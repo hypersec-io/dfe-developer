@@ -129,18 +129,20 @@
     mode: '0644'
 
 # Also deploy to current user if running for first time
-- name: Create Ghostty config directory for current user
+- name: Create Ghostty config directory for actual user
   ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/.config/ghostty"
+    path: "{{ dfe_user_home }}/.config/ghostty"
     state: directory
     mode: '0755'
-  become: false
+    owner: "{{ dfe_actual_user }}"
+    group: "{{ dfe_actual_user }}"
 
-- name: Deploy Ghostty configuration for current user
+- name: Deploy Ghostty configuration for actual user
   ansible.builtin.copy:
     src: /etc/skel/.config/ghostty/config
-    dest: "{{ ansible_env.HOME }}/.config/ghostty/config"
+    dest: "{{ dfe_user_home }}/.config/ghostty/config"
     mode: '0644'
+    owner: "{{ dfe_actual_user }}"
+    group: "{{ dfe_actual_user }}"
     remote_src: true
     force: false
-  become: false
