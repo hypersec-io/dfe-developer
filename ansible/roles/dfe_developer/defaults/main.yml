@@ -2,9 +2,9 @@
 # DFE Developer Environment - Defaults
 
 # Mirror configuration (validated before use)
-dfe_use_mirrors: true  # Set to false to use OS default mirrors
+dfe_use_mirrors: false  # Set to true to use custom mirrors (AARNET has issues with Fedora updates)
 dfe_mirror_url: "https://mirror.aarnet.edu.au/pub"  # Override for different mirror (e.g., company mirror)
-# Note: Mirrors can improve download speeds (default: AARNET in Australia)
+# Note: AARNET mirrors work for Ubuntu but have issues with Fedora updates - use OS defaults
 
 # Ghostty installation
 dfe_install_ghostty: true
