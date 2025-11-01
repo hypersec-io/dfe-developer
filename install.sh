@@ -69,6 +69,10 @@ while [[ $# -gt 0 ]]; do
             ANSIBLE_EXTRA_VARS="$ANSIBLE_EXTRA_VARS -e dfe_install_ghostty=false"
             shift
             ;;
+        --no-fastestmirror)
+            ANSIBLE_EXTRA_VARS="$ANSIBLE_EXTRA_VARS -e dfe_use_fastestmirror=false"
+            shift
+            ;;
         --core)
             ANSIBLE_TAGS="--tags developer,base,core,advanced"
             shift
@@ -89,15 +93,16 @@ while [[ $# -gt 0 ]]; do
             echo "Usage: $0 [OPTIONS]"
             echo ""
             echo "Options:"
-            echo "  --check         Run in check mode (dry-run, no changes)"
-            echo "  --tags TAGS     Run specific Ansible tags (comma-separated)"
-            echo "  --branch BRANCH Git branch to use (default: main)"
-            echo "  --no-ghostty    Skip Ghostty terminal installation"
-            echo "  --core          Install core developer tools (JFrog, Azure, Node.js, etc.)"
-            echo "  --vm            Install VM optimizer tools"
-            echo "  --rdp           Install RDP optimizer (GNOME Remote Desktop auto-resize)"
-            echo "  --all           Install everything (base + core + VM + RDP)"
-            echo "  --help          Show this help message"
+            echo "  --check              Run in check mode (dry-run, no changes)"
+            echo "  --tags TAGS          Run specific Ansible tags (comma-separated)"
+            echo "  --branch BRANCH      Git branch to use (default: main)"
+            echo "  --no-ghostty         Skip Ghostty terminal installation"
+            echo "  --no-fastestmirror   Disable automatic mirror selection (use OS defaults)"
+            echo "  --core               Install core developer tools (JFrog, Azure, Node.js, etc.)"
+            echo "  --vm                 Install VM optimizer tools"
+            echo "  --rdp                Install RDP optimizer (GNOME Remote Desktop auto-resize)"
+            echo "  --all                Install everything (base + core + VM + RDP)"
+            echo "  --help               Show this help message"
             echo ""
             echo "Default: Base developer environment only (Docker, K8s, Python, Git, VS Code, Chrome, Ghostty)"
             exit 0
