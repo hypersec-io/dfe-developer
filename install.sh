@@ -160,40 +160,61 @@ if ! sudo -n true 2>/dev/null; then
 fi
 print_success "Sudo access verified"
 
-# Check if Ansible is installed
-if command -v ansible-playbook &>/dev/null; then
-    ANSIBLE_VERSION=$(ansible --version | head -1 | awk '{print $2}')
-    print_success "Ansible already installed (version $ANSIBLE_VERSION)"
-else
-    print_info "Installing Ansible..."
+# Install latest Ansible in temporary Python venv (isolated from OS)
+# This avoids circular dependency if playbook updates system Ansible
+TEMP_ANSIBLE_DIR="$HOME/.dfe-ansible-temp"
+ANSIBLE_BIN="$TEMP_ANSIBLE_DIR/bin/ansible-playbook"
 
+if [[ -f "$ANSIBLE_BIN" ]]; then
+    ANSIBLE_VERSION=$("$TEMP_ANSIBLE_DIR/bin/ansible" --version | head -1 | awk '{print $2}')
+    print_info "Using temporary Ansible venv (version $ANSIBLE_VERSION)"
+else
+    print_info "Creating temporary Ansible environment (isolated from OS)..."
+
+    # Ensure Python 3 is installed
     case "$OS_FAMILY" in
         fedora)
-            sudo dnf install -y ansible || {
-                print_error "Failed to install Ansible via dnf"
-                exit 1
-            }
+            if ! command -v python3 &>/dev/null; then
+                sudo dnf install -y python3 python3-pip || {
+                    print_error "Failed to install Python 3"
+                    exit 1
+                }
+            fi
             ;;
         ubuntu|debian)
-            sudo apt update
-            sudo apt install -y ansible || {
-                print_error "Failed to install Ansible via apt"
-                exit 1
-            }
+            if ! command -v python3 &>/dev/null; then
+                sudo apt update
+                sudo apt install -y python3 python3-pip python3-venv || {
+                    print_error "Failed to install Python 3"
+                    exit 1
+                }
+            fi
             ;;
         macos)
-            if ! command -v brew &>/dev/null; then
-                print_error "Homebrew not installed. Install from https://brew.sh"
+            if ! command -v python3 &>/dev/null; then
+                print_error "Python 3 not found. Install from https://www.python.org or use: brew install python3"
                 exit 1
             fi
-            brew install ansible || {
-                print_error "Failed to install Ansible via Homebrew"
-                exit 1
-            }
             ;;
     esac
 
-    print_success "Ansible installed successfully"
+    # Create temporary Python venv
+    python3 -m venv "$TEMP_ANSIBLE_DIR" || {
+        print_error "Failed to create Python venv"
+        exit 1
+    }
+
+    # Install latest Ansible via pip
+    print_info "Installing latest Ansible via pip (isolated venv)..."
+    "$TEMP_ANSIBLE_DIR/bin/pip" install --upgrade pip setuptools wheel >/dev/null 2>&1
+    "$TEMP_ANSIBLE_DIR/bin/pip" install ansible >/dev/null 2>&1 || {
+        print_error "Failed to install Ansible via pip"
+        exit 1
+    }
+
+    ANSIBLE_VERSION=$("$TEMP_ANSIBLE_DIR/bin/ansible" --version | head -1 | awk '{print $2}')
+    print_success "Ansible $ANSIBLE_VERSION installed to temporary venv"
+    print_info "Location: $TEMP_ANSIBLE_DIR (will be reused on subsequent runs)"
 fi
 
 # Determine script directory and check for ansible directory
@@ -245,13 +266,13 @@ if [[ ! -d "ansible" ]]; then
     print_success "Ansible directory cloned successfully"
 fi
 
-# Run Ansible playbook
-print_info "Running Ansible playbook..."
-print_info "Command: ansible-playbook ansible/playbooks/main.yml -i ansible/inventories/localhost/inventory.yml $ANSIBLE_CHECK $ANSIBLE_TAGS $ANSIBLE_EXTRA_VARS"
+# Run Ansible playbook using temp venv Ansible
+print_info "Running Ansible playbook (using isolated venv Ansible)..."
+print_info "Command: $ANSIBLE_BIN ansible/playbooks/main.yml -i ansible/inventories/localhost/inventory.yml $ANSIBLE_CHECK $ANSIBLE_TAGS $ANSIBLE_EXTRA_VARS"
 
 cd ansible || exit 1
 
-ansible-playbook \
+"$ANSIBLE_BIN" \
     playbooks/main.yml \
     -i inventories/localhost/inventory.yml \
     $ANSIBLE_CHECK \
