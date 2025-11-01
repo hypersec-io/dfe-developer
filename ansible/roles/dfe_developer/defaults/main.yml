@@ -1,13 +1,10 @@
 ---
 # DFE Developer Environment - Defaults
 
-# Mirror configuration (validated before use)
-dfe_use_mirrors: false  # Disabled: AARNET Fedora mirror has persistent zchunk/metalink issues
-# Per-distro mirror URLs (default: AARNET - change to your local mirror)
-dfe_fedora_mirror_base: "https://mirror.aarnet.edu.au/pub/fedora/linux"
-dfe_ubuntu_mirror_base: "https://mirror.aarnet.edu.au/pub/ubuntu/archive"
-# Note: Ubuntu mirrors work perfectly. Fedora AARNET mirror has corrupt zchunk metadata.
-# TODO: Test with different Fedora mirror (US/EU mirrors may work)
+# Mirror/repository optimization configuration
+dfe_use_fastestmirror: true  # Enable fastest mirror selection (automatic mirror selection)
+# Note: Fedora uses fastestmirror, Ubuntu uses mirror selection in sources.list
+# Set to false with --no-fastestmirror flag to use default repos only
 
 # Ghostty installation
 dfe_install_ghostty: true

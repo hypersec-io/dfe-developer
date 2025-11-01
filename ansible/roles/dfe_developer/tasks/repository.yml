@@ -32,7 +32,7 @@
 # FEDORA REPOSITORY CONFIGURATION
 # ============================================================================
 
-- name: Configure Fedora mirrors
+- name: Enable Fedora fastestmirror
   block:
     - name: Ensure DNF vars directory exists
       ansible.builtin.file:
