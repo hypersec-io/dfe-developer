@@ -8,28 +8,37 @@
     state: present
   when: ansible_distribution == 'Fedora'
 
-- name: Configure dnf-automatic for security updates only (Fedora)
-  ansible.builtin.lineinfile:
+- name: Wait for dnf-automatic.conf to be created
+  ansible.builtin.wait_for:
     path: /etc/dnf/automatic.conf
-    regexp: "^upgrade_type"
-    line: "upgrade_type = security"
-    state: present
+    timeout: 5
+  when: ansible_distribution == 'Fedora'
+
+- name: Configure dnf-automatic for security updates only (Fedora)
+  ansible.builtin.ini_file:
+    path: /etc/dnf/automatic.conf
+    section: commands
+    option: upgrade_type
+    value: security
+    mode: '0644'
   when: ansible_distribution == 'Fedora'
 
 - name: Enable automatic downloads (Fedora)
-  ansible.builtin.lineinfile:
+  ansible.builtin.ini_file:
     path: /etc/dnf/automatic.conf
-    regexp: "^download_updates"
-    line: "download_updates = yes"
-    state: present
+    section: commands
+    option: download_updates
+    value: "yes"
+    mode: '0644'
   when: ansible_distribution == 'Fedora'
 
 - name: Enable automatic application of security updates (Fedora)
-  ansible.builtin.lineinfile:
+  ansible.builtin.ini_file:
     path: /etc/dnf/automatic.conf
-    regexp: "^apply_updates"
-    line: "apply_updates = yes"
-    state: present
+    section: commands
+    option: apply_updates
+    value: "yes"
+    mode: '0644'
   when: ansible_distribution == 'Fedora'
 
 - name: Enable and start dnf-automatic timer (Fedora)
