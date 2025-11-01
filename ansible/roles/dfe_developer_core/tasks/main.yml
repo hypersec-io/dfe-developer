@@ -2,6 +2,11 @@
 # DFE Developer Core - Main Tasks
 # Maps to: fedora/install-dfe-developer-core.sh
 
+- name: Install C development tools
+  ansible.builtin.include_tasks:
+    file: c_tools.yml
+  tags: ['c_tools', 'dev']
+
 - name: Install JFrog CLI
   ansible.builtin.include_tasks:
     file: jfrog.yml
@@ -27,3 +32,13 @@
     file: slack.yml
   tags: ['slack']
   when: ansible_env.DISPLAY is defined or ansible_env.WAYLAND_DISPLAY is defined
+
+- name: Install OpenVPN 3
+  ansible.builtin.include_tasks:
+    file: openvpn.yml
+  tags: ['openvpn', 'vpn']
+
+- name: Install Claude Code CLI
+  ansible.builtin.include_tasks:
+    file: claude.yml
+  tags: ['claude', 'ai']
