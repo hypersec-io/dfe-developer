@@ -66,11 +66,11 @@
         regexp: '^metalink='
         replace: '#metalink='
 
-    - name: Add mirror to fedora.repo
+    - name: Add mirror to fedora.repo (use exact version to avoid DNF5 $releasever bug)
       ansible.builtin.lineinfile:
         path: /etc/yum.repos.d/fedora.repo
         insertafter: '^\[fedora\]'
-        line: "baseurl={{ dfe_fedora_mirror_base }}/releases/$releasever/Everything/$basearch/os/"
+        line: "baseurl={{ dfe_fedora_mirror_base }}/releases/{{ ansible_distribution_major_version }}/Everything/$basearch/os/"
         state: present
 
     - name: Disable metalink in fedora-updates.repo
@@ -79,11 +79,11 @@
         regexp: '^metalink='
         replace: '#metalink='
 
-    - name: Add mirror to fedora-updates.repo
+    - name: Add mirror to fedora-updates.repo (use exact version to avoid DNF5 $releasever bug)
       ansible.builtin.lineinfile:
         path: /etc/yum.repos.d/fedora-updates.repo
         insertafter: '^\[updates\]'
-        line: "baseurl={{ dfe_fedora_mirror_base }}/updates/$releasever/Everything/$basearch/"
+        line: "baseurl={{ dfe_fedora_mirror_base }}/updates/{{ ansible_distribution_major_version }}/Everything/$basearch/"
         state: present
 
     - name: Create DNF conf.d directory
