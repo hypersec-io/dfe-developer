@@ -54,11 +54,11 @@
         regexp: '^metalink='
         replace: '#metalink='
 
-    - name: Add AARNET mirror to fedora.repo
+    - name: Add mirror to fedora.repo
       ansible.builtin.lineinfile:
         path: /etc/yum.repos.d/fedora.repo
         insertafter: '^\[fedora\]'
-        line: "baseurl={{ dfe_mirror_url }}/fedora/linux/releases/$releasever/Everything/$basearch/os/"
+        line: "baseurl={{ dfe_fedora_mirror_base }}/releases/$releasever/Everything/$basearch/os/"
         state: present
 
     - name: Disable metalink in fedora-updates.repo
@@ -67,11 +67,11 @@
         regexp: '^metalink='
         replace: '#metalink='
 
-    - name: Add AARNET mirror to fedora-updates.repo
+    - name: Add mirror to fedora-updates.repo
       ansible.builtin.lineinfile:
         path: /etc/yum.repos.d/fedora-updates.repo
         insertafter: '^\[updates\]'
-        line: "baseurl={{ dfe_mirror_url }}/fedora/linux/updates/$releasever/Everything/$basearch/"
+        line: "baseurl={{ dfe_fedora_mirror_base }}/updates/$releasever/Everything/$basearch/"
         state: present
 
     - name: Create DNF conf.d directory
@@ -122,14 +122,14 @@
       ansible.builtin.replace:
         path: /etc/apt/sources.list
         regexp: 'http://[a-z]{2}\.archive\.ubuntu\.com/ubuntu'
-        replace: "{{ dfe_mirror_url }}/ubuntu/archive"
+        replace: "{{ dfe_ubuntu_mirror_base }}"
         backup: false
 
     - name: Configure security mirror for Ubuntu
       ansible.builtin.replace:
         path: /etc/apt/sources.list
         regexp: 'http://security\.ubuntu\.com/ubuntu'
-        replace: "{{ dfe_mirror_url }}/ubuntu/archive"
+        replace: "{{ dfe_ubuntu_mirror_base }}"
         backup: false
 
     - name: Configure APT performance settings
