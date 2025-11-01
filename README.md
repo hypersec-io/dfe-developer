@@ -10,7 +10,9 @@ Standardised complete developer environment setup for HyperSec DFE developers ac
 
 ## Multi-Platform Quick Start
 
-**Recommended for all new installations.** Supports Fedora 42+, Ubuntu 24.04+, and macOS.
+**Recommended for all new installations.** Supports Ubuntu 24.04+ (primary), Fedora 42+, and macOS.
+
+**v3.0+**: Ubuntu is now the primary supported platform, with Fedora and macOS as secondary platforms.
 
 ```bash
 # Clone the repository
