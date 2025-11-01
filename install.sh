@@ -48,6 +48,8 @@ ANSIBLE_CHECK=""
 ANSIBLE_TAGS=""
 ANSIBLE_SKIP_TAGS=""
 ANSIBLE_EXTRA_VARS=""
+GIT_BRANCH="main"
+REPO_URL="https://github.com/hypersec-io/dfe-developer.git"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -57,6 +59,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --tags)
             ANSIBLE_TAGS="--tags $2"
+            shift 2
+            ;;
+        --branch)
+            GIT_BRANCH="$2"
             shift 2
             ;;
         --no-ghostty)
@@ -85,6 +91,7 @@ while [[ $# -gt 0 ]]; do
             echo "Options:"
             echo "  --check         Run in check mode (dry-run, no changes)"
             echo "  --tags TAGS     Run specific Ansible tags (comma-separated)"
+            echo "  --branch BRANCH Git branch to use (default: main)"
             echo "  --no-ghostty    Skip Ghostty terminal installation"
             echo "  --core          Install core developer tools (JFrog, Azure, Node.js, etc.)"
             echo "  --vm            Install VM optimizer tools"
@@ -189,15 +196,53 @@ else
     print_success "Ansible installed successfully"
 fi
 
-# Verify we're in the repo directory
+# Determine script directory and check for ansible directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR" || exit 1
 
-# Check if ansible directory exists
+# Check if ansible directory exists, clone if not
 if [[ ! -d "ansible" ]]; then
-    print_error "ansible/ directory not found in repository"
-    print_info "Expected location: $SCRIPT_DIR/ansible"
-    exit 1
+    print_warning "ansible/ directory not found"
+    print_info "Cloning ansible directory from repository (branch: $GIT_BRANCH)..."
+
+    # Check if git is installed
+    if ! command -v git &>/dev/null; then
+        case "$OS_FAMILY" in
+            fedora)
+                sudo dnf install -y git
+                ;;
+            ubuntu|debian)
+                sudo apt update && sudo apt install -y git
+                ;;
+            macos)
+                print_error "Git not found. Install Xcode Command Line Tools: xcode-select --install"
+                exit 1
+                ;;
+        esac
+    fi
+
+    # Clone only the ansible directory using sparse checkout
+    print_info "Cloning ansible directory from $REPO_URL (branch: $GIT_BRANCH)..."
+    mkdir -p .dfe-temp-repo
+    cd .dfe-temp-repo || exit 1
+
+    git init
+    git remote add origin "$REPO_URL"
+    git config core.sparseCheckout true
+    echo "ansible/" > .git/info/sparse-checkout
+    git pull origin "$GIT_BRANCH" || {
+        print_error "Failed to clone ansible directory from branch: $GIT_BRANCH"
+        cd ..
+        rm -rf .dfe-temp-repo
+        exit 1
+    }
+
+    # Move ansible directory to parent
+    mv ansible ../
+    cd ..
+    rm -rf .dfe-temp-repo
+
+    print_success "Ansible directory cloned successfully"
 fi
 
 # Run Ansible playbook
