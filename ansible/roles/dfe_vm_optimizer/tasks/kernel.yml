@@ -1,40 +1,35 @@
 ---
 # Kernel parameter optimizations for VMs
 
-- name: Configure VM kernel parameters using sysctl module
-  ansible.posix.sysctl:
-    name: "{{ item.name }}"
-    value: "{{ item.value }}"
-    state: present
-    sysctl_set: true
-    sysctl_file: /etc/sysctl.d/98-vm-optimizer.conf
-    reload: false
-  loop:
-    # Memory optimizations
-    - { name: 'vm.swappiness', value: '10' }
-    - { name: 'vm.dirty_ratio', value: '15' }
-    - { name: 'vm.dirty_background_ratio', value: '5' }
-    - { name: 'vm.vfs_cache_pressure', value: '50' }
-    # Scheduler optimizations
-    - { name: 'kernel.sched_min_granularity_ns', value: '10000000' }
-    - { name: 'kernel.sched_wakeup_granularity_ns', value: '15000000' }
-    # Network optimizations
-    - { name: 'net.core.netdev_max_backlog', value: '5000' }
-    - { name: 'net.ipv4.tcp_congestion_control', value: 'bbr' }
-    - { name: 'net.core.default_qdisc', value: 'fq' }
-    # Security
-    - { name: 'net.ipv4.conf.all.accept_source_route', value: '0' }
-    - { name: 'net.ipv6.conf.all.accept_source_route', value: '0' }
-    # IPv6 disable (reduces overhead in VMs)
-    - { name: 'net.ipv6.conf.all.disable_ipv6', value: '1' }
-    - { name: 'net.ipv6.conf.default.disable_ipv6', value: '1' }
-  when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
-    - ansible_virtualization_role == 'guest'
+- name: Configure VM kernel parameters
+  ansible.builtin.copy:
+    dest: /etc/sysctl.d/98-vm-optimizer.conf
+    content: |
+      # VM Optimizer Settings
 
-- name: Reload sysctl settings
-  ansible.builtin.command: sysctl --system
-  changed_when: false
+      # Memory optimizations
+      vm.swappiness = 10
+      vm.dirty_ratio = 15
+      vm.dirty_background_ratio = 5
+      vm.vfs_cache_pressure = 50
+
+      # Scheduler optimizations
+      kernel.sched_min_granularity_ns = 10000000
+      kernel.sched_wakeup_granularity_ns = 15000000
+
+      # Network optimizations
+      net.core.netdev_max_backlog = 5000
+      net.ipv4.tcp_congestion_control = bbr
+      net.core.default_qdisc = fq
+
+      # Security
+      net.ipv4.conf.all.accept_source_route = 0
+      net.ipv6.conf.all.accept_source_route = 0
+
+      # IPv6 disable (reduces overhead in VMs)
+      net.ipv6.conf.all.disable_ipv6 = 1
+      net.ipv6.conf.default.disable_ipv6 = 1
+    mode: '0644'
   when:
     - ansible_distribution in ['Fedora', 'Ubuntu']
     - ansible_virtualization_role == 'guest'
