@@ -2,11 +2,12 @@
 # DFE Developer Environment - Defaults
 
 # Mirror configuration (validated before use)
-dfe_use_mirrors: false  # Set to true to enable mirrors (Fedora 42 DNF5 has issues - investigating)
+dfe_use_mirrors: false  # Disabled by default (Fedora 42 incompatible with AARNET due to DNF5/metalink conflicts)
 # Per-distro mirror URLs (default: AARNET - change to your local mirror)
 dfe_fedora_mirror_base: "https://mirror.aarnet.edu.au/pub/fedora/linux"
 dfe_ubuntu_mirror_base: "https://mirror.aarnet.edu.au/pub/ubuntu/archive"
-# Note: Mirrors improve download speeds - set to your country's mirror for best performance
+# Note: Ubuntu mirrors work fine. Fedora mirrors conflict with RPMFusion/COPR metalinks in DNF5.
+# Use OS defaults for Fedora or find a mirror without metalink conflicts.
 
 # Ghostty installation
 dfe_install_ghostty: true
