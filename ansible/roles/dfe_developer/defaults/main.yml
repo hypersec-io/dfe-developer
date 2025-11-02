@@ -6,6 +6,14 @@ dfe_use_fastestmirror: true  # Enable fastest mirror selection (automatic mirror
 # Note: Fedora uses fastestmirror, Ubuntu uses mirror selection in sources.list
 # Set to false with --no-fastestmirror flag to use default repos only
 
+# Supported platforms (used for validation in init.yml)
+dfe_supported_distros:
+  - Fedora
+  - Ubuntu
+  - MacOSX
+dfe_min_fedora_version: 42
+dfe_min_ubuntu_version: "24.04"
+
 # Ghostty installation
 dfe_install_ghostty: true
 

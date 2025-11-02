@@ -1,6 +1,25 @@
 ---
 # Bootstrap tasks - run once at the start
-# Sets up common variables used across all tasks
+# Sets up common variables and validates platform
+
+- name: Validate supported distribution
+  ansible.builtin.fail:
+    msg: "Unsupported distribution: {{ ansible_distribution }}. Supported: {{ dfe_supported_distros | join(', ') }}"
+  when: ansible_distribution not in dfe_supported_distros
+
+- name: Validate Fedora version
+  ansible.builtin.fail:
+    msg: "Unsupported Fedora version: {{ ansible_distribution_major_version }}. Minimum required: {{ dfe_min_fedora_version }}"
+  when:
+    - ansible_distribution == 'Fedora'
+    - ansible_distribution_major_version | int < dfe_min_fedora_version
+
+- name: Validate Ubuntu version
+  ansible.builtin.fail:
+    msg: "Unsupported Ubuntu version: {{ ansible_distribution_version }}. Minimum required: {{ dfe_min_ubuntu_version }}"
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - ansible_distribution_version is version(dfe_min_ubuntu_version, '<')
 
 - name: Detect actual user (for sudo operations)
   ansible.builtin.set_fact:
