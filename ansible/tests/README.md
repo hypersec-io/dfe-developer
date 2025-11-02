@@ -20,8 +20,8 @@ Automated testing on Proxmox (Fedora/Ubuntu) and Scaleway (macOS).
 The Scaleway CLI is installed on this machine for manual operations:
 
 ```bash
-# Activate Python venv with Scaleway CLI
-source ~/.local/share/scaleway-cli/venv/bin/activate
+# Scaleway CLI is installed at /usr/local/bin/scw
+# No venv needed - it's a standalone binary
 
 # List Mac minis
 scw apple-silicon server list zone=fr-par-3
