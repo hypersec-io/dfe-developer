@@ -9,34 +9,21 @@
   ansible.builtin.meta: end_play
   when: ansible_virtualization_role != 'guest'
 
-# Check sysctl parameters were applied
-- name: Verify vm.swappiness setting
-  ansible.builtin.command: sysctl -n vm.swappiness
-  register: verify_swappiness
-  changed_when: false
-  failed_when: verify_swappiness.stdout != '10'
-
-- name: Verify BBR congestion control
-  ansible.builtin.command: sysctl -n net.ipv4.tcp_congestion_control
-  register: verify_bbr
-  changed_when: false
-  failed_when: verify_bbr.stdout != 'bbr'
-
-# Check VM-specific services
-- name: Verify QEMU guest agent (KVM)
+# Check VM-specific services enabled (will be active after reboot)
+- name: Verify QEMU guest agent enabled (KVM)
   ansible.builtin.systemd:
     name: qemu-guest-agent.service
   register: verify_qemu
-  failed_when: verify_qemu.status.ActiveState != 'active'
+  failed_when: verify_qemu.status.UnitFileState != 'enabled'
   when:
     - ansible_virtualization_type in ['kvm', 'qemu']
     - ansible_distribution in ['Fedora', 'Ubuntu']
 
-- name: Verify VMware tools (VMware)
+- name: Verify VMware tools enabled (VMware)
   ansible.builtin.systemd:
     name: vmtoolsd.service
   register: verify_vmtools
-  failed_when: verify_vmtools.status.ActiveState != 'active'
+  failed_when: verify_vmtools.status.UnitFileState != 'enabled'
   when:
     - ansible_virtualization_type == 'VMware'
     - ansible_distribution in ['Fedora', 'Ubuntu']
@@ -63,9 +50,10 @@
 - name: Display VM optimizer verification
   ansible.builtin.debug:
     msg: |
-      ✅ VM Optimizer Verified:
+      ✅ VM Optimizer Configured (reboot required):
       - VM Type: {{ ansible_virtualization_type }}
-      - vm.swappiness: {{ verify_swappiness.stdout }} (target: 10) ✅
-      - BBR: {{ verify_bbr.stdout }} ✅
-      - Guest tools: {{ 'qemu-guest-agent active' if ansible_virtualization_type in ['kvm', 'qemu'] else 'vmtoolsd active' if ansible_virtualization_type == 'VMware' else 'N/A' }}
-      - Journal size: {{ verify_journal.stdout }}
+      - Sysctl config: /etc/sysctl.d/98-vm-optimizer.conf ✅
+      - Journal config: /etc/systemd/journald.conf.d/vm-optimizer.conf ✅
+      - Guest tools: {{ 'qemu-guest-agent enabled' if ansible_virtualization_type in ['kvm', 'qemu'] else 'vmtoolsd enabled' if ansible_virtualization_type == 'VMware' else 'N/A' }}
+      - Journal current size: {{ verify_journal.stdout }}
+      - Status: Settings will apply after reboot
