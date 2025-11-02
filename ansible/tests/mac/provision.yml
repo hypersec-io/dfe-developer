@@ -1,0 +1,88 @@
+---
+# Provision Scaleway Mac mini for testing
+# Reads configuration from ../.env file
+# Requires: ansible-galaxy collection install scaleway.scaleway
+
+- name: Provision Scaleway Mac mini
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    env_file: "{{ playbook_dir }}/../.env"
+
+  tasks:
+    - name: Load environment variables from .env
+      ansible.builtin.include_vars:
+        file: "{{ env_file }}"
+        name: env
+
+    - name: Check for existing Mac mini
+      ansible.builtin.uri:
+        url: "https://api.scaleway.com/apple-silicon/v1alpha1/zones/{{ env.SCALEWAY_ZONE }}/servers"
+        method: GET
+        headers:
+          X-Auth-Token: "{{ env.SCALEWAY_ACCESS_KEY_SECRET }}"
+        return_content: true
+      register: existing_servers
+
+    - name: Find our Mac mini if it exists
+      ansible.builtin.set_fact:
+        server_id: "{{ item.id }}"
+      loop: "{{ existing_servers.json.servers }}"
+      when: item.name == env.SCALEWAY_MAC_NAME
+      no_log: true
+
+    - name: Create Mac mini if not exists
+      ansible.builtin.uri:
+        url: "https://api.scaleway.com/apple-silicon/v1alpha1/zones/{{ env.SCALEWAY_ZONE }}/servers"
+        method: POST
+        headers:
+          X-Auth-Token: "{{ env.SCALEWAY_ACCESS_KEY_SECRET }}"
+          Content-Type: application/json
+        body_format: json
+        body:
+          name: "{{ env.SCALEWAY_MAC_NAME }}"
+          project_id: "{{ env.SCALEWAY_PROJECT_ID }}"
+          type: "{{ env.SCALEWAY_MAC_TYPE }}"
+        return_content: true
+      register: new_server
+      when: server_id is not defined
+
+    - name: Set server ID from new server
+      ansible.builtin.set_fact:
+        server_id: "{{ new_server.json.server.id }}"
+      when: new_server is defined and new_server.json is defined
+
+    - name: Wait for Mac mini to be ready
+      ansible.builtin.uri:
+        url: "https://api.scaleway.com/apple-silicon/v1alpha1/zones/{{ env.SCALEWAY_ZONE }}/servers/{{ server_id }}"
+        method: GET
+        headers:
+          X-Auth-Token: "{{ env.SCALEWAY_ACCESS_KEY_SECRET }}"
+        return_content: true
+      register: server_info
+      until: server_info.json.server.status == "ready"
+      retries: 60
+      delay: 20
+
+    - name: Generate dynamic inventory
+      ansible.builtin.copy:
+        content: |
+          [scaleway_mac]
+          {{ server_info.json.server.public_ip.address }} ansible_user={{ server_info.json.server.credentials.username }} ansible_password={{ server_info.json.server.credentials.password }}
+        dest: "{{ playbook_dir }}/inventory_scaleway.yml"
+
+    - name: Display connection info
+      ansible.builtin.debug:
+        msg: |
+          ✅ Scaleway Mac mini ready:
+          - SSH: ssh {{ server_info.json.server.credentials.username }}@{{ server_info.json.server.public_ip.address }}
+          - Password: {{ server_info.json.server.credentials.password }}
+          - VNC: {{ server_info.json.server.public_ip.address }}:{{ server_info.json.server.vnc_port }}
+          - Server ID: {{ server_id }}
+
+          Inventory: {{ playbook_dir }}/inventory_scaleway.yml
+
+          Next: ansible-playbook -i tests/mac/inventory_scaleway.yml playbooks/main.yml
+
+          Auto-delete in {{ env.SCALEWAY_AUTO_DELETE_HOURS }}h

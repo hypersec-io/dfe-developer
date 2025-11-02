@@ -65,4 +65,4 @@ CLAUDE.md
 
 # Keep these even though they have claude in name
 !lib.sh
-!install-*claude*.sh
+!install-*claude*.shansible/tests/.env
