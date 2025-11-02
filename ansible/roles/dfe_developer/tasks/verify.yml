@@ -15,11 +15,11 @@
   failed_when: verify_docker_service.status.UnitFileState != 'enabled'
   when: ansible_distribution in ['Fedora', 'Ubuntu']
 
-- name: Verify user in docker group
-  ansible.builtin.command: groups {{ dfe_actual_user }}
+- name: Check if user in docker group (requires logout to take effect)
+  ansible.builtin.command: getent group docker
   register: verify_docker_group
   changed_when: false
-  failed_when: "'docker' not in verify_docker_group.stdout"
+  failed_when: verify_docker_group.rc != 0 or dfe_actual_user not in verify_docker_group.stdout
 
 # Kubernetes tools
 - name: Verify kubectl
