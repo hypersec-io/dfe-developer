@@ -71,6 +71,11 @@
       tags: ['always']
 
   post_tasks:
+    - name: Verify key tools are installed
+      ansible.builtin.include_tasks:
+        file: ../verify.yml
+      tags: ['verify']
+
     - name: Display completion message
       ansible.builtin.debug:
         msg: |
@@ -78,5 +83,5 @@
 
           Next steps:
           1. Log out and back in for Docker group membership
-          2. Verify: docker --version, kubectl version, python3 --version
+          2. Reboot to apply all optimizations
           3. Configure your tools (Git, AWS CLI, etc.)
