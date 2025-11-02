@@ -44,6 +44,7 @@
           name: "{{ env.SCALEWAY_MAC_NAME }}"
           project_id: "{{ env.SCALEWAY_PROJECT_ID }}"
           type: "{{ env.SCALEWAY_MAC_TYPE }}"
+          tags: "{{ env.SCALEWAY_TAGS.split(',') + [env.SCALEWAY_AGENT_TAG] }}"
         return_content: true
       register: new_server
       when: server_id is not defined
