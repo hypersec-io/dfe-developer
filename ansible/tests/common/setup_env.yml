@@ -2,15 +2,19 @@
 # CRUD operations for .env file
 # Creates .env from .env.sample if missing, updates variables, reads existing
 
+- name: Find tests directory
+  ansible.builtin.set_fact:
+    tests_dir: "{{ playbook_dir }}/../../tests" if 'serverless' in playbook_dir else "{{ playbook_dir }}/../tests" if 'mac' in playbook_dir or 'proxmox' in playbook_dir else "{{ playbook_dir }}/tests"
+
 - name: Check if .env exists
   ansible.builtin.stat:
-    path: "{{ playbook_dir }}/../.env"
+    path: "{{ tests_dir }}/.env"
   register: env_file_stat
 
 - name: Create .env from .env.sample if missing
   ansible.builtin.copy:
-    src: "{{ playbook_dir }}/../.env.sample"
-    dest: "{{ playbook_dir }}/../.env"
+    src: "{{ tests_dir }}/.env.sample"
+    dest: "{{ tests_dir }}/.env"
     mode: '0600'
   when: not env_file_stat.stat.exists
 
@@ -27,12 +31,12 @@
 
 - name: Load environment variables from .env
   ansible.builtin.include_vars:
-    file: "{{ playbook_dir }}/../.env"
+    file: "{{ tests_dir }}/.env"
     name: env
 
 - name: Update .env with runtime values (e.g., generated server IDs)
   ansible.builtin.lineinfile:
-    path: "{{ playbook_dir }}/../.env"
+    path: "{{ tests_dir }}/.env"
     regexp: "^{{ item.key }}="
     line: "{{ item.key }}={{ item.value }}"
     create: false
