@@ -1,5 +1,6 @@
 ---
 # Deploy Scaleway Serverless Function for idle Mac mini deletion
+# OPTIONAL: Only deploys if DEPLOY_SCALEWAY_IDLE_FUNCTION=true in .env
 # Creates function + CRON trigger to run every hour
 
 - name: Deploy Scaleway idle checker function
@@ -10,6 +11,20 @@
     - name: Setup .env
       ansible.builtin.include_tasks:
         file: ../../common/setup_env.yml
+
+    - name: Check if deployment is enabled
+      ansible.builtin.fail:
+        msg: |
+          Serverless function deployment is DISABLED.
+          To enable: Set DEPLOY_SCALEWAY_IDLE_FUNCTION=true in ansible/tests/.env
+
+          This is a one-time setup that creates:
+          - Scaleway Functions namespace
+          - Python function for idle detection
+          - Hourly CRON trigger
+
+          Cost: ~$0.40/month for 720 hourly executions
+      when: not (env.DEPLOY_SCALEWAY_IDLE_FUNCTION | default('false') | bool)
 
     - name: Check if function namespace exists
       ansible.builtin.uri:
