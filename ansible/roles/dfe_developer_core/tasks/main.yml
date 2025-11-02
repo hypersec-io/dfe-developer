@@ -42,3 +42,8 @@
   ansible.builtin.include_tasks:
     file: claude.yml
   tags: ['claude', 'ai']
+
+- name: Verify core tools installation
+  ansible.builtin.include_tasks:
+    file: verify.yml
+  tags: ['verify']

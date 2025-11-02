@@ -70,3 +70,8 @@
     file: wallpaper.yml
   tags: ['wallpaper']
   when: dfe_has_gnome
+
+- name: Verify base tools installation
+  ansible.builtin.include_tasks:
+    file: verify.yml
+  tags: ['verify']
