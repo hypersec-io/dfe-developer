@@ -1,0 +1,63 @@
+---
+# Comprehensive Proxmox testing
+# Tests BOTH direct Ansible and install.sh on Fedora and Ubuntu
+
+- name: Setup test environment
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Provision VMs (reset to snapshot)
+      ansible.builtin.import_playbook: provision.yml
+
+- name: TEST 1 - Direct Ansible on Fedora
+  hosts: fedora
+  become: true
+  roles:
+    - ../../roles/dfe_developer
+    - ../../roles/dfe_developer_core
+    - ../../roles/dfe_vm_optimizer
+    - ../../roles/dfe_rdp_optimizer
+    - ../../roles/dfe_system_cleanup
+
+- name: TEST 2 - Direct Ansible on Ubuntu
+  hosts: ubuntu
+  become: true
+  roles:
+    - ../../roles/dfe_developer
+    - ../../roles/dfe_developer_core
+    - ../../roles/dfe_vm_optimizer
+    - ../../roles/dfe_rdp_optimizer
+    - ../../roles/dfe_system_cleanup
+
+- name: Reset VMs for install.sh tests
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Reset VMs again
+      ansible.builtin.import_playbook: provision.yml
+
+- name: TEST 3 - install.sh on Fedora
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Setup .env
+      ansible.builtin.include_tasks:
+        file: ../common/setup_env.yml
+
+    - name: Run install.sh on Fedora
+      ansible.builtin.shell: |
+        ssh {{ env.PROXMOX_FEDORA_USER }}@{{ env.PROXMOX_FEDORA_HOSTNAME }} "curl -fsSL https://raw.githubusercontent.com/hypersec-io/dfe-developer/feat/no-ref/ansible-deployment/install.sh -o install.sh && chmod +x install.sh && echo '{{ env.PROXMOX_FEDORA_PASSWORD }}' | sudo -S ./install.sh --branch feat/no-ref/ansible-deployment --all"
+      register: fedora_install_result
+
+- name: TEST 4 - install.sh on Ubuntu
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Setup .env
+      ansible.builtin.include_tasks:
+        file: ../common/setup_env.yml
+
+    - name: Run install.sh on Ubuntu
+      ansible.builtin.shell: |
+        ssh {{ env.PROXMOX_UBUNTU_USER }}@{{ env.PROXMOX_UBUNTU_HOSTNAME }} "curl -fsSL https://raw.githubusercontent.com/hypersec-io/dfe-developer/feat/no-ref/ansible-deployment/install.sh -o install.sh && chmod +x install.sh && echo '{{ env.PROXMOX_UBUNTU_PASSWORD }}' | sudo -S ./install.sh --branch feat/no-ref/ansible-deployment --all"
+      register: ubuntu_install_result
