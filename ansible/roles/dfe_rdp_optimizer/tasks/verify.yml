@@ -45,6 +45,19 @@
   changed_when: false
   failed_when: verify_mtu.stdout != '1'
 
+# Config file validation
+- name: Verify RDP TCP config file exists
+  ansible.builtin.stat:
+    path: /etc/sysctl.d/99-rdp-optimization.conf
+  register: verify_rdp_tcp_conf
+  failed_when: not verify_rdp_tcp_conf.stat.exists
+
+- name: Verify RDP MTU config file exists
+  ansible.builtin.stat:
+    path: /etc/sysctl.d/99-rdp-mtu.conf
+  register: verify_rdp_mtu_conf
+  failed_when: not verify_rdp_mtu_conf.stat.exists
+
 - name: Display RDP optimizer verification
   ansible.builtin.debug:
     msg: |

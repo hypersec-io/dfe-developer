@@ -47,6 +47,19 @@
   register: verify_journal
   changed_when: false
 
+# Config file validation
+- name: Verify sysctl config file exists
+  ansible.builtin.stat:
+    path: /etc/sysctl.d/98-vm-optimizer.conf
+  register: verify_sysctl_conf
+  failed_when: not verify_sysctl_conf.stat.exists
+
+- name: Verify journal config file exists
+  ansible.builtin.stat:
+    path: /etc/systemd/journald.conf.d/vm-optimizer.conf
+  register: verify_journal_conf
+  failed_when: not verify_journal_conf.stat.exists
+
 - name: Display VM optimizer verification
   ansible.builtin.debug:
     msg: |
