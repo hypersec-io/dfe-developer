@@ -8,14 +8,14 @@
     state: present
   when: ansible_distribution == 'Ubuntu'
 
-# Install Git
-- name: Install Git (Fedora)
+# Install Git - latest version
+- name: Install latest Git (Fedora)
   ansible.builtin.dnf:
     name:
       - git
       - git-lfs
       - git-subtree
-    state: present
+    state: latest
   when: ansible_distribution == 'Fedora'
 
 - name: Install Git (Ubuntu)
