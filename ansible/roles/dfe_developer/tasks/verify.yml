@@ -1,0 +1,72 @@
+---
+# Verification - Base developer tools
+
+- name: Verify Docker
+  ansible.builtin.command: docker --version
+  register: verify_docker
+  changed_when: false
+  failed_when: verify_docker.rc != 0
+
+- name: Verify kubectl
+  ansible.builtin.command: kubectl version --client
+  register: verify_kubectl
+  changed_when: false
+  failed_when: verify_kubectl.rc != 0
+
+- name: Verify Helm
+  ansible.builtin.command: helm version --short
+  register: verify_helm
+  changed_when: false
+  failed_when: verify_helm.rc != 0
+
+- name: Verify Terraform
+  ansible.builtin.command: terraform version
+  register: verify_terraform
+  changed_when: false
+  failed_when: verify_terraform.rc != 0
+
+- name: Verify Git
+  ansible.builtin.command: git --version
+  register: verify_git
+  changed_when: false
+  failed_when: verify_git.rc != 0
+
+- name: Verify Git subtree
+  ansible.builtin.command: git subtree --help
+  register: verify_git_subtree
+  changed_when: false
+  failed_when: verify_git_subtree.rc != 0
+
+- name: Verify UV
+  ansible.builtin.command: "{{ dfe_user_home }}/.cargo/bin/uv --version"
+  register: verify_uv
+  changed_when: false
+  failed_when: verify_uv.rc != 0
+  become: false
+  become_user: "{{ dfe_actual_user }}"
+
+- name: Verify AWS CLI
+  ansible.builtin.command: aws --version
+  register: verify_aws
+  changed_when: false
+  failed_when: verify_aws.rc != 0
+
+- name: Verify yq
+  ansible.builtin.command: yq --version
+  register: verify_yq
+  changed_when: false
+  failed_when: verify_yq.rc != 0
+
+- name: Display base tools verification
+  ansible.builtin.debug:
+    msg: |
+      ✅ Base Developer Tools Verified:
+      - Docker: {{ verify_docker.stdout }}
+      - kubectl: {{ verify_kubectl.stdout | regex_search('v[0-9.]+') }}
+      - Helm: {{ verify_helm.stdout }}
+      - Terraform: {{ verify_terraform.stdout_lines[0] }}
+      - Git: {{ verify_git.stdout }}
+      - Git subtree: ✅ Available
+      - UV: {{ verify_uv.stdout }}
+      - AWS CLI: {{ verify_aws.stdout }}
+      - yq: {{ verify_yq.stdout }}
