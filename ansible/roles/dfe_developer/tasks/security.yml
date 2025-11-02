@@ -11,7 +11,7 @@
 - name: Wait for dnf-automatic.conf to be created
   ansible.builtin.wait_for:
     path: /etc/dnf/automatic.conf
-    timeout: 5
+    timeout: 30
   when: ansible_distribution == 'Fedora'
 
 - name: Configure dnf-automatic for security updates only (Fedora)
