@@ -13,7 +13,6 @@
     name:
       - git
       - git-lfs
-      - git-subtree
     state: latest
   when: ansible_distribution == 'Fedora'
 
