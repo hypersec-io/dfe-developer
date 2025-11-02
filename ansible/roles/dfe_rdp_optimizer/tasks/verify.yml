@@ -1,0 +1,57 @@
+---
+# Verification - RDP optimizer (functional checks)
+
+- name: Skip if no GNOME
+  ansible.builtin.meta: end_play
+  when: not dfe_has_gnome
+
+# Check gnome-remote-desktop service
+- name: Verify gnome-remote-desktop service
+  ansible.builtin.systemd:
+    name: gnome-remote-desktop.service
+  register: verify_grd_service
+  failed_when: verify_grd_service.status.ActiveState != 'active'
+
+# Check RDP port listening
+- name: Verify RDP port 3389 listening
+  ansible.builtin.command: ss -tlnp
+  register: verify_rdp_port
+  changed_when: false
+  failed_when: "'3389' not in verify_rdp_port.stdout"
+
+# Check certificates exist
+- name: Verify RDP TLS certificate exists
+  ansible.builtin.stat:
+    path: /var/lib/gnome-remote-desktop/.local/share/gnome-remote-desktop/certificates/rdp-tls.crt
+  register: verify_rdp_cert
+  failed_when: not verify_rdp_cert.stat.exists
+
+- name: Verify RDP TLS key exists
+  ansible.builtin.stat:
+    path: /var/lib/gnome-remote-desktop/.local/share/gnome-remote-desktop/certificates/rdp-tls.key
+  register: verify_rdp_key
+  failed_when: not verify_rdp_key.stat.exists
+
+# Check network optimizations
+- name: Verify BBR congestion control
+  ansible.builtin.command: sysctl -n net.ipv4.tcp_congestion_control
+  register: verify_rdp_bbr
+  changed_when: false
+  failed_when: verify_rdp_bbr.stdout != 'bbr'
+
+- name: Verify MTU probing enabled
+  ansible.builtin.command: sysctl -n net.ipv4.tcp_mtu_probing
+  register: verify_mtu
+  changed_when: false
+  failed_when: verify_mtu.stdout != '1'
+
+- name: Display RDP optimizer verification
+  ansible.builtin.debug:
+    msg: |
+      ✅ RDP Optimizer Verified:
+      - gnome-remote-desktop: {{ verify_grd_service.status.ActiveState }} ✅
+      - Port 3389: Listening ✅
+      - TLS Cert: {{ verify_rdp_cert.stat.mode }} ✅
+      - TLS Key: {{ verify_rdp_key.stat.mode }} ✅
+      - BBR: {{ verify_rdp_bbr.stdout }} ✅
+      - MTU Probing: Enabled ✅

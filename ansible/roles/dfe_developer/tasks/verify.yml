@@ -1,12 +1,27 @@
 ---
-# Verification - Base developer tools
+# Verification - Base developer tools (Tier 1: Functional checks)
 
-- name: Verify Docker
+# Docker verification
+- name: Verify Docker installed
   ansible.builtin.command: docker --version
   register: verify_docker
   changed_when: false
   failed_when: verify_docker.rc != 0
 
+- name: Verify Docker service running
+  ansible.builtin.systemd:
+    name: docker.service
+  register: verify_docker_service
+  failed_when: verify_docker_service.status.ActiveState != 'active'
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+- name: Verify user in docker group
+  ansible.builtin.command: groups {{ dfe_actual_user }}
+  register: verify_docker_group
+  changed_when: false
+  failed_when: "'docker' not in verify_docker_group.stdout"
+
+# Kubernetes tools
 - name: Verify kubectl
   ansible.builtin.command: kubectl version --client
   register: verify_kubectl
@@ -25,6 +40,7 @@
   changed_when: false
   failed_when: verify_terraform.rc != 0
 
+# Git verification
 - name: Verify Git
   ansible.builtin.command: git --version
   register: verify_git
@@ -37,6 +53,15 @@
   changed_when: false
   failed_when: verify_git_subtree.rc != 0
 
+- name: Verify Git LFS filter installed
+  ansible.builtin.command: git lfs env
+  register: verify_git_lfs
+  changed_when: false
+  failed_when: verify_git_lfs.rc != 0
+  become: false
+  become_user: "{{ dfe_actual_user }}"
+
+# Python tools
 - name: Verify UV
   ansible.builtin.command: "{{ dfe_user_home }}/.cargo/bin/uv --version"
   register: verify_uv
@@ -45,6 +70,15 @@
   become: false
   become_user: "{{ dfe_actual_user }}"
 
+- name: Verify UV can list Python versions
+  ansible.builtin.command: "{{ dfe_user_home }}/.cargo/bin/uv python list"
+  register: verify_uv_python
+  changed_when: false
+  failed_when: verify_uv_python.rc != 0
+  become: false
+  become_user: "{{ dfe_actual_user }}"
+
+# Cloud tools
 - name: Verify AWS CLI
   ansible.builtin.command: aws --version
   register: verify_aws
@@ -61,12 +95,14 @@
   ansible.builtin.debug:
     msg: |
       ✅ Base Developer Tools Verified:
-      - Docker: {{ verify_docker.stdout }}
+      - Docker: {{ verify_docker.stdout }} (service: {{ verify_docker_service.status.ActiveState if ansible_distribution in ['Fedora', 'Ubuntu'] else 'N/A' }})
+      - Docker group: {{ dfe_actual_user }} in docker group ✅
       - kubectl: {{ verify_kubectl.stdout | regex_search('v[0-9.]+') }}
       - Helm: {{ verify_helm.stdout }}
       - Terraform: {{ verify_terraform.stdout_lines[0] }}
       - Git: {{ verify_git.stdout }}
-      - Git subtree: ✅ Available
-      - UV: {{ verify_uv.stdout }}
+      - Git subtree: ✅
+      - Git LFS: ✅ Filters installed
+      - UV: {{ verify_uv.stdout }} (can list Python versions ✅)
       - AWS CLI: {{ verify_aws.stdout }}
       - yq: {{ verify_yq.stdout }}
