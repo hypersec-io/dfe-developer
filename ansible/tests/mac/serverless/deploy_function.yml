@@ -1,0 +1,104 @@
+---
+# Deploy Scaleway Serverless Function for idle Mac mini deletion
+# Creates function + CRON trigger to run every hour
+
+- name: Deploy Scaleway idle checker function
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Setup .env
+      ansible.builtin.include_tasks:
+        file: ../../common/setup_env.yml
+
+    - name: Check if function namespace exists
+      ansible.builtin.uri:
+        url: "https://api.scaleway.com/functions/v1beta1/regions/{{ env.SCALEWAY_REGION }}/namespaces"
+        method: GET
+        headers:
+          X-Auth-Token: "{{ env.SCALEWAY_ACCESS_KEY_SECRET }}"
+        return_content: true
+      register: namespaces
+
+    - name: Create function namespace if not exists
+      ansible.builtin.uri:
+        url: "https://api.scaleway.com/functions/v1beta1/regions/{{ env.SCALEWAY_REGION }}/namespaces"
+        method: POST
+        headers:
+          X-Auth-Token: "{{ env.SCALEWAY_ACCESS_KEY_SECRET }}"
+          Content-Type: application/json
+        body_format: json
+        body:
+          name: dfe-test-automation
+          project_id: "{{ env.SCALEWAY_PROJECT_ID }}"
+          description: "DFE test infrastructure automation"
+        return_content: true
+      register: namespace
+      when: namespaces.json.namespaces | selectattr('name', 'equalto', 'dfe-test-automation') | list | length == 0
+
+    - name: Set namespace ID
+      ansible.builtin.set_fact:
+        namespace_id: "{{ (namespaces.json.namespaces | selectattr('name', 'equalto', 'dfe-test-automation') | first).id if namespaces.json.namespaces | selectattr('name', 'equalto', 'dfe-test-automation') | list | length > 0 else namespace.json.id }}"
+
+    - name: Create function for idle checking
+      ansible.builtin.uri:
+        url: "https://api.scaleway.com/functions/v1beta1/regions/{{ env.SCALEWAY_REGION }}/functions"
+        method: POST
+        headers:
+          X-Auth-Token: "{{ env.SCALEWAY_ACCESS_KEY_SECRET }}"
+          Content-Type: application/json
+        body_format: json
+        body:
+          namespace_id: "{{ namespace_id }}"
+          name: mac-idle-checker
+          runtime: python311
+          handler: idle_checker.handle
+          min_scale: 0
+          max_scale: 1
+          memory_limit: 256
+          timeout: 60s
+          environment_variables:
+            SCALEWAY_SECRET_KEY: "{{ env.SCALEWAY_ACCESS_KEY_SECRET }}"
+            SCALEWAY_ZONE: "{{ env.SCALEWAY_ZONE }}"
+        return_content: true
+      register: function
+
+    - name: Upload function code
+      ansible.builtin.command:
+        cmd: |
+          cd {{ playbook_dir }} && \
+          zip -r /tmp/idle_checker.zip idle_checker.py && \
+          curl -X POST \
+            -H "X-Auth-Token: {{ env.SCALEWAY_ACCESS_KEY_SECRET }}" \
+            -F "file=@/tmp/idle_checker.zip" \
+            "https://api.scaleway.com/functions/v1beta1/regions/{{ env.SCALEWAY_REGION }}/functions/{{ function.json.id }}/upload"
+      when: function is defined
+
+    - name: Create CRON trigger (runs every hour)
+      ansible.builtin.uri:
+        url: "https://api.scaleway.com/functions/v1beta1/regions/{{ env.SCALEWAY_REGION }}/triggers"
+        method: POST
+        headers:
+          X-Auth-Token: "{{ env.SCALEWAY_ACCESS_KEY_SECRET }}"
+          Content-Type: application/json
+        body_format: json
+        body:
+          name: idle-check-hourly
+          function_id: "{{ function.json.id }}"
+          config:
+            type: cron
+            schedule: "0 * * * *"  # Every hour
+        return_content: true
+
+    - name: Display deployment info
+      ansible.builtin.debug:
+        msg: |
+          ✅ Scaleway Serverless Function Deployed:
+          - Function: mac-idle-checker
+          - Trigger: Every hour (CRON)
+          - Action: Delete Mac minis with 'auto-delete' tag idle >24h
+          - Checks: CPU usage, network activity
+          - Tags watched: {{ env.SCALEWAY_TAGS }}
+          - Future: {{ env.SCALEWAY_AGENT_TAG }}
+
+          Your Mac minis will now auto-delete after 24h of inactivity!
