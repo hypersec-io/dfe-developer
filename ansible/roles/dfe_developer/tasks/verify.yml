@@ -8,11 +8,11 @@
   changed_when: false
   failed_when: verify_docker.rc != 0
 
-- name: Verify Docker service running
+- name: Verify Docker service enabled (will be active after reboot)
   ansible.builtin.systemd:
     name: docker.service
   register: verify_docker_service
-  failed_when: verify_docker_service.status.ActiveState != 'active'
+  failed_when: verify_docker_service.status.UnitFileState != 'enabled'
   when: ansible_distribution in ['Fedora', 'Ubuntu']
 
 - name: Verify user in docker group
