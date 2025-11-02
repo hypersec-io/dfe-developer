@@ -57,3 +57,8 @@
   ansible.builtin.include_tasks:
     file: memory.yml
   tags: ['memory']
+
+- name: Verify VM optimizations
+  ansible.builtin.include_tasks:
+    file: verify.yml
+  tags: ['verify']

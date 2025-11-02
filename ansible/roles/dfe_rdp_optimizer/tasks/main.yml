@@ -41,3 +41,8 @@
   ansible.builtin.include_tasks:
     file: service.yml
   tags: ['service']
+
+- name: Verify RDP optimizations
+  ansible.builtin.include_tasks:
+    file: verify.yml
+  tags: ['verify']
