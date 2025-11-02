@@ -1,0 +1,60 @@
+---
+# Verification - Core developer tools
+
+- name: Verify JFrog CLI
+  ansible.builtin.command: jf --version
+  register: verify_jfrog
+  changed_when: false
+  failed_when: verify_jfrog.rc != 0
+
+- name: Verify Azure CLI
+  ansible.builtin.command: az version
+  register: verify_azure
+  changed_when: false
+  failed_when: verify_azure.rc != 0
+
+- name: Verify Node.js
+  ansible.builtin.command: node --version
+  register: verify_node
+  changed_when: false
+  failed_when: verify_node.rc != 0
+
+- name: Verify semantic-release
+  ansible.builtin.command: "{{ dfe_user_home }}/.npm-global/bin/semantic-release --version"
+  register: verify_semrel
+  changed_when: false
+  failed_when: verify_semrel.rc != 0
+  become: false
+  become_user: "{{ dfe_actual_user }}"
+
+- name: Verify Linear CLI
+  ansible.builtin.command: linear --version
+  register: verify_linear
+  changed_when: false
+  failed_when: verify_linear.rc != 0
+
+- name: Verify OpenVPN 3
+  ansible.builtin.command: openvpn3 version
+  register: verify_openvpn
+  changed_when: false
+  failed_when: verify_openvpn.rc != 0
+
+- name: Verify Claude Code CLI
+  ansible.builtin.command: "{{ dfe_user_home }}/.npm-global/bin/claude --version"
+  register: verify_claude
+  changed_when: false
+  failed_when: verify_claude.rc != 0
+  become: false
+  become_user: "{{ dfe_actual_user }}"
+
+- name: Display core tools verification
+  ansible.builtin.debug:
+    msg: |
+      ✅ Core Developer Tools Verified:
+      - JFrog CLI: {{ verify_jfrog.stdout }}
+      - Azure CLI: {{ verify_azure.stdout | from_json | json_query('"azure-cli"') }}
+      - Node.js: {{ verify_node.stdout }}
+      - semantic-release: {{ verify_semrel.stdout }}
+      - Linear CLI: {{ verify_linear.stdout }}
+      - OpenVPN 3: {{ verify_openvpn.stdout }}
+      - Claude Code CLI: {{ verify_claude.stdout }}
