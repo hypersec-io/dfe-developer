@@ -1,0 +1,40 @@
+---
+# CRUD operations for .env file
+# Creates .env from .env.sample if missing, updates variables, reads existing
+
+- name: Check if .env exists
+  ansible.builtin.stat:
+    path: "{{ playbook_dir }}/../.env"
+  register: env_file_stat
+
+- name: Create .env from .env.sample if missing
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../.env.sample"
+    dest: "{{ playbook_dir }}/../.env"
+    mode: '0600'
+  when: not env_file_stat.stat.exists
+
+- name: Prompt for missing Proxmox credentials if .env was just created
+  ansible.builtin.pause:
+    prompt: |
+      .env file created from template!
+      Please edit ansible/tests/.env with your credentials:
+      - Proxmox: PROXMOX_HOST, PROXMOX_USER, PROXMOX_PASSWORD
+      - Scaleway: SCALEWAY_ACCESS_KEY_ID, SCALEWAY_ACCESS_KEY_SECRET
+
+      Press Enter when done editing...
+  when: not env_file_stat.stat.exists
+
+- name: Load environment variables from .env
+  ansible.builtin.include_vars:
+    file: "{{ playbook_dir }}/../.env"
+    name: env
+
+- name: Update .env with runtime values (e.g., generated server IDs)
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/../.env"
+    regexp: "^{{ item.key }}="
+    line: "{{ item.key }}={{ item.value }}"
+    create: false
+  loop: "{{ env_updates | default([]) }}"
+  when: env_updates is defined
