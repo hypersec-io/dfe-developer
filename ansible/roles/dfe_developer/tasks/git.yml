@@ -1,15 +1,14 @@
 ---
 # Git and version control tools installation
 
-# Add git-core PPA for latest version (Ubuntu)
-- name: Add git-core PPA for latest Git (Ubuntu)
-  ansible.builtin.apt_repository:
-    repo: ppa:git-core/ppa
-    state: present
-  when: ansible_distribution == 'Ubuntu'
+# Fedora - Enable git-maint COPR for latest Git
+- name: Enable git-maint COPR for latest Git (Fedora)
+  community.general.copr:
+    name: '@git-maint/git'
+    state: enabled
+  when: ansible_distribution == 'Fedora'
 
-# Install Git - latest version
-- name: Install latest Git (Fedora)
+- name: Install latest Git from COPR (Fedora)
   ansible.builtin.dnf:
     name:
       - git
@@ -18,23 +17,30 @@
     state: latest
   when: ansible_distribution == 'Fedora'
 
-- name: Install Git (Ubuntu)
+# Ubuntu - Add git-core PPA for latest version
+- name: Add git-core PPA for latest Git (Ubuntu)
+  ansible.builtin.apt_repository:
+    repo: ppa:git-core/ppa
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install latest Git from PPA (Ubuntu)
   ansible.builtin.apt:
     name:
       - git
       - git-lfs
-    state: present
+      - git-subtree
+    state: latest
     update_cache: true
   when: ansible_distribution == 'Ubuntu'
 
-# Note: git-subtree is included in git package on Ubuntu, separate on Fedora
-
-- name: Install Git (macOS)
+# macOS - Homebrew provides latest
+- name: Install latest Git (macOS)
   community.general.homebrew:
     name:
       - git
       - git-lfs
-    state: present
+    state: latest
   when: ansible_distribution == 'MacOSX'
 
 # Install GitHub CLI
