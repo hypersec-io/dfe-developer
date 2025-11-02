@@ -91,6 +91,25 @@
   changed_when: false
   failed_when: verify_yq.rc != 0
 
+# Config file validation
+- name: Verify DNF performance config (Fedora)
+  ansible.builtin.stat:
+    path: /etc/dnf/dnf.conf.d/99-performance.conf
+  register: verify_dnf_conf
+  failed_when: not verify_dnf_conf.stat.exists
+  when:
+    - ansible_distribution == 'Fedora'
+    - dfe_use_fastestmirror | default(true)
+
+- name: Verify APT performance config (Ubuntu)
+  ansible.builtin.stat:
+    path: /etc/apt/apt.conf.d/99-performance
+  register: verify_apt_conf
+  failed_when: not verify_apt_conf.stat.exists
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - dfe_use_fastestmirror | default(true)
+
 - name: Display base tools verification
   ansible.builtin.debug:
     msg: |
