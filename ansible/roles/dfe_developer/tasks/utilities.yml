@@ -21,6 +21,18 @@
     state: present
     flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
     method: system
+
+# Configure Flathub for user-level installations (for apps like Freelens, Slack)
+- name: Add Flathub repository (user-level)
+  community.general.flatpak_remote:
+    name: flathub
+    state: present
+    flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
+    method: user
+  become: false
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - dfe_has_gnome | default(false)
   when: ansible_distribution in ['Fedora', 'Ubuntu']
 
 # Common development utilities

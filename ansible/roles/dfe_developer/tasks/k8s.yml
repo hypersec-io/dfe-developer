@@ -151,16 +151,6 @@
   when: ansible_distribution in ['Fedora', 'Ubuntu']
 
 # Freelens - Flatpak (GUI only)
-- name: Ensure Flathub remote configured
-  community.general.flatpak_remote:
-    name: flathub
-    state: present
-    flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
-    method: user
-  become: false
-  when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
-    - dfe_has_gnome | default(false)
 
 - name: Install Freelens
   community.general.flatpak:
