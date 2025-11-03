@@ -60,84 +60,94 @@
     update_cache: true
   when: ansible_distribution == 'Ubuntu'
 
+
 # ============================================================================
-# K9S - Binary download
+# LINUX - Binary downloads for k9s, kubectx/kubens, Minikube, ArgoCD, dive
 # ============================================================================
 
-# k9s - Binary download
-- name: Get latest k9s version
-  ansible.builtin.uri:
-    url: https://api.github.com/repos/derailed/k9s/releases/latest
-    return_content: true
-  register: k9s_latest
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+- name: Install Kubernetes CLI tools via binary download (Linux)
+  block:
+    # k9s
+    - name: Get latest k9s version
+      ansible.builtin.uri:
+        url: https://api.github.com/repos/derailed/k9s/releases/latest
+        return_content: true
+      register: k9s_latest
 
-- name: Download and extract k9s
-  ansible.builtin.unarchive:
-    src: "https://github.com/derailed/k9s/releases/download/{{ k9s_latest.json.tag_name }}/k9s_Linux_amd64.tar.gz"
-    dest: /usr/local/bin
-    remote_src: true
-    include: k9s
-    mode: '0755'
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+    - name: Download and extract k9s
+      ansible.builtin.unarchive:
+        src: "https://github.com/derailed/k9s/releases/download/{{ k9s_latest.json.tag_name }}/k9s_Linux_amd64.tar.gz"
+        dest: /usr/local/bin
+        remote_src: true
+        include: k9s
+        mode: '0755'
 
-# kubectx and kubens
-- name: Get latest kubectx version
-  ansible.builtin.uri:
-    url: https://api.github.com/repos/ahmetb/kubectx/releases/latest
-    return_content: true
-  register: kubectx_latest
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+    # kubectx and kubens
+    - name: Get latest kubectx version
+      ansible.builtin.uri:
+        url: https://api.github.com/repos/ahmetb/kubectx/releases/latest
+        return_content: true
+      register: kubectx_latest
 
-- name: Download kubectx
-  ansible.builtin.get_url:
-    url: "https://github.com/ahmetb/kubectx/releases/download/{{ kubectx_latest.json.tag_name }}/kubectx"
-    dest: /usr/local/bin/kubectx
-    mode: '0755'
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+    - name: Download kubectx
+      ansible.builtin.get_url:
+        url: "https://github.com/ahmetb/kubectx/releases/download/{{ kubectx_latest.json.tag_name }}/kubectx"
+        dest: /usr/local/bin/kubectx
+        mode: '0755'
 
-- name: Download kubens
-  ansible.builtin.get_url:
-    url: "https://github.com/ahmetb/kubectx/releases/download/{{ kubectx_latest.json.tag_name }}/kubens"
-    dest: /usr/local/bin/kubens
-    mode: '0755'
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+    - name: Download kubens
+      ansible.builtin.get_url:
+        url: "https://github.com/ahmetb/kubectx/releases/download/{{ kubectx_latest.json.tag_name }}/kubens"
+        dest: /usr/local/bin/kubens
+        mode: '0755'
 
-# Minikube
-- name: Download Minikube
-  ansible.builtin.get_url:
-    url: https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
-    dest: /tmp/minikube-linux-amd64
-    mode: '0755'
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+    # Minikube
+    - name: Download Minikube
+      ansible.builtin.get_url:
+        url: https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
+        dest: /tmp/minikube-linux-amd64
+        mode: '0755'
 
-- name: Install Minikube
-  ansible.builtin.copy:
-    src: /tmp/minikube-linux-amd64
-    dest: /usr/local/bin/minikube
-    mode: '0755'
-    remote_src: true
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+    - name: Install Minikube
+      ansible.builtin.copy:
+        src: /tmp/minikube-linux-amd64
+        dest: /usr/local/bin/minikube
+        mode: '0755'
+        remote_src: true
 
-- name: Remove Minikube installer
-  ansible.builtin.file:
-    path: /tmp/minikube-linux-amd64
-    state: absent
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+    - name: Remove Minikube installer
+      ansible.builtin.file:
+        path: /tmp/minikube-linux-amd64
+        state: absent
 
-# ArgoCD CLI
-- name: Get latest ArgoCD version
-  ansible.builtin.uri:
-    url: https://api.github.com/repos/argoproj/argo-cd/releases/latest
-    return_content: true
-  register: argocd_latest
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+    # ArgoCD CLI
+    - name: Get latest ArgoCD version
+      ansible.builtin.uri:
+        url: https://api.github.com/repos/argoproj/argo-cd/releases/latest
+        return_content: true
+      register: argocd_latest
 
-- name: Download ArgoCD CLI
-  ansible.builtin.get_url:
-    url: "https://github.com/argoproj/argo-cd/releases/download/{{ argocd_latest.json.tag_name }}/argocd-linux-amd64"
-    dest: /usr/local/bin/argocd
-    mode: '0755'
+    - name: Download ArgoCD CLI
+      ansible.builtin.get_url:
+        url: "https://github.com/argoproj/argo-cd/releases/download/{{ argocd_latest.json.tag_name }}/argocd-linux-amd64"
+        dest: /usr/local/bin/argocd
+        mode: '0755'
+
+    # dive
+    - name: Get latest dive version
+      ansible.builtin.uri:
+        url: https://api.github.com/repos/wagoodman/dive/releases/latest
+        return_content: true
+      register: dive_latest
+
+    - name: Download and extract dive
+      ansible.builtin.unarchive:
+        src: "https://github.com/wagoodman/dive/releases/download/{{ dive_latest.json.tag_name }}/dive_{{ dive_latest.json.tag_name | regex_replace('^v', '') }}_linux_amd64.tar.gz"
+        dest: /usr/local/bin
+        remote_src: true
+        include: dive
+        mode: '0755'
+
   when: ansible_distribution in ['Fedora', 'Ubuntu']
 
 # Freelens - Flatpak (GUI only)
@@ -163,24 +173,6 @@
   when:
     - ansible_distribution in ['Fedora', 'Ubuntu']
     - dfe_has_gnome | default(false)
-
-# dive - Docker image analyzer
-- name: Get latest dive version
-  ansible.builtin.uri:
-    url: https://api.github.com/repos/wagoodman/dive/releases/latest
-    return_content: true
-  register: dive_latest
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
-
-- name: Download and extract dive
-  ansible.builtin.unarchive:
-    src: "https://github.com/wagoodman/dive/releases/download/{{ dive_latest.json.tag_name }}/dive_{{ dive_latest.json.tag_name | regex_replace('^v', '') }}_linux_amd64.tar.gz"
-    dest: /usr/local/bin
-    remote_src: true
-    include: dive
-    mode: '0755'
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
-
 
 # ============================================================================
 # macOS - Install via Homebrew
@@ -221,3 +213,91 @@
   become: false
   environment: "{{ homebrew_env }}"
   when: ansible_distribution == 'MacOSX'
+# ============================================================================
+# LINUX - Binary downloads for k9s, kubectx/kubens, Minikube, ArgoCD, dive
+# ============================================================================
+
+- name: Install Kubernetes CLI tools via binary download (Linux)
+  block:
+    # k9s
+    - name: Get latest k9s version
+      ansible.builtin.uri:
+        url: https://api.github.com/repos/derailed/k9s/releases/latest
+        return_content: true
+      register: k9s_latest
+
+    - name: Download and extract k9s
+      ansible.builtin.unarchive:
+        src: "https://github.com/derailed/k9s/releases/download/{{ k9s_latest.json.tag_name }}/k9s_Linux_amd64.tar.gz"
+        dest: /usr/local/bin
+        remote_src: true
+        include: k9s
+        mode: '0755'
+
+    # kubectx and kubens
+    - name: Get latest kubectx version
+      ansible.builtin.uri:
+        url: https://api.github.com/repos/ahmetb/kubectx/releases/latest
+        return_content: true
+      register: kubectx_latest
+
+    - name: Download kubectx
+      ansible.builtin.get_url:
+        url: "https://github.com/ahmetb/kubectx/releases/download/{{ kubectx_latest.json.tag_name }}/kubectx"
+        dest: /usr/local/bin/kubectx
+        mode: '0755'
+
+    - name: Download kubens
+      ansible.builtin.get_url:
+        url: "https://github.com/ahmetb/kubectx/releases/download/{{ kubectx_latest.json.tag_name }}/kubens"
+        dest: /usr/local/bin/kubens
+        mode: '0755'
+
+    # Minikube
+    - name: Download Minikube
+      ansible.builtin.get_url:
+        url: https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
+        dest: /tmp/minikube-linux-amd64
+        mode: '0755'
+
+    - name: Install Minikube
+      ansible.builtin.copy:
+        src: /tmp/minikube-linux-amd64
+        dest: /usr/local/bin/minikube
+        mode: '0755'
+        remote_src: true
+
+    - name: Remove Minikube installer
+      ansible.builtin.file:
+        path: /tmp/minikube-linux-amd64
+        state: absent
+
+    # ArgoCD CLI
+    - name: Get latest ArgoCD version
+      ansible.builtin.uri:
+        url: https://api.github.com/repos/argoproj/argo-cd/releases/latest
+        return_content: true
+      register: argocd_latest
+
+    - name: Download ArgoCD CLI
+      ansible.builtin.get_url:
+        url: "https://github.com/argoproj/argo-cd/releases/download/{{ argocd_latest.json.tag_name }}/argocd-linux-amd64"
+        dest: /usr/local/bin/argocd
+        mode: '0755'
+
+    # dive
+    - name: Get latest dive version
+      ansible.builtin.uri:
+        url: https://api.github.com/repos/wagoodman/dive/releases/latest
+        return_content: true
+      register: dive_latest
+
+    - name: Download and extract dive
+      ansible.builtin.unarchive:
+        src: "https://github.com/wagoodman/dive/releases/download/{{ dive_latest.json.tag_name }}/dive_{{ dive_latest.json.tag_name | regex_replace('^v', '') }}_linux_amd64.tar.gz"
+        dest: /usr/local/bin
+        remote_src: true
+        include: dive
+        mode: '0755'
+
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
