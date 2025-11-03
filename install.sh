@@ -178,33 +178,45 @@ ANSIBLE_BIN="$TEMP_ANSIBLE_DIR/bin/ansible-playbook"
 if [[ -f "$ANSIBLE_BIN" ]]; then
     ANSIBLE_VERSION=$("$TEMP_ANSIBLE_DIR/bin/ansible" --version | head -1 | awk '{print $2}')
     print_info "Using temporary Ansible venv (version $ANSIBLE_VERSION)"
-else
-    print_info "Creating temporary Ansible environment (isolated from OS)..."
 
-    # Ensure Python 3 is installed (only prerequisite - no git needed, we use tarball)
-    case "$OS_FAMILY" in
-        fedora)
-            if ! command -v python3 &>/dev/null || ! command -v curl &>/dev/null; then
-                sudo dnf install -y python3 python3-pip curl || {
-                    print_error "Failed to install prerequisites (python3, curl)"
-                    exit 1
-                }
-            fi
-            ;;
-        ubuntu|debian)
-            # Always install prerequisites on Ubuntu/Debian (ensures venv module present)
-            sudo apt update
-            sudo apt install -y python3 python3-pip python3-venv curl || {
-                print_error "Failed to install prerequisites (python3, venv, curl)"
+# ============================================================================
+# INSTALL PREREQUISITES (before checking for venv)
+# ============================================================================
+
+print_info "Ensuring prerequisites are installed..."
+case "$OS_FAMILY" in
+    fedora)
+        if ! command -v python3 &>/dev/null || ! command -v curl &>/dev/null; then
+            print_info "Installing python3 and curl..."
+            sudo dnf install -y python3 python3-pip curl || {
+                print_error "Failed to install prerequisites"
                 exit 1
             }
-            ;;
-        macos)
-            if ! command -v python3 &>/dev/null; then
-                print_error "Python 3 not found. Install from https://www.python.org or use: brew install python3"
-                exit 1
-            fi
-            ;;
+        fi
+        ;;
+    ubuntu|debian)
+        # Always install on Ubuntu/Debian (ensures venv module present)
+        print_info "Installing python3, venv, and curl..."
+        sudo apt update
+        sudo apt install -y python3 python3-pip python3-venv curl || {
+            print_error "Failed to install prerequisites"
+            exit 1
+        }
+        ;;
+    macos)
+        if ! command -v python3 &>/dev/null; then
+            print_error "Python 3 not found. Install from https://www.python.org or use: brew install python3"
+            exit 1
+        fi
+        # curl pre-installed on macOS
+        ;;
+esac
+print_success "Prerequisites installed"
+
+# ============================================================================
+# CREATE ANSIBLE VENV (if not exists)
+# ============================================================================
+
     esac
 
     # Create temporary Python venv
