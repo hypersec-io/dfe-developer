@@ -49,29 +49,19 @@
   become: false
   when: ansible_distribution == 'MacOSX'
 
-- name: Remove quarantine attribute from Docker.app (macOS)
-  ansible.builtin.command: xattr -dr com.apple.quarantine /Applications/Docker.app
-  become: false
-  when: ansible_distribution == 'MacOSX'
-  failed_when: false
-  changed_when: false
+- name: Display Docker Desktop installation note (macOS)
+  ansible.builtin.debug:
+    msg: |
+      Docker Desktop installed via Homebrew.
 
-- name: Launch Docker Desktop to initialize CLI tools (macOS)
-  ansible.builtin.command: open --hide --background -a Docker
-  become: false
-  when: ansible_distribution == 'MacOSX'
-  changed_when: false
+      IMPORTANT: You must manually launch Docker Desktop for first-time setup:
+      1. Open Applications folder
+      2. Double-click Docker.app
+      3. Accept the service agreement and configure settings
+      4. Docker CLI will be available after initialization
 
-- name: Wait for Docker daemon to start (macOS)
-  ansible.builtin.command: docker info
-  register: docker_info
-  until: docker_info.rc == 0
-  retries: 15
-  delay: 2
-  become: false
+      This is a one-time setup - Docker will auto-start on subsequent logins.
   when: ansible_distribution == 'MacOSX'
-  changed_when: false
-  failed_when: false
 
 # ============================================================================
 # REMOVE CONFLICTING PACKAGES
@@ -188,11 +178,21 @@
 # VERIFY INSTALLATION
 # ============================================================================
 
-- name: Verify Docker is installed
+- name: Verify Docker is installed (Linux)
   ansible.builtin.command: docker --version
   register: docker_version
   changed_when: false
   failed_when: docker_version.rc != 0
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+- name: Verify Docker CLI is available (macOS - may fail if not launched yet)
+  ansible.builtin.command: docker --version
+  environment:
+    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ ansible_env.PATH }}"
+  register: docker_version
+  changed_when: false
+  failed_when: false
+  when: ansible_distribution == 'MacOSX'
 
 - name: Display Docker version
   ansible.builtin.debug:
