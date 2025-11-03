@@ -161,54 +161,43 @@
     state: present
   when: ansible_distribution == 'Fedora'
 
+
 # ============================================================================
 # macOS - Install via Homebrew
 # ============================================================================
 
-- name: Install AWS CLI via Homebrew (macOS)
-  community.general.homebrew:
-    name: awscli
-    state: present
-  become: false
-  environment: "{{ homebrew_env }}"
-  when: ansible_distribution == 'MacOSX'
+- name: Install cloud tools via Homebrew (macOS)
+  block:
+    - name: Install AWS CLI
+      community.general.homebrew:
+        name: awscli
+        state: present
 
-- name: Install Helm via Homebrew (macOS)
-  community.general.homebrew:
-    name: helm
-    state: present
-  become: false
-  environment: "{{ homebrew_env }}"
-  when: ansible_distribution == 'MacOSX'
+    - name: Install Helm
+      community.general.homebrew:
+        name: helm
+        state: present
 
-- name: Install Terraform via Homebrew (macOS)
-  community.general.homebrew:
-    name: terraform
-    state: present
-  become: false
-  environment: "{{ homebrew_env }}"
-  when: ansible_distribution == 'MacOSX'
+    - name: Install Terraform
+      community.general.homebrew:
+        name: terraform
+        state: present
 
-- name: Tap HashiCorp formulae (macOS)
-  community.general.homebrew_tap:
-    name: hashicorp/tap
-    state: present
-  become: false
-  environment: "{{ homebrew_env }}"
-  when: ansible_distribution == 'MacOSX'
+    - name: Tap HashiCorp formulae
+      community.general.homebrew_tap:
+        name: hashicorp/tap
+        state: present
 
-- name: Install Vault via Homebrew (macOS)
-  community.general.homebrew:
-    name: hashicorp/tap/vault
-    state: present
-  become: false
-  environment: "{{ homebrew_env }}"
-  when: ansible_distribution == 'MacOSX'
+    - name: Install Vault
+      community.general.homebrew:
+        name: hashicorp/tap/vault
+        state: present
 
-- name: Install Helm Dashboard plugin (macOS)
-  ansible.builtin.command: helm plugin install https://github.com/komodorio/helm-dashboard.git
+    - name: Install Helm Dashboard plugin
+      ansible.builtin.command: helm plugin install https://github.com/komodorio/helm-dashboard.git
+      failed_when: false
+      changed_when: false
+
   become: false
   environment: "{{ homebrew_env }}"
-  failed_when: false
-  changed_when: false
   when: ansible_distribution == 'MacOSX'
