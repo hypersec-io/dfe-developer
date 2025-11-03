@@ -51,6 +51,23 @@
   become: false
   when: ansible_distribution == 'MacOSX'
 
+- name: Launch Docker Desktop to initialize CLI tools (macOS)
+  ansible.builtin.command: open --hide --background -a Docker
+  become: false
+  when: ansible_distribution == 'MacOSX'
+  changed_when: false
+
+- name: Wait for Docker daemon to start (macOS)
+  ansible.builtin.command: docker info
+  register: docker_info
+  until: docker_info.rc == 0
+  retries: 15
+  delay: 2
+  become: false
+  when: ansible_distribution == 'MacOSX'
+  changed_when: false
+  failed_when: false
+
 # ============================================================================
 # REMOVE CONFLICTING PACKAGES
 # ============================================================================
