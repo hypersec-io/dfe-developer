@@ -9,7 +9,7 @@
 
 - name: DFE Developer Environment Setup
   hosts: all
-  become: true
+  become: false
   gather_facts: true
 
   pre_tasks:
