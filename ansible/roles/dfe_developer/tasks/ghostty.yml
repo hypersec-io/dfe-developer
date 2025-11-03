@@ -88,7 +88,7 @@
       font-feature = liga
 
       # Theme - Solarized Dark
-      theme = iTerm2 Solarized Dark
+      theme = Builtin Solarized Dark
 
       # Window Configuration
       window-height = 35
@@ -189,7 +189,7 @@
       font-feature = liga
 
       # Theme - Solarized Dark
-      theme = iTerm2 Solarized Dark
+      theme = Builtin Solarized Dark
 
       # Window Configuration
       window-height = 35

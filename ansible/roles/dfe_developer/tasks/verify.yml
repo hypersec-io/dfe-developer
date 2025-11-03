@@ -35,6 +35,7 @@
 # Kubernetes tools
 - name: Verify kubectl
   ansible.builtin.command: kubectl version --client
+  register: verify_kubectl
   environment:
     PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_env.PATH }}"
   changed_when: false
@@ -42,6 +43,7 @@
 
 - name: Verify Helm
   ansible.builtin.command: helm version --short
+  register: verify_helm
   environment:
     PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_env.PATH }}"
   changed_when: false
@@ -49,6 +51,7 @@
 
 - name: Verify Terraform
   ansible.builtin.command: terraform version
+  register: verify_terraform
   environment:
     PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_env.PATH }}"
   changed_when: false
@@ -57,20 +60,29 @@
 # Git verification
 - name: Verify Git
   ansible.builtin.command: git --version
+  register: verify_git
   environment:
     PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_env.PATH }}"
   changed_when: false
   failed_when: verify_git.rc != 0
 
-- name: Verify Git subtree
+- name: Verify Git subtree (Linux - part of git package)
   ansible.builtin.command: git subtree --help
-  environment:
-    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_env.PATH }}"
+  register: verify_git_subtree
   changed_when: false
   failed_when: verify_git_subtree.rc != 0
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+- name: Verify Git subtree (macOS - skip, not in Homebrew git)
+  ansible.builtin.set_fact:
+    verify_git_subtree:
+      stdout: "git subtree not included in Homebrew git (install separately if needed)"
+      rc: 0
+  when: ansible_distribution == 'MacOSX'
 
 - name: Verify Git LFS filter installed
   ansible.builtin.command: git lfs env
+  register: verify_git_lfs
   environment:
     PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_env.PATH }}"
   changed_when: false
@@ -81,6 +93,7 @@
 # Python tools
 - name: Verify UV
   ansible.builtin.command: "{{ dfe_user_home }}/.cargo/bin/uv --version"
+  register: verify_uv
   environment:
     PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_env.PATH }}"
   changed_when: false
@@ -90,6 +103,7 @@
 
 - name: Verify UV can list Python versions
   ansible.builtin.command: "{{ dfe_user_home }}/.cargo/bin/uv python list"
+  register: verify_uv_python
   environment:
     PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_env.PATH }}"
   changed_when: false
@@ -100,6 +114,7 @@
 # Cloud tools
 - name: Verify AWS CLI
   ansible.builtin.command: aws --version
+  register: verify_aws
   environment:
     PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_env.PATH }}"
   changed_when: false
@@ -107,8 +122,29 @@
 
 - name: Verify yq
   ansible.builtin.command: yq --version
+  register: verify_yq
+  register: verify_kubectl
+  register: verify_helm
+  register: verify_terraform
+  register: verify_git
+  register: verify_git_subtree
+  register: verify_git_lfs
+  register: verify_uv
+  register: verify_uv_python
+  register: verify_aws
+  register: verify_yq
   environment:
     PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_env.PATH }}"
+  register: verify_kubectl
+  register: verify_helm
+  register: verify_terraform
+  register: verify_git
+  register: verify_git_subtree
+  register: verify_git_lfs
+  register: verify_uv
+  register: verify_uv_python
+  register: verify_aws
+  register: verify_yq
   changed_when: false
   failed_when: verify_yq.rc != 0
 
