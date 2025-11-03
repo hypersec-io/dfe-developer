@@ -56,29 +56,35 @@
         headers:
           X-Auth-Token: "{{ env.SCALEWAY_ACCESS_KEY_SECRET }}"
         return_content: true
-      register: server_info
-      until: server_info.json.server.status == "ready"
+      register: server_info_response
+      until: (server_info_response.json.server.status if server_info_response.json.server is defined else server_info_response.json.status) == "ready"
       retries: 60
       delay: 20
+
+    - name: Extract server info (handle both API response formats)
+      ansible.builtin.set_fact:
+        server_data: "{{ server_info_response.json.server if server_info_response.json.server is defined else server_info_response.json }}"
 
     - name: Generate dynamic inventory
       ansible.builtin.copy:
         content: |
           [scaleway_mac]
-          {{ server_info.json.server.public_ip.address }} ansible_user={{ server_info.json.server.credentials.username }} ansible_password={{ server_info.json.server.credentials.password }}
+          {{ server_data.ip }} ansible_user={{ server_data.ssh_username }} ansible_password={{ server_data.sudo_password }}
         dest: "{{ playbook_dir }}/inventory_scaleway.yml"
 
     - name: Display connection info
       ansible.builtin.debug:
         msg: |
           ✅ Scaleway Mac mini ready:
-          - SSH: ssh {{ server_info.json.server.credentials.username }}@{{ server_info.json.server.public_ip.address }}
-          - Password: {{ server_info.json.server.credentials.password }}
-          - VNC: {{ server_info.json.server.public_ip.address }}:{{ server_info.json.server.vnc_port }}
+          - Name: {{ env.SCALEWAY_MAC_NAME }}
+          - SSH: ssh {{ server_data.ssh_username }}@{{ server_data.ip }}
+          - Password: {{ server_data.sudo_password }}
+          - VNC: {{ server_data.ip }}:{{ server_data.vnc_port }}
           - Server ID: {{ server_id }}
+          - Status: {{ server_data.status }}
 
           Inventory: {{ playbook_dir }}/inventory_scaleway.yml
 
           Next: ansible-playbook -i tests/mac/inventory_scaleway.yml playbooks/main.yml
 
-          Auto-delete in {{ env.SCALEWAY_AUTO_DELETE_HOURS }}h
+          Auto-delete: 23h idle (managed by serverless function)
