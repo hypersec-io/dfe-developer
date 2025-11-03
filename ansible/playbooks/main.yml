@@ -56,18 +56,23 @@
 
   roles:
     - role: dfe_developer
+      become: true
       tags: ['developer', 'base']
 
     - role: dfe_developer_core
+      become: true
       tags: ['core', 'advanced']
 
     - role: dfe_vm_optimizer
+      become: true
       tags: ['vm', 'optimizer']
 
     - role: dfe_rdp_optimizer
+      become: true
       tags: ['rdp', 'optimizer']
 
     - role: dfe_system_cleanup
+      become: true
       tags: ['always']
 
   post_tasks:
