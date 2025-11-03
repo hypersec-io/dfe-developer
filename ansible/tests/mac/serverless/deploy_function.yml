@@ -156,9 +156,9 @@
           ✅ Scaleway Serverless Function Deployed:
           - Function: mac-idle-checker ({{ 'existing' if function is not defined else 'created' }})
           - CRON: Every hour ({{ 'existing' if cron_id is defined else 'created' }})
-          - Action: Delete Mac minis with 'auto-delete' tag idle >24h
+          - Action: Delete Mac minis idle >23h (before 2nd billing cycle)
           - Checks: CPU usage, network activity
-          - Tags watched: {{ env.SCALEWAY_TAGS }}
-          - Future: {{ env.SCALEWAY_AGENT_TAG }}
+          - Watches: Any Mac with name prefix 'hypersec-test-mac-'
+          - Projects: hypersec-test-mac-dfe-developer, hypersec-test-mac-agent
 
-          Your Mac minis will now auto-delete after 24h of inactivity!
+          Your test Mac minis will auto-delete after 23h idle!
