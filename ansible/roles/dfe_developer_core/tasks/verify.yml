@@ -48,7 +48,6 @@
 
 - name: Verify semantic-release
   ansible.builtin.command: "{{ dfe_user_home }}/.npm-global/bin/semantic-release --version"
-  environment: "{{ npm_env }}"
   register: verify_semrel
   changed_when: false
   failed_when: verify_semrel.rc != 0
@@ -56,7 +55,6 @@
 
 - name: Verify Linear CLI
   ansible.builtin.command: "{{ dfe_user_home }}/.npm-global/bin/linear --version"
-  environment: "{{ npm_env }}"
   register: verify_linear
   changed_when: false
   failed_when: verify_linear.rc != 0
@@ -79,7 +77,6 @@
 
 - name: Verify Claude Code CLI
   ansible.builtin.command: "{{ dfe_user_home }}/.npm-global/bin/claude --version"
-  environment: "{{ npm_env }}"
   register: verify_claude
   changed_when: false
   failed_when: verify_claude.rc != 0
