@@ -69,7 +69,7 @@
       ansible.builtin.copy:
         content: |
           [scaleway_mac]
-          {{ server_data.ip }} ansible_user={{ server_data.ssh_username }} ansible_password={{ server_data.sudo_password }}
+          {{ server_data.ip }} ansible_user={{ server_data.ssh_username }} ansible_password={{ server_data.sudo_password }} ansible_become_password={{ server_data.sudo_password }}
         dest: "{{ playbook_dir }}/inventory_scaleway.yml"
 
     - name: Display connection info
