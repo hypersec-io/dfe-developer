@@ -1,38 +1,51 @@
 ---
 # Git and version control tools installation
 
-# Fedora - Enable git-maint COPR for latest Git
-- name: Enable git-maint COPR for latest Git (Fedora)
-  community.general.copr:
-    name: '@git-maint/git'
-    state: enabled
+# ============================================================================
+# FEDORA - Latest Git from COPR
+# ============================================================================
+
+- name: Install latest Git (Fedora)
+  block:
+    - name: Enable git-maint COPR
+      community.general.copr:
+        name: '@git-maint/git'
+        state: enabled
+
+    - name: Install Git and Git LFS
+      ansible.builtin.dnf:
+        name:
+          - git
+          - git-lfs
+        state: latest
+
   when: ansible_distribution == 'Fedora'
 
-- name: Install latest Git from COPR (Fedora)
-  ansible.builtin.dnf:
-    name:
-      - git
-      - git-lfs
-    state: latest
-  when: ansible_distribution == 'Fedora'
+# ============================================================================
+# UBUNTU - Latest Git from PPA
+# ============================================================================
 
-# Ubuntu - Add git-core PPA for latest version
-- name: Add git-core PPA for latest Git (Ubuntu)
-  ansible.builtin.apt_repository:
-    repo: ppa:git-core/ppa
-    state: present
+- name: Install latest Git (Ubuntu)
+  block:
+    - name: Add git-core PPA
+      ansible.builtin.apt_repository:
+        repo: ppa:git-core/ppa
+        state: present
+
+    - name: Install Git and Git LFS
+      ansible.builtin.apt:
+        name:
+          - git
+          - git-lfs
+        state: latest
+        update_cache: true
+
   when: ansible_distribution == 'Ubuntu'
 
-- name: Install latest Git from PPA (Ubuntu)
-  ansible.builtin.apt:
-    name:
-      - git
-      - git-lfs
-    state: latest
-    update_cache: true
-  when: ansible_distribution == 'Ubuntu'
+# ============================================================================
+# macOS - Latest Git from Homebrew
+# ============================================================================
 
-# macOS - Homebrew provides latest
 - name: Install latest Git (macOS)
   community.general.homebrew:
     name:
@@ -43,7 +56,10 @@
   environment: "{{ homebrew_env }}"
   when: ansible_distribution == 'MacOSX'
 
-# Install GitHub CLI
+# ============================================================================
+# GITHUB CLI (all platforms)
+# ============================================================================
+
 - name: Install GitHub CLI (Fedora)
   ansible.builtin.dnf:
     name: gh
@@ -64,7 +80,10 @@
   environment: "{{ homebrew_env }}"
   when: ansible_distribution == 'MacOSX'
 
-# Configure Git LFS
+# ============================================================================
+# CONFIGURE GIT LFS (all platforms, user-level)
+# ============================================================================
+
 - name: Install Git LFS hooks
   ansible.builtin.command: git lfs install
   become: false

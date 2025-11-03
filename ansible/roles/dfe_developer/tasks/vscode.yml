@@ -1,6 +1,5 @@
 ---
 # VS Code installation
-# Repository configured in repository.yml
 
 - name: Install VS Code (Fedora)
   ansible.builtin.dnf:
@@ -8,36 +7,42 @@
     state: present
   when: ansible_distribution == 'Fedora'
 
-# Ubuntu - Add Microsoft repository
-- name: Create APT keyrings directory (Ubuntu)
-  ansible.builtin.file:
-    path: /etc/apt/keyrings
-    state: directory
-    mode: '0755'
-  when: ansible_distribution == 'Ubuntu'
-
-- name: Add Microsoft GPG key (Ubuntu)
-  ansible.builtin.get_url:
-    url: https://packages.microsoft.com/keys/microsoft.asc
-    dest: /etc/apt/keyrings/packages.microsoft.asc
-    mode: '0644'
-  when: ansible_distribution == 'Ubuntu'
-
-- name: Add VS Code repository (Ubuntu)
-  ansible.builtin.apt_repository:
-    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/packages.microsoft.asc] https://packages.microsoft.com/repos/code stable main"
-    filename: vscode
-    state: present
-  when: ansible_distribution == 'Ubuntu'
+# ============================================================================
+# UBUNTU - Add Microsoft repository and install
+# ============================================================================
 
 - name: Install VS Code (Ubuntu)
-  ansible.builtin.apt:
-    name: code
-    state: present
-    update_cache: true
+  block:
+    - name: Create APT keyrings directory
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Add Microsoft GPG key
+      ansible.builtin.get_url:
+        url: https://packages.microsoft.com/keys/microsoft.asc
+        dest: /etc/apt/keyrings/packages.microsoft.asc
+        mode: '0644'
+
+    - name: Add VS Code repository
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/packages.microsoft.asc] https://packages.microsoft.com/repos/code stable main"
+        filename: vscode
+        state: present
+
+    - name: Install VS Code
+      ansible.builtin.apt:
+        name: code
+        state: present
+        update_cache: true
+
   when: ansible_distribution == 'Ubuntu'
 
-# macOS
+# ============================================================================
+# macOS - Install via Homebrew cask
+# ============================================================================
+
 - name: Install VS Code (macOS)
   community.general.homebrew_cask:
     name: visual-studio-code
