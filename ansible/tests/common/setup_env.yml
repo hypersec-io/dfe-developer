@@ -4,7 +4,7 @@
 
 - name: Find tests directory
   ansible.builtin.set_fact:
-    tests_dir: "{{ playbook_dir }}/../../tests" if 'serverless' in playbook_dir else "{{ playbook_dir }}/../tests" if 'mac' in playbook_dir or 'proxmox' in playbook_dir else "{{ playbook_dir }}/tests"
+    tests_dir: "{{ (playbook_dir + '/../../tests') if 'serverless' in playbook_dir else (playbook_dir + '/../tests') if ('mac' in playbook_dir or 'proxmox' in playbook_dir) else (playbook_dir + '/tests') }}"
 
 - name: Check if .env exists
   ansible.builtin.stat:
