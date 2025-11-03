@@ -33,6 +33,9 @@
   community.general.homebrew:
     name: node
     state: present
+  become: false
+  environment:
+    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
   when: ansible_distribution == 'MacOSX'
 
 # Configure npm for user-specific global packages
