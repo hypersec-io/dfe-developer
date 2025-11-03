@@ -40,7 +40,7 @@
   ansible.builtin.apt:
     update_cache: true
   when: ansible_distribution == 'Ubuntu'
-  failed_when: false'
+  failed_when: false
 
 - name: Install latest Git (Ubuntu)
   block:
