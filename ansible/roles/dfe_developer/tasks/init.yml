@@ -25,23 +25,53 @@
   ansible.builtin.set_fact:
     dfe_actual_user: "{{ ansible_env.SUDO_USER | default(ansible_user_id, true) }}"
 
-- name: Set actual user home directory
+- name: Set actual user home directory (Linux)
   ansible.builtin.set_fact:
     dfe_user_home: "{{ '/home/' + dfe_actual_user if dfe_actual_user != 'root' else '/root' }}"
+  when: ansible_distribution != 'MacOSX'
+
+- name: Set actual user home directory (macOS)
+  ansible.builtin.set_fact:
+    dfe_user_home: "{{ '/Users/' + dfe_actual_user if dfe_actual_user != 'root' else '/var/root' }}"
+  when: ansible_distribution == 'MacOSX'
 
 - name: Display user information
   ansible.builtin.debug:
     msg: "Installing for user: {{ dfe_actual_user }} (home: {{ dfe_user_home }})"
 
-- name: Detect if GNOME is running
+- name: Install Homebrew (macOS)
+  ansible.builtin.shell: |
+    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  args:
+    creates: /opt/homebrew/bin/brew
+  become: false
+  when: ansible_distribution == 'MacOSX'
+
+- name: Add Homebrew to shell profile (macOS)
+  ansible.builtin.lineinfile:
+    path: "{{ dfe_user_home }}/.zprofile"
+    line: 'eval "$(/opt/homebrew/bin/brew shellenv)"'
+    create: true
+    mode: '0644'
+  become: false
+  when: ansible_distribution == 'MacOSX'
+
+- name: Detect if GNOME is running (Linux only)
   ansible.builtin.command: pgrep -x gnome-shell
   register: gnome_running_check
   failed_when: false
   changed_when: false
+  when: ansible_distribution != 'MacOSX'
 
-- name: Set GNOME availability fact
+- name: Set GNOME availability fact (Linux)
   ansible.builtin.set_fact:
     dfe_has_gnome: "{{ gnome_running_check.rc == 0 }}"
+  when: ansible_distribution != 'MacOSX'
+
+- name: Set GNOME availability fact (macOS - N/A)
+  ansible.builtin.set_fact:
+    dfe_has_gnome: false
+  when: ansible_distribution == 'MacOSX'
 
 - name: Display GNOME status
   ansible.builtin.debug:
