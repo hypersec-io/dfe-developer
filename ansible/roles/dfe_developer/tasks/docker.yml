@@ -51,6 +51,13 @@
   become: false
   when: ansible_distribution == 'MacOSX'
 
+- name: Remove quarantine attribute from Docker.app (macOS)
+  ansible.builtin.command: xattr -dr com.apple.quarantine /Applications/Docker.app
+  become: false
+  when: ansible_distribution == 'MacOSX'
+  failed_when: false
+  changed_when: false
+
 - name: Launch Docker Desktop to initialize CLI tools (macOS)
   ansible.builtin.command: open --hide --background -a Docker
   become: false
