@@ -1,6 +1,23 @@
 ---
 # Enable and configure GNOME Remote Desktop system service
 
+# ============================================================================
+# DISABLE DESKTOP SHARING (conflicting service)
+# ============================================================================
+
+- name: Disable Desktop Sharing via grdctl (conflicts with Remote Login)
+  ansible.builtin.command:
+    cmd: grdctl --system rdp disable
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - dfe_has_gnome
+  failed_when: false
+  changed_when: false
+
+# ============================================================================
+# ENABLE REMOTE LOGIN (RDP)
+# ============================================================================
+
 - name: Enable gnome-remote-desktop system service
   ansible.builtin.systemd:
     name: gnome-remote-desktop.service
@@ -10,7 +27,7 @@
     - ansible_distribution in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
 
-- name: Enable RDP via grdctl
+- name: Enable Remote Login (RDP) via grdctl
   ansible.builtin.command:
     cmd: grdctl --system rdp enable
   when:
@@ -19,9 +36,28 @@
   failed_when: false
   changed_when: false
 
-- name: Display RDP status
+# ============================================================================
+# STATUS & USER INSTRUCTIONS
+# ============================================================================
+
+- name: Display RDP configuration status
   ansible.builtin.debug:
-    msg: "GNOME Remote Desktop enabled with auto-resize support on port 3389"
+    msg: |
+      ✅ GNOME Remote Desktop configured:
+      - Desktop Sharing: DISABLED (conflicts with Remote Login)
+      - Remote Login (RDP): ENABLED on port 3389
+      - Auto-resize: ENABLED via TCP optimization
+
+      ⚠️  IMPORTANT: You must set an RDP password manually:
+      
+      1. Open GNOME Settings
+      2. Go to: Sharing → Remote Login
+      3. Click "Set Password" and create an RDP-specific password
+      4. This password is different from your user account password
+      5. Use this RDP password when connecting from remote clients
+      
+      The RDP password is stored encrypted and separate from your login password
+      for security reasons.
   when:
     - ansible_distribution in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
