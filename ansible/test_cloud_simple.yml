@@ -1,0 +1,10 @@
+---
+- name: Test Cloud Tools Installation on macOS
+  hosts: all
+  become: false
+  gather_facts: true
+
+  tasks:
+    - name: Include cloud tasks
+      ansible.builtin.include_tasks:
+        file: roles/dfe_developer/tasks/cloud.yml

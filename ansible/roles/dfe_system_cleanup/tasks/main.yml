@@ -41,10 +41,16 @@
   community.general.homebrew:
     update_homebrew: true
     upgrade_all: true
+  become: false
+  environment:
+    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
   when: ansible_distribution == 'MacOSX'
 
 - name: Clean Homebrew cache (macOS)
   ansible.builtin.command: brew cleanup
+  become: false
+  environment:
+    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
   changed_when: false
   when: ansible_distribution == 'MacOSX'
 

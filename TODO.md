@@ -1,37 +1,34 @@
 # TODO - DFE Developer Environment
 
-## IMMEDIATE: Complete macOS Support
+## IMMEDIATE: Refactor macOS Homebrew Environment Variables
 
-**Priority:** Finish macOS implementation for ALL roles/tasks (except VM/RDP optimizers)
+**Priority:** Reduce code duplication by using vars for common Homebrew environment
 
-Add macOS support to every remaining task in:
+Created `/projects/dfe-developer/ansible/roles/dfe_developer/vars/macos.yml` with:
+- `homebrew_env` - for regular Homebrew tasks
+- `homebrew_cask_env` - for Homebrew cask tasks requiring sudo
 
-**ansible/roles/dfe_developer/tasks:**
-- ⏸️ git.yml - Add PATH environment to macOS Homebrew tasks
-- ⏸️ cloud.yml - AWS CLI, Helm, Terraform (research macOS methods)
-- ⏸️ k8s.yml - kubectl, k9s, minikube (Homebrew or binary)
-- ⏸️ vscode.yml - VS Code via Homebrew cask
-- ⏸️ chrome.yml - Chrome via Homebrew cask
-- ⏸️ ghostty.yml - macOS installation method
+**Action needed:** Update all macOS tasks to use `environment: "{{ homebrew_env }}"` instead of repeating the PATH definition.
 
-**ansible/roles/dfe_developer_core/tasks:**
-- ⏸️ jfrog.yml - JFrog CLI via Homebrew
-- ⏸️ azure.yml - Azure CLI via Homebrew
-- ⏸️ openvpn.yml - OpenVPN 3 for macOS
-- ⏸️ linear.yml - Linear CLI for macOS
-- ⏸️ c_tools.yml - Xcode Command Line Tools
+**Files to update:**
+- ansible/roles/dfe_developer/tasks/git.yml (2 tasks)
+- ansible/roles/dfe_developer/tasks/cloud.yml (5 tasks)
+- ansible/roles/dfe_developer/tasks/k8s.yml (6 tasks)
+- ansible/roles/dfe_developer/tasks/vscode.yml (1 task)
+- ansible/roles/dfe_developer/tasks/chrome.yml (1 task)
+- ansible/roles/dfe_developer/tasks/ghostty.yml (2 tasks)
+- ansible/roles/dfe_developer_core/tasks/*.yml (multiple)
+- ansible/roles/dfe_system_cleanup/tasks/main.yml (2 tasks)
 
-**ansible/roles/dfe_system_cleanup/tasks:**
-- ⏸️ Homebrew cleanup
-- ⏸️ /tmp/askpass.sh removal
+---
 
-**Process:**
-1. Research macOS equivalent (Homebrew preferred)
-2. Add task with PATH + become: false
-3. Test on Scaleway Mac (51.159.120.9)
-4. Fix issues, commit, move to next
+## Testing & Quality
 
-**Test:** `ansible-playbook -i tests/mac/inventory_scaleway.yml playbooks/main.yml --tags <tag>`
+**Remaining work:**
+- Test complete playbook run on macOS (not just individual tasks)
+- Test on Ubuntu 24.04 (ensure no regressions)
+- Test on Fedora 42 (ensure no regressions)
+- Add test coverage for python.yml, docker.yml, utilities.yml on macOS
 
 ---
 
@@ -39,6 +36,8 @@ Add macOS support to every remaining task in:
 
 - WSL Ubuntu support research
 - macOS cloud VM alternatives to Scaleway
+- Consider Homebrew Bundle for macOS (Brewfile)
+- Investigate macOS security settings automation
 
 ---
 

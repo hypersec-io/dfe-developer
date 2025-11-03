@@ -45,4 +45,8 @@
   community.general.homebrew_cask:
     name: google-chrome
     state: present
+  become: false
+  environment:
+    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+    SUDO_ASKPASS: "/tmp/askpass.sh"
   when: ansible_distribution == 'MacOSX'
