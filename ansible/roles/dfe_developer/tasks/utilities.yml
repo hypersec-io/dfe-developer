@@ -22,6 +22,7 @@
     flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
     method: system
 
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
 # Configure Flathub for user-level installations (for apps like Freelens, Slack)
 - name: Add Flathub repository (user-level)
   community.general.flatpak_remote:
