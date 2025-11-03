@@ -39,12 +39,30 @@
   ansible.builtin.debug:
     msg: "Installing for user: {{ dfe_actual_user }} (home: {{ dfe_user_home }})"
 
+- name: Create temporary sudo askpass script (macOS)
+  ansible.builtin.copy:
+    content: |
+      #!/bin/sh
+      echo "{{ ansible_become_password }}"
+    dest: /tmp/askpass.sh
+    mode: '0700'
+  become: false
+  when: ansible_distribution == 'MacOSX'
+
 - name: Install Homebrew (macOS)
   ansible.builtin.shell: |
+    export SUDO_ASKPASS=/tmp/askpass.sh
     NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   args:
     creates: /opt/homebrew/bin/brew
-  become: true
+  become: false
+  when: ansible_distribution == 'MacOSX'
+
+- name: Remove temporary askpass script (macOS)
+  ansible.builtin.file:
+    path: /tmp/askpass.sh
+    state: absent
+  become: false
   when: ansible_distribution == 'MacOSX'
 
 - name: Add Homebrew to shell profile (macOS)
