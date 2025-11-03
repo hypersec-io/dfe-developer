@@ -181,33 +181,27 @@ if [[ -f "$ANSIBLE_BIN" ]]; then
 else
     print_info "Creating temporary Ansible environment (isolated from OS)..."
 
-    # Ensure Python 3 and Git are installed (prerequisites)
+    # Ensure Python 3 is installed (only prerequisite - no git needed, we use tarball)
     case "$OS_FAMILY" in
         fedora)
-            if ! command -v python3 &>/dev/null || ! command -v git &>/dev/null; then
-                sudo dnf install -y python3 python3-pip git || {
-                    print_error "Failed to install Python 3 or Git"
+            if ! command -v python3 &>/dev/null; then
+                sudo dnf install -y python3 python3-pip || {
+                    print_error "Failed to install Python 3"
                     exit 1
                 }
             fi
             ;;
         ubuntu|debian)
-            # Check for python3-venv module (not just python3 binary)
-            if ! python3 -m venv --help &>/dev/null 2>&1 || ! command -v git &>/dev/null; then
-                sudo apt update
-                sudo apt install -y python3 python3-pip python3-venv git || {
-                    print_error "Failed to install Python 3, venv, or Git"
-                    exit 1
-                }
-            fi
+            # Always install prerequisites on Ubuntu/Debian (ensures venv module present)
+            sudo apt update
+            sudo apt install -y python3 python3-pip python3-venv || {
+                print_error "Failed to install Python 3 and venv"
+                exit 1
+            }
             ;;
         macos)
             if ! command -v python3 &>/dev/null; then
                 print_error "Python 3 not found. Install from https://www.python.org or use: brew install python3"
-                exit 1
-            fi
-            if ! command -v git &>/dev/null; then
-                print_error "Git not found. Install Xcode Command Line Tools: xcode-select --install"
                 exit 1
             fi
             ;;
@@ -236,34 +230,32 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR" || exit 1
 
-# Check if ansible directory exists, clone if not
+# Check if ansible directory exists, download if not
 if [[ ! -d "ansible" ]]; then
     print_warning "ansible/ directory not found"
-    print_info "Cloning ansible directory from repository (branch: $GIT_BRANCH)..."
+    print_info "Downloading ansible directory from repository (branch: $GIT_BRANCH)..."
 
-    # Clone only the ansible directory using sparse checkout
-    # Git is already installed from prerequisites check above
-    print_info "Cloning ansible directory from $REPO_URL (branch: $GIT_BRANCH)..."
-    mkdir -p .dfe-temp-repo
-    cd .dfe-temp-repo || exit 1
+    # Download GitHub tarball (no git required)
+    TARBALL_URL="https://github.com/hypersec-io/dfe-developer/archive/refs/heads/${GIT_BRANCH}.tar.gz"
 
-    git init
-    git remote add origin "$REPO_URL"
-    git config core.sparseCheckout true
-    echo "ansible/" > .git/info/sparse-checkout
-    git pull origin "$GIT_BRANCH" || {
-        print_error "Failed to clone ansible directory from branch: $GIT_BRANCH"
-        cd ..
-        rm -rf .dfe-temp-repo
+    print_info "Downloading from $TARBALL_URL..."
+    curl -fsSL "$TARBALL_URL" -o /tmp/dfe-developer.tar.gz || {
+        print_error "Failed to download repository tarball from branch: $GIT_BRANCH"
         exit 1
     }
 
-    # Move ansible directory to parent
-    mv ansible ../
-    cd ..
-    rm -rf .dfe-temp-repo
+    # Extract only the ansible directory
+    print_info "Extracting ansible directory..."
+    tar -xzf /tmp/dfe-developer.tar.gz --strip-components=1 "dfe-developer-${GIT_BRANCH}/ansible" || {
+        print_error "Failed to extract ansible directory"
+        rm -f /tmp/dfe-developer.tar.gz
+        exit 1
+    }
 
-    print_success "Ansible directory cloned successfully"
+    # Cleanup
+    rm -f /tmp/dfe-developer.tar.gz
+
+    print_success "Ansible directory downloaded successfully"
 fi
 
 # Run Ansible playbook using temp venv Ansible
