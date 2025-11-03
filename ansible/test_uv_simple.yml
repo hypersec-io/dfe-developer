@@ -1,0 +1,16 @@
+---
+- name: Test UV Installation
+  hosts: all
+  become: false
+  gather_facts: true
+
+  pre_tasks:
+    - name: Set user vars
+      ansible.builtin.set_fact:
+        dfe_actual_user: "{{ ansible_user_id }}"
+        dfe_user_home: "/Users/{{ ansible_user_id }}"
+
+  tasks:
+    - name: Include UV tasks
+      ansible.builtin.include_tasks:
+        file: roles/dfe_developer/tasks/uv.yml

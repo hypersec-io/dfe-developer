@@ -39,15 +39,24 @@
     dest: "/tmp/uv-{{ uv_arch }}.tar.gz"
     mode: '0644'
 
-- name: Create UV directory
+- name: Create UV directory (Linux)
   ansible.builtin.file:
     path: "{{ dfe_user_home }}/.cargo/bin"
     state: directory
     mode: '0755'
     owner: "{{ dfe_actual_user }}"
     group: "{{ dfe_actual_user }}"
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
 
-- name: Extract UV binary
+- name: Create UV directory (macOS)
+  ansible.builtin.file:
+    path: "{{ dfe_user_home }}/.cargo/bin"
+    state: directory
+    mode: '0755'
+  become: false
+  when: ansible_distribution == 'MacOSX'
+
+- name: Extract UV binary (Linux)
   ansible.builtin.unarchive:
     src: "/tmp/uv-{{ uv_arch }}.tar.gz"
     dest: "{{ dfe_user_home }}/.cargo/bin"
@@ -57,6 +66,16 @@
     group: "{{ dfe_actual_user }}"
     extra_opts:
       - --strip-components=1
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+- name: Extract UV binary (macOS - use shell for BSD tar)
+  ansible.builtin.shell: |
+    cd "{{ dfe_user_home }}/.cargo/bin"
+    tar -xzf "/tmp/uv-{{ uv_arch }}.tar.gz" --strip-components=1
+  args:
+    creates: "{{ dfe_user_home }}/.cargo/bin/uv"
+  become: false
+  when: ansible_distribution == 'MacOSX'
 
 - name: Remove UV tarball
   ansible.builtin.file:
