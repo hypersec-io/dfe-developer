@@ -12,83 +12,74 @@
       ansible.builtin.include_tasks:
         file: ../common/setup_env.yml
 
-    - name: Check for existing Mac mini using scw CLI
-      ansible.builtin.shell: |
-        export SCW_ACCESS_KEY="{{ env.SCALEWAY_ACCESS_KEY_ID }}"
-        export SCW_SECRET_KEY="{{ env.SCALEWAY_ACCESS_KEY_SECRET }}"
-        export SCW_DEFAULT_PROJECT_ID="{{ env.SCALEWAY_PROJECT_ID }}"
-        export SCW_DEFAULT_ZONE="{{ env.SCALEWAY_ZONE }}"
-        scw apple-silicon server list zone={{ env.SCALEWAY_ZONE }} -o json | jq -r '.[] | select(.name == "{{ env.SCALEWAY_MAC_NAME }}") | .id'
-      register: existing_server_check
-      changed_when: false
-      failed_when: false
+    - name: Check for existing Mac mini
+      ansible.builtin.uri:
+        url: "https://api.scaleway.com/apple-silicon/v1alpha1/zones/{{ env.SCALEWAY_ZONE }}/servers"
+        method: GET
+        headers:
+          X-Auth-Token: "{{ env.SCALEWAY_ACCESS_KEY_SECRET }}"
+        return_content: true
+      register: existing_servers
 
-    - name: Set server_id if Mac mini exists
+    - name: Find our Mac mini if it exists
       ansible.builtin.set_fact:
-        server_id: "{{ existing_server_check.stdout }}"
-      when: existing_server_check.stdout | length > 0
+        server_id: "{{ item.id }}"
+      loop: "{{ existing_servers.json.servers }}"
+      when: item.name == env.SCALEWAY_MAC_NAME
+      no_log: true
 
-    - name: Display existing server message
-      ansible.builtin.debug:
-        msg: "Found existing Mac mini: {{ env.SCALEWAY_MAC_NAME }} (ID: {{ server_id }})"
-      when: server_id is defined
-
-    - name: Create Mac mini if not exists using scw CLI
-      ansible.builtin.shell: |
-        export SCW_ACCESS_KEY="{{ env.SCALEWAY_ACCESS_KEY_ID }}"
-        export SCW_SECRET_KEY="{{ env.SCALEWAY_ACCESS_KEY_SECRET }}"
-        export SCW_DEFAULT_PROJECT_ID="{{ env.SCALEWAY_PROJECT_ID }}"
-        export SCW_DEFAULT_ZONE="{{ env.SCALEWAY_ZONE }}"
-        scw apple-silicon server create \
-          name="{{ env.SCALEWAY_MAC_NAME }}" \
-          type="{{ env.SCALEWAY_MAC_TYPE }}" \
-          project-id="{{ env.SCALEWAY_PROJECT_ID }}" \
-          zone="{{ env.SCALEWAY_ZONE }}" \
-          -o json | jq -r '.id'
-      register: new_server_result
+    - name: Create Mac mini if not exists
+      ansible.builtin.uri:
+        url: "https://api.scaleway.com/apple-silicon/v1alpha1/zones/{{ env.SCALEWAY_ZONE }}/servers"
+        method: POST
+        headers:
+          X-Auth-Token: "{{ env.SCALEWAY_ACCESS_KEY_SECRET }}"
+          Content-Type: application/json
+        body_format: json
+        body:
+          name: "{{ env.SCALEWAY_MAC_NAME }}"
+          project_id: "{{ env.SCALEWAY_PROJECT_ID }}"
+          type: "{{ env.SCALEWAY_MAC_TYPE }}"
+          tags: "{{ env.SCALEWAY_TAGS.split(',') + [env.SCALEWAY_AGENT_TAG] }}"
+        return_content: true
+      register: new_server
       when: server_id is not defined
-      changed_when: true
 
     - name: Set server ID from new server
       ansible.builtin.set_fact:
-        server_id: "{{ new_server_result.stdout }}"
-      when: new_server_result is defined and new_server_result.stdout is defined and new_server_result.stdout | length > 0
+        server_id: "{{ new_server.json.server.id }}"
+      when: new_server is defined and new_server.json is defined
 
-    - name: Wait for Mac mini to be ready using scw CLI
-      ansible.builtin.shell: |
-        export SCW_ACCESS_KEY="{{ env.SCALEWAY_ACCESS_KEY_ID }}"
-        export SCW_SECRET_KEY="{{ env.SCALEWAY_ACCESS_KEY_SECRET }}"
-        export SCW_DEFAULT_PROJECT_ID="{{ env.SCALEWAY_PROJECT_ID }}"
-        export SCW_DEFAULT_ZONE="{{ env.SCALEWAY_ZONE }}"
-        scw apple-silicon server get {{ server_id }} zone={{ env.SCALEWAY_ZONE }} -o json
-      register: server_info_raw
-      until: (server_info_raw.stdout | from_json).status == "ready"
+    - name: Wait for Mac mini to be ready
+      ansible.builtin.uri:
+        url: "https://api.scaleway.com/apple-silicon/v1alpha1/zones/{{ env.SCALEWAY_ZONE }}/servers/{{ server_id }}"
+        method: GET
+        headers:
+          X-Auth-Token: "{{ env.SCALEWAY_ACCESS_KEY_SECRET }}"
+        return_content: true
+      register: server_info
+      until: server_info.json.server.status == "ready"
       retries: 60
       delay: 20
-      changed_when: false
-
-    - name: Parse server info
-      ansible.builtin.set_fact:
-        server_info: "{{ server_info_raw.stdout | from_json }}"
 
     - name: Generate dynamic inventory
       ansible.builtin.copy:
         content: |
           [scaleway_mac]
-          {{ server_info.ip }} ansible_user={{ server_info.username }} ansible_password={{ server_info.password }}
+          {{ server_info.json.server.public_ip.address }} ansible_user={{ server_info.json.server.credentials.username }} ansible_password={{ server_info.json.server.credentials.password }}
         dest: "{{ playbook_dir }}/inventory_scaleway.yml"
 
     - name: Display connection info
       ansible.builtin.debug:
         msg: |
           ✅ Scaleway Mac mini ready:
-          - Name: {{ env.SCALEWAY_MAC_NAME }}
-          - SSH: ssh {{ server_info.username }}@{{ server_info.ip }}
-          - Password: {{ server_info.password }}
-          - VNC: {{ server_info.ip }}:{{ server_info.vnc_port }}
+          - SSH: ssh {{ server_info.json.server.credentials.username }}@{{ server_info.json.server.public_ip.address }}
+          - Password: {{ server_info.json.server.credentials.password }}
+          - VNC: {{ server_info.json.server.public_ip.address }}:{{ server_info.json.server.vnc_port }}
           - Server ID: {{ server_id }}
-          - Status: {{ server_info.status }}
 
           Inventory: {{ playbook_dir }}/inventory_scaleway.yml
 
           Next: ansible-playbook -i tests/mac/inventory_scaleway.yml playbooks/main.yml
+
+          Auto-delete in {{ env.SCALEWAY_AUTO_DELETE_HOURS }}h
