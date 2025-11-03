@@ -29,7 +29,7 @@
 
 - name: Install Python development tools
   ansible.builtin.include_tasks:
-    file: python.yml
+    file: uv.yml
   tags: ['python']
 
 - name: Install Git and version control tools
