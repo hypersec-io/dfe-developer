@@ -118,25 +118,25 @@
           "https://api.scaleway.com/functions/v1beta1/regions/{{ env.SCALEWAY_REGION }}/functions/{{ function_id }}/upload"
       changed_when: true
 
-    - name: Get existing triggers for function
+    - name: Get existing CRON triggers for function
       ansible.builtin.uri:
-        url: "https://api.scaleway.com/functions/v1beta1/regions/{{ env.SCALEWAY_REGION }}/triggers?function_id={{ function_id }}"
+        url: "https://api.scaleway.com/functions/v1beta1/regions/{{ env.SCALEWAY_REGION }}/crons?function_id={{ function_id }}"
         method: GET
         headers:
           X-Auth-Token: "{{ env.SCALEWAY_ACCESS_KEY_SECRET }}"
         return_content: true
-      register: triggers
+      register: crons
 
-    - name: Find existing trigger
+    - name: Find existing CRON trigger
       ansible.builtin.set_fact:
-        trigger_id: "{{ item.id }}"
-      loop: "{{ triggers.json.triggers }}"
+        cron_id: "{{ item.id }}"
+      loop: "{{ crons.json.crons }}"
       when: item.name == 'idle-check-hourly'
       no_log: true
 
     - name: Create CRON trigger if not exists (runs every hour)
       ansible.builtin.uri:
-        url: "https://api.scaleway.com/functions/v1beta1/regions/{{ env.SCALEWAY_REGION }}/triggers"
+        url: "https://api.scaleway.com/functions/v1beta1/regions/{{ env.SCALEWAY_REGION }}/crons"
         method: POST
         headers:
           X-Auth-Token: "{{ env.SCALEWAY_ACCESS_KEY_SECRET }}"
@@ -145,18 +145,17 @@
         body:
           name: idle-check-hourly
           function_id: "{{ function_id }}"
-          config:
-            type: cron
-            schedule: "0 * * * *"  # Every hour
+          schedule: "0 * * * *"
+          args: {}
         return_content: true
-      when: trigger_id is not defined
+      when: cron_id is not defined
 
     - name: Display deployment info
       ansible.builtin.debug:
         msg: |
           ✅ Scaleway Serverless Function Deployed:
           - Function: mac-idle-checker ({{ 'existing' if function is not defined else 'created' }})
-          - Trigger: Every hour (CRON) ({{ 'existing' if trigger_id is defined else 'created' }})
+          - CRON: Every hour ({{ 'existing' if cron_id is defined else 'created' }})
           - Action: Delete Mac minis with 'auto-delete' tag idle >24h
           - Checks: CPU usage, network activity
           - Tags watched: {{ env.SCALEWAY_TAGS }}
