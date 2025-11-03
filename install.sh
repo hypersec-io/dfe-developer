@@ -181,21 +181,22 @@ if [[ -f "$ANSIBLE_BIN" ]]; then
 else
     print_info "Creating temporary Ansible environment (isolated from OS)..."
 
-    # Ensure Python 3 is installed
+    # Ensure Python 3 and Git are installed (prerequisites)
     case "$OS_FAMILY" in
         fedora)
-            if ! command -v python3 &>/dev/null; then
-                sudo dnf install -y python3 python3-pip || {
-                    print_error "Failed to install Python 3"
+            if ! command -v python3 &>/dev/null || ! command -v git &>/dev/null; then
+                sudo dnf install -y python3 python3-pip git || {
+                    print_error "Failed to install Python 3 or Git"
                     exit 1
                 }
             fi
             ;;
         ubuntu|debian)
-            if ! command -v python3 &>/dev/null; then
+            # Check for python3-venv module (not just python3 binary)
+            if ! python3 -m venv --help &>/dev/null 2>&1 || ! command -v git &>/dev/null; then
                 sudo apt update
-                sudo apt install -y python3 python3-pip python3-venv || {
-                    print_error "Failed to install Python 3"
+                sudo apt install -y python3 python3-pip python3-venv git || {
+                    print_error "Failed to install Python 3, venv, or Git"
                     exit 1
                 }
             fi
@@ -203,6 +204,10 @@ else
         macos)
             if ! command -v python3 &>/dev/null; then
                 print_error "Python 3 not found. Install from https://www.python.org or use: brew install python3"
+                exit 1
+            fi
+            if ! command -v git &>/dev/null; then
+                print_error "Git not found. Install Xcode Command Line Tools: xcode-select --install"
                 exit 1
             fi
             ;;
@@ -236,23 +241,8 @@ if [[ ! -d "ansible" ]]; then
     print_warning "ansible/ directory not found"
     print_info "Cloning ansible directory from repository (branch: $GIT_BRANCH)..."
 
-    # Check if git is installed
-    if ! command -v git &>/dev/null; then
-        case "$OS_FAMILY" in
-            fedora)
-                sudo dnf install -y git
-                ;;
-            ubuntu|debian)
-                sudo apt update && sudo apt install -y git
-                ;;
-            macos)
-                print_error "Git not found. Install Xcode Command Line Tools: xcode-select --install"
-                exit 1
-                ;;
-        esac
-    fi
-
     # Clone only the ansible directory using sparse checkout
+    # Git is already installed from prerequisites check above
     print_info "Cloning ansible directory from $REPO_URL (branch: $GIT_BRANCH)..."
     mkdir -p .dfe-temp-repo
     cd .dfe-temp-repo || exit 1
