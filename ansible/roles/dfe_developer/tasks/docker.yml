@@ -199,4 +199,4 @@
 
 - name: Display Docker version
   ansible.builtin.debug:
-    msg: "Docker installed: {{ docker_version.stdout }}"
+    msg: "Docker installed: {{ docker_version.stdout | default('Docker Desktop - launch manually') }}"

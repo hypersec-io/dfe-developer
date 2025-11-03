@@ -22,14 +22,21 @@
   when: ansible_distribution == 'Fedora'
 
 # ============================================================================
-# UBUNTU - Latest Git from PPA
+# UBUNTU - Latest Git from PPA (modern signed-by method)
 # ============================================================================
 
 - name: Install latest Git (Ubuntu)
   block:
-    - name: Add git-core PPA
+    - name: Import git-core PPA GPG key
+      ansible.builtin.get_url:
+        url: https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xE1DD270288B4E6030699E45FA1715D88E1DF1F24
+        dest: /etc/apt/keyrings/git-core-ppa.asc
+        mode: '0644'
+
+    - name: Add git-core PPA repository
       ansible.builtin.apt_repository:
-        repo: ppa:git-core/ppa
+        repo: "deb [signed-by=/etc/apt/keyrings/git-core-ppa.asc] https://ppa.launchpadcontent.net/git-core/ppa/ubuntu {{ ansible_distribution_release }} main"
+        filename: git-core-ppa
         state: present
 
     - name: Install Git and Git LFS
