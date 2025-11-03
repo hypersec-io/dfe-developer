@@ -37,8 +37,11 @@
   when: ansible_distribution == 'Ubuntu'
 
 # macOS
-- name: Install OpenVPN 3 via Homebrew (macOS)
+- name: Install OpenVPN via Homebrew (macOS)
   community.general.homebrew:
     name: openvpn
     state: present
+  become: false
+  environment:
+    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ ansible_env.PATH }}"
   when: ansible_distribution == 'MacOSX'

@@ -19,6 +19,7 @@
           OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
           Architecture: {{ ansible_architecture }}
           Python: {{ ansible_python_version }}
+      tags: ['always']
 
     - name: Validate supported operating system
       ansible.builtin.fail:
@@ -27,32 +28,54 @@
         (ansible_distribution not in ['Fedora', 'Ubuntu', 'MacOSX']) or
         (ansible_distribution == 'Fedora' and ansible_distribution_major_version|int < 42) or
         (ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('24.04', '<'))
+      tags: ['always']
 
     - name: Detect actual user (for sudo operations)
       ansible.builtin.set_fact:
         dfe_actual_user: "{{ ansible_env.SUDO_USER | default(ansible_user_id, true) }}"
+      tags: ['always']
 
-    - name: Set actual user home directory
+    - name: Set actual user home directory (Linux)
       ansible.builtin.set_fact:
         dfe_user_home: "{{ '/home/' + dfe_actual_user if dfe_actual_user != 'root' else '/root' }}"
+      when: ansible_distribution in ['Fedora', 'Ubuntu']
+      tags: ['always']
+
+    - name: Set actual user home directory (macOS)
+      ansible.builtin.set_fact:
+        dfe_user_home: "{{ '/Users/' + dfe_actual_user }}"
+      when: ansible_distribution == 'MacOSX'
+      tags: ['always']
 
     - name: Display user information
       ansible.builtin.debug:
         msg: "Installing for user: {{ dfe_actual_user }} (home: {{ dfe_user_home }})"
+      tags: ['always']
 
-    - name: Detect if GNOME is running
+    - name: Detect if GNOME is running (Linux only)
       ansible.builtin.command: pgrep -x gnome-shell
       register: gnome_running_check
       failed_when: false
       changed_when: false
+      when: ansible_distribution in ['Fedora', 'Ubuntu']
+      tags: ['always']
 
-    - name: Set GNOME availability fact
+    - name: Set GNOME availability fact (Linux)
       ansible.builtin.set_fact:
         dfe_has_gnome: "{{ gnome_running_check.rc == 0 }}"
+      when: ansible_distribution in ['Fedora', 'Ubuntu']
+      tags: ['always']
+
+    - name: Set GNOME availability fact (macOS - N/A)
+      ansible.builtin.set_fact:
+        dfe_has_gnome: false
+      when: ansible_distribution == 'MacOSX'
+      tags: ['always']
 
     - name: Display GNOME status
       ansible.builtin.debug:
         msg: "GNOME desktop: {{ 'Detected' if dfe_has_gnome else 'Not detected' }}"
+      tags: ['always']
 
   roles:
     - role: dfe_developer
