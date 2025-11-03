@@ -298,9 +298,40 @@ All contributions must pass:
 
 ### Manual Testing
 
-Test on clean Fedora 42 system:
+**Test Systems:**
 
+**Fedora (clean VM):**
 ```bash
+# Reset Fedora test VM (fast - uses snapshot)
+ssh root@proxmox.tyrell.com.au "qm rollback 2005 initial_build && qm start 2005"
+# Then test via: ansible-playbook -i tests/fedora/inventory.yml playbooks/main.yml
+```
+
+**Ubuntu (clean VM):**
+```bash
+# Reset Ubuntu test VM (fast - uses snapshot)
+ssh root@proxmox.tyrell.com.au "qm rollback 2006 initial_build && qm start 2006"
+# Then test via: ansible-playbook -i tests/ubuntu/inventory.yml playbooks/main.yml
+```
+
+**macOS (clean system):**
+```bash
+# ⚠️ WARNING: Mac mini provisioning takes 20-30 minutes!
+# Only reset when absolutely necessary (major changes, broken state)
+# Use sparingly to avoid unnecessary costs and time
+
+# Reset Mac mini test system (SLOW - full OS install)
+cd ansible
+ansible-playbook -i tests/mac/inventory_scaleway.yml tests/provision_scaleway_mac.yml
+
+# Then test via:
+ansible-playbook -i tests/mac/inventory_scaleway.yml playbooks/main.yml
+```
+
+**Legacy Fedora Shell Scripts:**
+```bash
+cd fedora
+
 # Standard installation
 ./install-dfe-developer.sh
 
