@@ -51,3 +51,10 @@
 - name: Display cleanup status
   ansible.builtin.debug:
     msg: "System updated and cleaned successfully"
+
+- name: Remove temporary askpass script (macOS)
+  ansible.builtin.file:
+    path: /tmp/askpass.sh
+    state: absent
+  become: false
+  when: ansible_distribution == "MacOSX"

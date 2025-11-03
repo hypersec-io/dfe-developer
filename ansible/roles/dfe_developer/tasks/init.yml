@@ -58,12 +58,8 @@
   become: false
   when: ansible_distribution == 'MacOSX'
 
-- name: Remove temporary askpass script (macOS)
-  ansible.builtin.file:
-    path: /tmp/askpass.sh
-    state: absent
-  become: false
-  when: ansible_distribution == 'MacOSX'
+# Note: askpass.sh is kept for Docker and other Homebrew cask installs
+# It will be cleaned up in dfe_system_cleanup role
 
 - name: Add Homebrew to shell profile (macOS)
   ansible.builtin.lineinfile:
