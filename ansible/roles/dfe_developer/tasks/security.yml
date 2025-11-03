@@ -12,10 +12,13 @@
         name: dnf-automatic
         state: present
 
-    - name: Wait for dnf-automatic.conf to be created
-      ansible.builtin.wait_for:
+    - name: Ensure dnf-automatic.conf exists
+      ansible.builtin.file:
         path: /etc/dnf/automatic.conf
-        timeout: 30
+        state: touch
+        mode: '0644'
+        modification_time: preserve
+        access_time: preserve
 
     - name: Configure dnf-automatic for security updates only
       ansible.builtin.ini_file:
