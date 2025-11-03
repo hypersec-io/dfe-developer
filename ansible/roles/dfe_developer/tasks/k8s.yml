@@ -181,54 +181,43 @@
     mode: '0755'
   when: ansible_distribution in ['Fedora', 'Ubuntu']
 
+
 # ============================================================================
 # macOS - Install via Homebrew
 # ============================================================================
 
-- name: Install kubectl via Homebrew (macOS)
-  community.general.homebrew:
-    name: kubernetes-cli
-    state: present
-  become: false
-  environment: "{{ homebrew_env }}"
-  when: ansible_distribution == 'MacOSX'
+- name: Install Kubernetes tools via Homebrew (macOS)
+  block:
+    - name: Install kubectl
+      community.general.homebrew:
+        name: kubernetes-cli
+        state: present
 
-- name: Install k9s via Homebrew (macOS)
-  community.general.homebrew:
-    name: k9s
-    state: present
-  become: false
-  environment: "{{ homebrew_env }}"
-  when: ansible_distribution == 'MacOSX'
+    - name: Install k9s
+      community.general.homebrew:
+        name: k9s
+        state: present
 
-- name: Install kubectx via Homebrew (macOS)
-  community.general.homebrew:
-    name: kubectx
-    state: present
-  become: false
-  environment: "{{ homebrew_env }}"
-  when: ansible_distribution == 'MacOSX'
+    - name: Install kubectx
+      community.general.homebrew:
+        name: kubectx
+        state: present
 
-- name: Install minikube via Homebrew (macOS)
-  community.general.homebrew:
-    name: minikube
-    state: present
-  become: false
-  environment: "{{ homebrew_env }}"
-  when: ansible_distribution == 'MacOSX'
+    - name: Install minikube
+      community.general.homebrew:
+        name: minikube
+        state: present
 
-- name: Install ArgoCD CLI via Homebrew (macOS)
-  community.general.homebrew:
-    name: argocd
-    state: present
-  become: false
-  environment: "{{ homebrew_env }}"
-  when: ansible_distribution == 'MacOSX'
+    - name: Install ArgoCD CLI
+      community.general.homebrew:
+        name: argocd
+        state: present
 
-- name: Install dive via Homebrew (macOS)
-  community.general.homebrew:
-    name: dive
-    state: present
+    - name: Install dive
+      community.general.homebrew:
+        name: dive
+        state: present
+
   become: false
   environment: "{{ homebrew_env }}"
   when: ansible_distribution == 'MacOSX'
