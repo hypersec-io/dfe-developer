@@ -49,7 +49,6 @@ ANSIBLE_TAGS=""
 ANSIBLE_SKIP_TAGS=""
 ANSIBLE_EXTRA_VARS=""
 GIT_BRANCH="main"
-REPO_URL="https://github.com/hypersec-io/dfe-developer.git"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -169,38 +168,44 @@ if ! sudo -n true 2>/dev/null; then
     }
 fi
 print_success "Sudo access verified"
+
 # Install latest Ansible in temporary Python venv (isolated from OS)
 # This avoids circular dependency if playbook updates system Ansible
 TEMP_ANSIBLE_DIR="$HOME/.dfe-ansible-temp"
 ANSIBLE_BIN="$TEMP_ANSIBLE_DIR/bin/ansible-playbook"
-
-# Always ensure prerequisites are installed first
-print_info "Ensuring prerequisites are installed..."
-case "$OS_FAMILY" in
-    fedora)
-        if ! command -v python3 &>/dev/null || ! command -v curl &>/dev/null; then
-            sudo dnf install -y python3 python3-pip curl
-        fi
-        ;;
-    ubuntu|debian)
-        # Always install on Ubuntu/Debian (ensures venv module present)
-        sudo apt update >/dev/null 2>&1
-        sudo apt install -y python3 python3-pip python3-venv curl >/dev/null 2>&1
-        ;;
-    macos)
-        if ! command -v python3 &>/dev/null; then
-            print_error "Python 3 not found. Install from https://www.python.org or use: brew install python3"
-            exit 1
-        fi
-        # curl pre-installed on macOS
-        ;;
-esac
 
 if [[ -f "$ANSIBLE_BIN" ]]; then
     ANSIBLE_VERSION=$("$TEMP_ANSIBLE_DIR/bin/ansible" --version | head -1 | awk '{print $2}')
     print_info "Using temporary Ansible venv (version $ANSIBLE_VERSION)"
 else
     print_info "Creating temporary Ansible environment (isolated from OS)..."
+
+    # Ensure Python 3 and curl are installed (prerequisites)
+    case "$OS_FAMILY" in
+        fedora)
+            if ! command -v python3 &>/dev/null || ! command -v curl &>/dev/null; then
+                sudo dnf install -y python3 python3-pip curl || {
+                    print_error "Failed to install Python 3 or curl"
+                    exit 1
+                }
+            fi
+            ;;
+        ubuntu|debian)
+            # Always install prerequisites (venv check unreliable on Ubuntu)
+            sudo apt update >/dev/null 2>&1
+            sudo apt install -y python3 python3-pip python3-venv curl >/dev/null 2>&1 || {
+                print_error "Failed to install Python 3, venv, or curl"
+                exit 1
+            }
+            ;;
+        macos)
+            if ! command -v python3 &>/dev/null; then
+                print_error "Python 3 not found. Install from https://www.python.org or use: brew install python3"
+                exit 1
+            fi
+            # curl pre-installed on macOS
+            ;;
+    esac
 
     # Create temporary Python venv
     python3 -m venv "$TEMP_ANSIBLE_DIR" || {
@@ -221,11 +226,14 @@ else
     print_info "Location: $TEMP_ANSIBLE_DIR (will be reused on subsequent runs)"
 fi
 
+# Determine script directory and check for ansible directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR" || exit 1
 
-# Check if ansible directory exists, download if not
+# Check if ansible directory exists, clone if not
 if [[ ! -d "ansible" ]]; then
     print_warning "ansible/ directory not found"
-    print_info "Downloading ansible directory from repository (branch: $GIT_BRANCH)..."
+    print_info "Cloning ansible directory from repository (branch: $GIT_BRANCH)..."
 
     # Download GitHub tarball (no git required)
     TARBALL_URL="https://github.com/hypersec-io/dfe-developer/archive/refs/heads/${GIT_BRANCH}.tar.gz"
@@ -237,9 +245,11 @@ if [[ ! -d "ansible" ]]; then
     }
 
     # Extract only the ansible directory
-    print_info "Extracting ansible directory..."
-    tar -xzf /tmp/dfe-developer.tar.gz --strip-components=1 "dfe-developer-${GIT_BRANCH}/ansible" || {
-        print_error "Failed to extract ansible directory"
+    # Note: Branch name slashes become hyphens in tarball archive directory
+    ARCHIVE_DIR="dfe-developer-${GIT_BRANCH//\//-}"
+    print_info "Extracting ansible directory from ${ARCHIVE_DIR}..."
+    tar -xzf /tmp/dfe-developer.tar.gz --strip-components=1 "${ARCHIVE_DIR}/ansible" || {
+        print_error "Failed to extract ansible directory from ${ARCHIVE_DIR}"
         rm -f /tmp/dfe-developer.tar.gz
         exit 1
     }
