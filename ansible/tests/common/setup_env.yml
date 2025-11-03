@@ -10,7 +10,7 @@
 - name: Determine tests directory (from mac or proxmox)
   ansible.builtin.set_fact:
     tests_dir: "{{ playbook_dir | regex_replace('/[^/]+$', '') }}"
-  when: "'mac' in playbook_dir or 'proxmox' in playbook_dir"
+  when: ("'mac' in playbook_dir or 'proxmox' in playbook_dir") and tests_dir is not defined
 
 - name: Determine tests directory (default)
   ansible.builtin.set_fact:
