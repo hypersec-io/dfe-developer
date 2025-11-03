@@ -25,6 +25,23 @@
 # UBUNTU - Latest Git from PPA (modern signed-by method)
 # ============================================================================
 
+# Clean up old PPA configuration if exists (migration from legacy method)
+- name: Remove old git-core PPA configuration
+  ansible.builtin.file:
+    path: "/etc/apt/sources.list.d/{{ item }}"
+    state: absent
+  loop:
+    - git-core-ubuntu-ppa-noble.list
+    - git-core-ubuntu-ppa-jammy.list
+    - ppa_git_core_ppa.list
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Update APT cache after cleanup
+  ansible.builtin.apt:
+    update_cache: true
+  when: ansible_distribution == 'Ubuntu'
+  failed_when: false'
+
 - name: Install latest Git (Ubuntu)
   block:
     - name: Import git-core PPA GPG key
