@@ -40,10 +40,18 @@
       Press Enter when done editing...
   when: not env_file_stat.stat.exists
 
-- name: Load environment variables from .env
-  ansible.builtin.include_vars:
-    file: "{{ tests_dir }}/.env"
-    name: env
+- name: Load environment variables from .env (shell format)
+  ansible.builtin.shell: |
+    set -a
+    source "{{ tests_dir }}/.env"
+    set +a
+    env | grep -E '^(SCALEWAY|PROXMOX|DEPLOY|ANSIBLE)_' | jq -R 'split("=") | {(.[0]): .[1:] | join("=")}' | jq -s 'add'
+  register: env_raw
+  changed_when: false
+
+- name: Parse environment variables into Ansible facts
+  ansible.builtin.set_fact:
+    env: "{{ env_raw.stdout | from_json }}"
 
 - name: Update .env with runtime values (e.g., generated server IDs)
   ansible.builtin.lineinfile:
