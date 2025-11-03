@@ -44,7 +44,7 @@
     NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   args:
     creates: /opt/homebrew/bin/brew
-  become: false
+  become: true
   when: ansible_distribution == 'MacOSX'
 
 - name: Add Homebrew to shell profile (macOS)
