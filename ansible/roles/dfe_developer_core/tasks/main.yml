@@ -2,6 +2,11 @@
 # DFE Developer Core - Main Tasks
 # Maps to: fedora/install-dfe-developer-core.sh
 
+- name: Load macOS variables
+  ansible.builtin.include_vars:
+    file: macos.yml
+  when: ansible_distribution == 'MacOSX'
+
 - name: Install C development tools
   ansible.builtin.include_tasks:
     file: c_tools.yml

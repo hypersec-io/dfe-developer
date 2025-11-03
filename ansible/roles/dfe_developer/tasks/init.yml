@@ -39,6 +39,11 @@
   ansible.builtin.debug:
     msg: "Installing for user: {{ dfe_actual_user }} (home: {{ dfe_user_home }})"
 
+- name: Load macOS-specific variables
+  ansible.builtin.include_vars:
+    file: macos.yml
+  when: ansible_distribution == 'MacOSX'
+
 - name: Create temporary sudo askpass script (macOS)
   ansible.builtin.copy:
     content: |

@@ -157,9 +157,7 @@
     name: font-jetbrains-mono
     state: present
   become: false
-  environment:
-    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
-    SUDO_ASKPASS: "/tmp/askpass.sh"
+  environment: "{{ homebrew_cask_env }}"
   when: ansible_distribution == 'MacOSX'
 
 - name: Install Ghostty via Homebrew cask (macOS)
@@ -167,9 +165,7 @@
     name: ghostty
     state: present
   become: false
-  environment:
-    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
-    SUDO_ASKPASS: "/tmp/askpass.sh"
+  environment: "{{ homebrew_cask_env }}"
   when: ansible_distribution == 'MacOSX'
 
 # Configure Ghostty for macOS

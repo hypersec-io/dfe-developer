@@ -42,6 +42,5 @@
     name: openvpn
     state: present
   become: false
-  environment:
-    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ ansible_env.PATH }}"
+  environment: "{{ homebrew_env }}"
   when: ansible_distribution == 'MacOSX'

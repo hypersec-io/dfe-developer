@@ -110,7 +110,6 @@
       - ansible
       - yq
     state: present
-  environment:
-    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:{{ ansible_env.PATH }}"
+  environment: "{{ homebrew_env }}"
   become: false
   when: ansible_distribution == 'MacOSX'

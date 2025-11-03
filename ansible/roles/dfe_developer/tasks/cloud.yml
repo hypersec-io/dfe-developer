@@ -170,8 +170,7 @@
     name: awscli
     state: present
   become: false
-  environment:
-    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  environment: "{{ homebrew_env }}"
   when: ansible_distribution == 'MacOSX'
 
 - name: Install Helm via Homebrew (macOS)
@@ -179,8 +178,7 @@
     name: helm
     state: present
   become: false
-  environment:
-    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  environment: "{{ homebrew_env }}"
   when: ansible_distribution == 'MacOSX'
 
 - name: Install Terraform via Homebrew (macOS)
@@ -188,8 +186,7 @@
     name: terraform
     state: present
   become: false
-  environment:
-    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  environment: "{{ homebrew_env }}"
   when: ansible_distribution == 'MacOSX'
 
 - name: Tap HashiCorp formulae (macOS)
@@ -197,8 +194,7 @@
     name: hashicorp/tap
     state: present
   become: false
-  environment:
-    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  environment: "{{ homebrew_env }}"
   when: ansible_distribution == 'MacOSX'
 
 - name: Install Vault via Homebrew (macOS)
@@ -206,15 +202,13 @@
     name: hashicorp/tap/vault
     state: present
   become: false
-  environment:
-    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  environment: "{{ homebrew_env }}"
   when: ansible_distribution == 'MacOSX'
 
 - name: Install Helm Dashboard plugin (macOS)
   ansible.builtin.command: helm plugin install https://github.com/komodorio/helm-dashboard.git
   become: false
-  environment:
-    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  environment: "{{ homebrew_env }}"
   failed_when: false
   changed_when: false
   when: ansible_distribution == 'MacOSX'
