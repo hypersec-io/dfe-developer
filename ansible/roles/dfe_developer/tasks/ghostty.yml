@@ -87,8 +87,8 @@
       font-feature = calt
       font-feature = liga
 
-      # Theme - Solarized Dark
-      theme = Builtin Solarized Dark
+      # Theme - Catppuccin Mocha (modern, better contrast than Solarized)
+      theme = catppuccin-mocha
 
       # Window Configuration
       window-height = 35
@@ -188,8 +188,8 @@
       font-feature = calt
       font-feature = liga
 
-      # Theme - Solarized Dark
-      theme = Builtin Solarized Dark
+      # Theme - Catppuccin Mocha (modern, better contrast than Solarized)
+      theme = catppuccin-mocha
 
       # Window Configuration
       window-height = 35
