@@ -1,7 +1,7 @@
 ---
 # Claude Code CLI installation (user-specific via npm)
 
-- name: Install Claude Code CLI globally for user
+- name: Install Claude Code CLI globally for user (Linux)
   community.general.npm:
     name: '@anthropic-ai/claude-code'
     global: true
@@ -10,11 +10,34 @@
     NPM_CONFIG_PREFIX: "{{ dfe_user_home }}/.npm-global"
   become: false
   become_user: "{{ dfe_actual_user }}"
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
 
-- name: Enable Claude Code auto-update
+- name: Install Claude Code CLI globally for user (macOS)
+  community.general.npm:
+    name: '@anthropic-ai/claude-code'
+    global: true
+    state: present
+  environment:
+    NPM_CONFIG_PREFIX: "{{ dfe_user_home }}/.npm-global"
+    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  become: false
+  when: ansible_distribution == 'MacOSX'
+
+- name: Enable Claude Code auto-update (Linux)
   ansible.builtin.command:
     cmd: "{{ dfe_user_home }}/.npm-global/bin/claude config set auto_update true"
   become: false
   become_user: "{{ dfe_actual_user }}"
   failed_when: false
   changed_when: false
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+- name: Enable Claude Code auto-update (macOS)
+  ansible.builtin.command:
+    cmd: "{{ dfe_user_home }}/.npm-global/bin/claude config set auto_update true"
+  environment:
+    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ dfe_user_home }}/.npm-global/bin:{{ ansible_env.PATH }}"
+  become: false
+  failed_when: false
+  changed_when: false
+  when: ansible_distribution == 'MacOSX'

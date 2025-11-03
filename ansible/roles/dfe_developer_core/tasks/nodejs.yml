@@ -39,22 +39,41 @@
   when: ansible_distribution == 'MacOSX'
 
 # Configure npm for user-specific global packages
-- name: Create npm global directory for user
+- name: Create npm global directory for user (Linux)
   ansible.builtin.file:
     path: "{{ dfe_user_home }}/.npm-global"
     state: directory
     mode: '0755'
     owner: "{{ dfe_actual_user }}"
     group: "{{ dfe_actual_user }}"
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
 
-- name: Configure npm prefix for user
+- name: Create npm global directory for user (macOS)
+  ansible.builtin.file:
+    path: "{{ dfe_user_home }}/.npm-global"
+    state: directory
+    mode: '0755'
+  become: false
+  when: ansible_distribution == 'MacOSX'
+
+- name: Configure npm prefix for user (Linux)
   ansible.builtin.command:
     cmd: npm config set prefix "{{ dfe_user_home }}/.npm-global"
   become: false
   become_user: "{{ dfe_actual_user }}"
   changed_when: false
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
 
-- name: Add npm global bin to PATH in .bashrc
+- name: Configure npm prefix for user (macOS)
+  ansible.builtin.command:
+    cmd: npm config set prefix "{{ dfe_user_home }}/.npm-global"
+  become: false
+  environment:
+    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  changed_when: false
+  when: ansible_distribution == 'MacOSX'
+
+- name: Add npm global bin to PATH in .bashrc (Linux)
   ansible.builtin.lineinfile:
     path: "{{ dfe_user_home }}/.bashrc"
     regexp: "^export PATH=.*\\.npm-global/bin"
@@ -63,9 +82,20 @@
     owner: "{{ dfe_actual_user }}"
     group: "{{ dfe_actual_user }}"
     create: true
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+- name: Add npm global bin to PATH in .zshrc (macOS)
+  ansible.builtin.lineinfile:
+    path: "{{ dfe_user_home }}/.zshrc"
+    regexp: "^export PATH=.*\\.npm-global/bin"
+    line: 'export PATH="{{ dfe_user_home }}/.npm-global/bin:$PATH"'
+    state: present
+    create: true
+  become: false
+  when: ansible_distribution == 'MacOSX'
 
 # Install semantic-release and plugins (user-specific)
-- name: Update npm to latest
+- name: Update npm to latest (Linux)
   ansible.builtin.command:
     cmd: npm install -g npm@latest
   environment:
@@ -73,8 +103,18 @@
   become: false
   become_user: "{{ dfe_actual_user }}"
   changed_when: false
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
 
-- name: Install semantic-release globally
+- name: Update npm to latest (macOS)
+  ansible.builtin.command:
+    cmd: npm install -g npm@latest
+  environment:
+    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ dfe_user_home }}/.npm-global/bin:{{ ansible_env.PATH }}"
+  become: false
+  changed_when: false
+  when: ansible_distribution == 'MacOSX'
+
+- name: Install semantic-release globally (Linux)
   community.general.npm:
     name: semantic-release
     global: true
@@ -83,8 +123,20 @@
     NPM_CONFIG_PREFIX: "{{ dfe_user_home }}/.npm-global"
   become: false
   become_user: "{{ dfe_actual_user }}"
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
 
-- name: Install semantic-release plugins globally
+- name: Install semantic-release globally (macOS)
+  community.general.npm:
+    name: semantic-release
+    global: true
+    state: present
+  environment:
+    NPM_CONFIG_PREFIX: "{{ dfe_user_home }}/.npm-global"
+    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  become: false
+  when: ansible_distribution == 'MacOSX'
+
+- name: Install semantic-release plugins globally (Linux)
   community.general.npm:
     name: "{{ item }}"
     global: true
@@ -101,3 +153,23 @@
     NPM_CONFIG_PREFIX: "{{ dfe_user_home }}/.npm-global"
   become: false
   become_user: "{{ dfe_actual_user }}"
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+- name: Install semantic-release plugins globally (macOS)
+  community.general.npm:
+    name: "{{ item }}"
+    global: true
+    state: present
+  loop:
+    - '@semantic-release/changelog'
+    - '@semantic-release/git'
+    - '@semantic-release/github'
+    - '@semantic-release/commit-analyzer'
+    - '@semantic-release/release-notes-generator'
+    - '@semantic-release/exec'
+    - conventional-changelog-conventionalcommits
+  environment:
+    NPM_CONFIG_PREFIX: "{{ dfe_user_home }}/.npm-global"
+    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  become: false
+  when: ansible_distribution == 'MacOSX'

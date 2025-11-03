@@ -1,60 +1,105 @@
 ---
 # Verification - Core developer tools
 
-- name: Verify JFrog CLI
+- name: Verify JFrog CLI (Linux)
   ansible.builtin.command: jf --version
   register: verify_jfrog
   changed_when: false
   failed_when: verify_jfrog.rc != 0
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
 
-- name: Verify Azure CLI
+- name: Verify JFrog CLI (macOS)
+  ansible.builtin.command: jf --version
+  environment:
+    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ ansible_env.PATH }}"
+  register: verify_jfrog
+  changed_when: false
+  failed_when: verify_jfrog.rc != 0
+  when: ansible_distribution == 'MacOSX'
+
+- name: Verify Azure CLI (Linux)
   ansible.builtin.command: az version
   register: verify_azure
   changed_when: false
   failed_when: verify_azure.rc != 0
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
 
-- name: Verify Node.js
+- name: Verify Azure CLI (macOS)
+  ansible.builtin.command: az version
+  environment:
+    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ ansible_env.PATH }}"
+  register: verify_azure
+  changed_when: false
+  failed_when: verify_azure.rc != 0
+  when: ansible_distribution == 'MacOSX'
+
+- name: Verify Node.js (Linux)
   ansible.builtin.command: node --version
   register: verify_node
   changed_when: false
   failed_when: verify_node.rc != 0
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+- name: Verify Node.js (macOS)
+  ansible.builtin.command: node --version
+  environment:
+    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ ansible_env.PATH }}"
+  register: verify_node
+  changed_when: false
+  failed_when: verify_node.rc != 0
+  when: ansible_distribution == 'MacOSX'
 
 - name: Verify semantic-release
   ansible.builtin.command: "{{ dfe_user_home }}/.npm-global/bin/semantic-release --version"
+  environment:
+    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.npm-global/bin:{{ ansible_env.PATH }}"
   register: verify_semrel
   changed_when: false
   failed_when: verify_semrel.rc != 0
   become: false
-  become_user: "{{ dfe_actual_user }}"
 
 - name: Verify Linear CLI
-  ansible.builtin.command: linear --version
+  ansible.builtin.command: "{{ dfe_user_home }}/.npm-global/bin/linear --version"
+  environment:
+    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.npm-global/bin:{{ ansible_env.PATH }}"
   register: verify_linear
   changed_when: false
   failed_when: verify_linear.rc != 0
+  become: false
 
-- name: Verify OpenVPN 3
+- name: Verify OpenVPN 3 (Linux)
   ansible.builtin.command: openvpn3 version
   register: verify_openvpn
   changed_when: false
   failed_when: verify_openvpn.rc != 0
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+- name: Verify OpenVPN 3 (macOS)
+  ansible.builtin.command: openvpn --version
+  environment:
+    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ ansible_env.PATH }}"
+  register: verify_openvpn
+  changed_when: false
+  failed_when: verify_openvpn.rc != 0
+  when: ansible_distribution == 'MacOSX'
 
 - name: Verify Claude Code CLI
   ansible.builtin.command: "{{ dfe_user_home }}/.npm-global/bin/claude --version"
+  environment:
+    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.npm-global/bin:{{ ansible_env.PATH }}"
   register: verify_claude
   changed_when: false
   failed_when: verify_claude.rc != 0
   become: false
-  become_user: "{{ dfe_actual_user }}"
 
 - name: Display core tools verification
   ansible.builtin.debug:
     msg: |
       ✅ Core Developer Tools Verified:
       - JFrog CLI: {{ verify_jfrog.stdout }}
-      - Azure CLI: {{ verify_azure.stdout | from_json | json_query('"azure-cli"') }}
+      - Azure CLI: {{ verify_azure.stdout | from_json | json_query('"azure-cli"') if ansible_distribution in ['Fedora', 'Ubuntu'] else verify_azure.stdout_lines[0] }}
       - Node.js: {{ verify_node.stdout }}
       - semantic-release: {{ verify_semrel.stdout }}
       - Linear CLI: {{ verify_linear.stdout }}
-      - OpenVPN 3: {{ verify_openvpn.stdout }}
+      - OpenVPN: {{ verify_openvpn.stdout_lines[0] }}
       - Claude Code CLI: {{ verify_claude.stdout }}
