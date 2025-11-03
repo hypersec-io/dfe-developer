@@ -1,42 +1,54 @@
 ---
 # OpenVPN 3 client installation
 
-# Fedora - COPR repository
-- name: Enable OpenVPN 3 COPR repository (Fedora)
-  community.general.copr:
-    name: dsommers/openvpn3
-    state: enabled
+# ============================================================================
+# FEDORA - Enable COPR and install
+# ============================================================================
+
+- name: Install OpenVPN 3 (Fedora)
+  block:
+    - name: Enable OpenVPN 3 COPR repository
+      community.general.copr:
+        name: dsommers/openvpn3
+        state: enabled
+
+    - name: Install OpenVPN 3 client
+      ansible.builtin.dnf:
+        name: openvpn3-client
+        state: present
+
   when: ansible_distribution == 'Fedora'
 
-- name: Install OpenVPN 3 client (Fedora)
-  ansible.builtin.dnf:
-    name: openvpn3-client
-    state: present
-  when: ansible_distribution == 'Fedora'
-
-# Ubuntu - Official OpenVPN repository
-- name: Add OpenVPN GPG key (Ubuntu)
-  ansible.builtin.get_url:
-    url: https://swupdate.openvpn.net/repos/openvpn-repo-pkg-key.pub
-    dest: /usr/share/keyrings/openvpn.asc
-    mode: '0644'
-  when: ansible_distribution == 'Ubuntu'
-
-- name: Add OpenVPN repository (Ubuntu)
-  ansible.builtin.apt_repository:
-    repo: "deb [signed-by=/usr/share/keyrings/openvpn.asc] https://swupdate.openvpn.net/community/openvpn3/repos {{ ansible_distribution_release }} main"
-    filename: openvpn3
-    state: present
-  when: ansible_distribution == 'Ubuntu'
+# ============================================================================
+# UBUNTU - Add OpenVPN repository and install
+# ============================================================================
 
 - name: Install OpenVPN 3 (Ubuntu)
-  ansible.builtin.apt:
-    name: openvpn3
-    state: present
-    update_cache: true
+  block:
+    - name: Add OpenVPN GPG key
+      ansible.builtin.get_url:
+        url: https://swupdate.openvpn.net/repos/openvpn-repo-pkg-key.pub
+        dest: /usr/share/keyrings/openvpn.asc
+        mode: '0644'
+
+    - name: Add OpenVPN repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/openvpn.asc] https://swupdate.openvpn.net/community/openvpn3/repos {{ ansible_distribution_release }} main"
+        filename: openvpn3
+        state: present
+
+    - name: Install OpenVPN 3
+      ansible.builtin.apt:
+        name: openvpn3
+        state: present
+        update_cache: true
+
   when: ansible_distribution == 'Ubuntu'
 
-# macOS
+# ============================================================================
+# macOS - Install via Homebrew
+# ============================================================================
+
 - name: Install OpenVPN via Homebrew (macOS)
   community.general.homebrew:
     name: openvpn
