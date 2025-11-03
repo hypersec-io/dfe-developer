@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """
 Scaleway Serverless Function - Mac Mini Idle Checker
-Deletes Mac minis with 'auto-delete' tag after 24h of no activity
+Deletes Mac minis with 'auto-delete' tag after 23h of idle time
 
 Triggered: Every hour via CRON trigger
 Checks: SSH connections, CPU usage from Scaleway metrics
-Deletes: Servers idle >24h with matching tags
+Deletes: Servers idle >23h with matching tags (before next 24h billing block)
+
+Note: Scaleway enforces 24h minimum lease from deployment.
+      Deleting at 23h idle ensures we delete before the 2nd billing cycle.
 """
 import os
 import json
@@ -30,10 +33,10 @@ def handle(event, context):
     kept = []
 
     for server in servers:
-        # Only check servers with auto-delete tag
-        tags = server.get('tags', [])
-        if 'auto-delete' not in tags:
-            kept.append(f"{server['name']}: no auto-delete tag")
+        # Check for hypersec-test-mac-* prefix in server name
+        server_name = server.get('name', '')
+        if not server_name.startswith('hypersec-test-mac-'):
+            kept.append(f"{server_name}: not a test Mac (no hypersec-test-mac- prefix)")
             continue
 
         # Check server age
@@ -47,22 +50,22 @@ def handle(event, context):
 
         if metrics_response.status_code == 200:
             metrics = metrics_response.json()
-            # Check for activity in last 24 hours
+            # Check for activity in last 23 hours (before next 24h billing block)
             cpu_usage = metrics.get('cpu_usage_avg_1h', 100)  # Default to active if unknown
             network_rx = metrics.get('network_rx_bytes_1h', 1000)  # Default to active
 
-            # Idle if CPU <5% and minimal network for 24h
-            if cpu_usage < 5 and network_rx < 1000 and age_hours >= 24:
+            # Idle if CPU <5% and minimal network for 23h (delete before 2nd billing cycle)
+            if cpu_usage < 5 and network_rx < 1000 and age_hours >= 23:
                 # Delete idle server
                 delete_response = requests.delete(f"{api_url}/{server_id}", headers=headers)
                 if delete_response.status_code in [200, 204]:
-                    deleted.append(f"{server['name']}: idle {age_hours:.1f}h, deleted")
+                    deleted.append(f"{server_name}: idle {age_hours:.1f}h, deleted")
                 else:
-                    kept.append(f"{server['name']}: delete failed - {delete_response.status_code}")
+                    kept.append(f"{server_name}: delete failed - {delete_response.status_code}")
             else:
-                kept.append(f"{server['name']}: active (CPU:{cpu_usage}%, age:{age_hours:.1f}h)")
+                kept.append(f"{server_name}: active (CPU:{cpu_usage}%, age:{age_hours:.1f}h)")
         else:
-            kept.append(f"{server['name']}: metrics unavailable")
+            kept.append(f"{server_name}: metrics unavailable")
 
     return {
         "statusCode": 200,
