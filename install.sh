@@ -184,9 +184,9 @@ else
     # Ensure Python 3 is installed (only prerequisite - no git needed, we use tarball)
     case "$OS_FAMILY" in
         fedora)
-            if ! command -v python3 &>/dev/null; then
-                sudo dnf install -y python3 python3-pip || {
-                    print_error "Failed to install Python 3"
+            if ! command -v python3 &>/dev/null || ! command -v curl &>/dev/null; then
+                sudo dnf install -y python3 python3-pip curl || {
+                    print_error "Failed to install prerequisites (python3, curl)"
                     exit 1
                 }
             fi
@@ -194,8 +194,8 @@ else
         ubuntu|debian)
             # Always install prerequisites on Ubuntu/Debian (ensures venv module present)
             sudo apt update
-            sudo apt install -y python3 python3-pip python3-venv || {
-                print_error "Failed to install Python 3 and venv"
+            sudo apt install -y python3 python3-pip python3-venv curl || {
+                print_error "Failed to install prerequisites (python3, venv, curl)"
                 exit 1
             }
             ;;
