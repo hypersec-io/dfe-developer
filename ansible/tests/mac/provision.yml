@@ -7,14 +7,10 @@
   hosts: localhost
   gather_facts: false
 
-  vars:
-    env_file: "{{ playbook_dir }}/../.env"
-
   tasks:
-    - name: Load environment variables from .env
-      ansible.builtin.include_vars:
-        file: "{{ env_file }}"
-        name: env
+    - name: Setup .env
+      ansible.builtin.include_tasks:
+        file: ../common/setup_env.yml
 
     - name: Check for existing Mac mini
       ansible.builtin.uri:
