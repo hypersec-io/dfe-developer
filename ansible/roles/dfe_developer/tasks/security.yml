@@ -1,93 +1,102 @@
 ---
 # Security configuration - automatic updates
 
-# Fedora - dnf-automatic for security updates
-- name: Install dnf-automatic (Fedora)
-  ansible.builtin.dnf:
-    name: dnf-automatic
-    state: present
+# ============================================================================
+# FEDORA - dnf-automatic for security updates
+# ============================================================================
+
+- name: Configure automatic security updates (Fedora)
+  block:
+    - name: Install dnf-automatic
+      ansible.builtin.dnf:
+        name: dnf-automatic
+        state: present
+
+    - name: Wait for dnf-automatic.conf to be created
+      ansible.builtin.wait_for:
+        path: /etc/dnf/automatic.conf
+        timeout: 30
+
+    - name: Configure dnf-automatic for security updates only
+      ansible.builtin.ini_file:
+        path: /etc/dnf/automatic.conf
+        section: commands
+        option: upgrade_type
+        value: security
+        mode: '0644'
+
+    - name: Enable automatic downloads
+      ansible.builtin.ini_file:
+        path: /etc/dnf/automatic.conf
+        section: commands
+        option: download_updates
+        value: "yes"
+        mode: '0644'
+
+    - name: Enable automatic application of security updates
+      ansible.builtin.ini_file:
+        path: /etc/dnf/automatic.conf
+        section: commands
+        option: apply_updates
+        value: "yes"
+        mode: '0644'
+
+    - name: Enable and start dnf-automatic timer
+      ansible.builtin.systemd:
+        name: dnf-automatic.timer
+        enabled: true
+        state: started
+
   when: ansible_distribution == 'Fedora'
 
-- name: Wait for dnf-automatic.conf to be created
-  ansible.builtin.wait_for:
-    path: /etc/dnf/automatic.conf
-    timeout: 30
-  when: ansible_distribution == 'Fedora'
-
-- name: Configure dnf-automatic for security updates only (Fedora)
-  ansible.builtin.ini_file:
-    path: /etc/dnf/automatic.conf
-    section: commands
-    option: upgrade_type
-    value: security
-    mode: '0644'
-  when: ansible_distribution == 'Fedora'
-
-- name: Enable automatic downloads (Fedora)
-  ansible.builtin.ini_file:
-    path: /etc/dnf/automatic.conf
-    section: commands
-    option: download_updates
-    value: "yes"
-    mode: '0644'
-  when: ansible_distribution == 'Fedora'
-
-- name: Enable automatic application of security updates (Fedora)
-  ansible.builtin.ini_file:
-    path: /etc/dnf/automatic.conf
-    section: commands
-    option: apply_updates
-    value: "yes"
-    mode: '0644'
-  when: ansible_distribution == 'Fedora'
-
-- name: Enable and start dnf-automatic timer (Fedora)
-  ansible.builtin.systemd:
-    name: dnf-automatic.timer
-    enabled: true
-    state: started
-  when: ansible_distribution == 'Fedora'
-
-# Ubuntu - unattended-upgrades for security updates
-- name: Install unattended-upgrades (Ubuntu)
-  ansible.builtin.apt:
-    name:
-      - unattended-upgrades
-      - apt-listchanges
-    state: present
-  when: ansible_distribution == 'Ubuntu'
+# ============================================================================
+# UBUNTU - unattended-upgrades for security updates
+# ============================================================================
 
 - name: Configure automatic security updates (Ubuntu)
-  ansible.builtin.copy:
-    dest: /etc/apt/apt.conf.d/50unattended-upgrades
-    content: |
-      // Automatic security updates configuration
-      Unattended-Upgrade::Allowed-Origins {
-          "${distro_id}:${distro_codename}-security";
-          "${distro_id}ESMApps:${distro_codename}-apps-security";
-          "${distro_id}ESM:${distro_codename}-infra-security";
-      };
+  block:
+    - name: Install unattended-upgrades
+      ansible.builtin.apt:
+        name:
+          - unattended-upgrades
+          - apt-listchanges
+        state: present
 
-      // Remove unused dependencies
-      Unattended-Upgrade::Remove-Unused-Dependencies "true";
-      Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
+    - name: Configure automatic security updates
+      ansible.builtin.copy:
+        dest: /etc/apt/apt.conf.d/50unattended-upgrades
+        content: |
+          // Automatic security updates configuration
+          Unattended-Upgrade::Allowed-Origins {
+              "${distro_id}:${distro_codename}-security";
+              "${distro_id}ESMApps:${distro_codename}-apps-security";
+              "${distro_id}ESM:${distro_codename}-infra-security";
+          };
 
-      // Automatic reboot if required (at 3 AM)
-      Unattended-Upgrade::Automatic-Reboot "true";
-      Unattended-Upgrade::Automatic-Reboot-Time "03:00";
-    mode: '0644'
+          // Remove unused dependencies
+          Unattended-Upgrade::Remove-Unused-Dependencies "true";
+          Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
+
+          // Automatic reboot if required (at 3 AM)
+          Unattended-Upgrade::Automatic-Reboot "true";
+          Unattended-Upgrade::Automatic-Reboot-Time "03:00";
+        mode: '0644'
+
+    - name: Enable automatic updates
+      ansible.builtin.copy:
+        dest: /etc/apt/apt.conf.d/20auto-upgrades
+        content: |
+          APT::Periodic::Update-Package-Lists "1";
+          APT::Periodic::Download-Upgradeable-Packages "1";
+          APT::Periodic::Unattended-Upgrade "1";
+          APT::Periodic::AutocleanInterval "7";
+        mode: '0644'
+
   when: ansible_distribution == 'Ubuntu'
 
-- name: Enable automatic updates (Ubuntu)
-  ansible.builtin.copy:
-    dest: /etc/apt/apt.conf.d/20auto-upgrades
-    content: |
-      APT::Periodic::Update-Package-Lists "1";
-      APT::Periodic::Download-Upgradeable-Packages "1";
-      APT::Periodic::Unattended-Upgrade "1";
-      APT::Periodic::AutocleanInterval "7";
-    mode: '0644'
-  when: ansible_distribution == 'Ubuntu'
+# ============================================================================
+# STATUS DISPLAY
+# ============================================================================
 
 - name: Display automatic updates status
   ansible.builtin.debug:
