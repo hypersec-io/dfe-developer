@@ -52,7 +52,7 @@
     - name: Set server ID from new server
       ansible.builtin.set_fact:
         server_id: "{{ new_server_result.stdout }}"
-      when: server_id is not defined and new_server_result.stdout | length > 0
+      when: new_server_result is defined and new_server_result.stdout is defined and new_server_result.stdout | length > 0
 
     - name: Wait for Mac mini to be ready using scw CLI
       ansible.builtin.shell: |
