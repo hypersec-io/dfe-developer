@@ -2,6 +2,11 @@
 # System cleanup and updates - runs at the end of playbook
 # Updates all packages and removes unused dependencies
 
+- name: Load macOS variables
+  ansible.builtin.include_vars:
+    file: macos.yml
+  when: ansible_distribution == 'MacOSX'
+
 - name: Update all packages (Fedora)
   ansible.builtin.dnf:
     name: "*"

@@ -65,6 +65,10 @@ while [[ $# -gt 0 ]]; do
             GIT_BRANCH="$2"
             shift 2
             ;;
+        --no-wallpaper)
+            ANSIBLE_SKIP_TAGS="--skip-tags wallpaper"
+            shift
+            ;;
         --no-ghostty)
             ANSIBLE_EXTRA_VARS="$ANSIBLE_EXTRA_VARS -e dfe_install_ghostty=false"
             shift
@@ -96,6 +100,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --check              Run in check mode (dry-run, no changes)"
             echo "  --tags TAGS          Run specific Ansible tags (comma-separated)"
             echo "  --branch BRANCH      Git branch to use (default: main)"
+  --no-wallpaper       Skip custom wallpaper installation
             echo "  --no-ghostty         Skip Ghostty terminal installation"
             echo "  --no-fastestmirror   Disable automatic mirror selection (use OS defaults)"
             echo "  --core               Install core developer tools (JFrog, Azure, Node.js, etc.)"
@@ -273,7 +278,7 @@ fi
 
 # Run Ansible playbook using temp venv Ansible
 print_info "Running Ansible playbook (using isolated venv Ansible)..."
-print_info "Command: $ANSIBLE_BIN ansible/playbooks/main.yml -i ansible/inventories/localhost/inventory.yml $ANSIBLE_CHECK $ANSIBLE_TAGS $ANSIBLE_EXTRA_VARS"
+print_info "Command: $ANSIBLE_BIN ansible/playbooks/main.yml -i ansible/inventories/localhost/inventory.yml $ANSIBLE_CHECK $ANSIBLE_CHECK $ANSIBLE_TAGS $ANSIBLE_SKIP_TAGS $ANSIBLE_EXTRA_VARS"
 
 cd ansible || exit 1
 
