@@ -52,3 +52,8 @@
   ansible.builtin.include_tasks:
     file: verify.yml
   tags: ['verify']
+
+- name: Set custom wallpaper (if provided)
+  ansible.builtin.include_tasks:
+    file: wallpaper.yml
+  tags: ['wallpaper']

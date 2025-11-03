@@ -65,12 +65,6 @@
   tags: ['ghostty']
   when: dfe_install_ghostty | default(true) | bool
 
-- name: Set custom wallpaper (if provided)
-  ansible.builtin.include_tasks:
-    file: wallpaper.yml
-  tags: ['wallpaper']
-  when: dfe_has_gnome
-
 - name: Verify base tools installation
   ansible.builtin.include_tasks:
     file: verify.yml

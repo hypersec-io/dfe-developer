@@ -113,3 +113,18 @@
   environment: "{{ homebrew_env }}"
   become: false
   when: ansible_distribution == 'MacOSX'
+
+# Remmina - Remote Desktop Client (Linux GUI only)
+# Using Flatpak for latest version (PPA discontinued as of 2025)
+# Flatpak provides better updates and cross-distro compatibility
+- name: Install Remmina via Flatpak (user-specific)
+  community.general.flatpak:
+    name: org.remmina.Remmina
+    state: present
+    method: user
+  become: false
+  environment:
+    FLATPAK_TTY_PROGRESS: "0"
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - dfe_has_gnome | default(false)

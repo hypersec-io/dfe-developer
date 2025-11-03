@@ -54,3 +54,37 @@
 - name: Display wallpaper status
   ansible.builtin.debug:
     msg: "{{ 'Wallpaper set: ' + dfe_wallpaper_name if wallpaper_files.matched > 0 else 'No wallpaper file found - skipping' }}"
+
+# ============================================================================
+# macOS - Install desktoppr and set wallpaper
+# ============================================================================
+
+- name: Install desktoppr via Homebrew (macOS)
+  community.general.homebrew:
+    name: desktoppr
+    state: present
+  become: false
+  environment: "{{ homebrew_env }}"
+  when:
+    - ansible_distribution == 'MacOSX'
+    - wallpaper_files.matched > 0
+
+- name: Copy wallpaper to user Pictures directory (macOS)
+  ansible.builtin.copy:
+    src: "{{ dfe_wallpaper_file }}"
+    dest: "{{ dfe_user_home }}/Pictures/{{ dfe_wallpaper_name }}"
+    mode: '0644'
+  become: false
+  when:
+    - ansible_distribution == 'MacOSX'
+    - wallpaper_files.matched > 0
+
+- name: Set macOS wallpaper using desktoppr
+  ansible.builtin.command:
+    cmd: desktoppr "{{ dfe_user_home }}/Pictures/{{ dfe_wallpaper_name }}"
+  environment: "{{ homebrew_env }}"
+  become: false
+  changed_when: false
+  when:
+    - ansible_distribution == 'MacOSX'
+    - wallpaper_files.matched > 0
