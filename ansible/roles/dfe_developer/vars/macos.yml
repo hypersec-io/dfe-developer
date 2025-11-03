@@ -1,0 +1,10 @@
+---
+# Common variables for macOS Homebrew operations
+# These can be used as: environment: "{{ homebrew_env }}"
+
+homebrew_env:
+  PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+
+homebrew_cask_env:
+  PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  SUDO_ASKPASS: "/tmp/askpass.sh"

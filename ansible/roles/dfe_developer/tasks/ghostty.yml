@@ -68,14 +68,15 @@
     - ansible_distribution == 'Ubuntu'
     - ghostty_deb_url is defined
 
-# Configure Ghostty with Solarized Dark theme (system-wide default)
-- name: Create Ghostty config directory in /etc/skel
+# Configure Ghostty with Solarized Dark theme (system-wide default for Linux)
+- name: Create Ghostty config directory in /etc/skel (Linux)
   ansible.builtin.file:
     path: /etc/skel/.config/ghostty
     state: directory
     mode: '0755'
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
 
-- name: Deploy Ghostty system-wide default configuration
+- name: Deploy Ghostty system-wide default configuration (Linux)
   ansible.builtin.copy:
     dest: /etc/skel/.config/ghostty/config
     content: |
@@ -127,17 +128,19 @@
       keybind = ctrl+minus=decrease_font_size:1
       keybind = ctrl+zero=reset_font_size
     mode: '0644'
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
 
-# Also deploy to current user if running for first time
-- name: Create Ghostty config directory for actual user
+# Also deploy to current user if running for first time (Linux)
+- name: Create Ghostty config directory for actual user (Linux)
   ansible.builtin.file:
     path: "{{ dfe_user_home }}/.config/ghostty"
     state: directory
     mode: '0755'
     owner: "{{ dfe_actual_user }}"
     group: "{{ dfe_actual_user }}"
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
 
-- name: Deploy Ghostty configuration for actual user
+- name: Deploy Ghostty configuration for actual user (Linux)
   ansible.builtin.copy:
     src: /etc/skel/.config/ghostty/config
     dest: "{{ dfe_user_home }}/.config/ghostty/config"
@@ -146,3 +149,88 @@
     group: "{{ dfe_actual_user }}"
     remote_src: true
     force: false
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+# macOS - Install via Homebrew cask
+- name: Install JetBrains Mono font via Homebrew cask (macOS)
+  community.general.homebrew_cask:
+    name: font-jetbrains-mono
+    state: present
+  become: false
+  environment:
+    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+    SUDO_ASKPASS: "/tmp/askpass.sh"
+  when: ansible_distribution == 'MacOSX'
+
+- name: Install Ghostty via Homebrew cask (macOS)
+  community.general.homebrew_cask:
+    name: ghostty
+    state: present
+  become: false
+  environment:
+    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+    SUDO_ASKPASS: "/tmp/askpass.sh"
+  when: ansible_distribution == 'MacOSX'
+
+# Configure Ghostty for macOS
+- name: Create Ghostty config directory for actual user (macOS)
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.config/ghostty"
+    state: directory
+    mode: '0755'
+  become: false
+  when: ansible_distribution == 'MacOSX'
+
+- name: Deploy Ghostty configuration for actual user (macOS)
+  ansible.builtin.copy:
+    dest: "{{ ansible_env.HOME }}/.config/ghostty/config"
+    content: |
+      # Ghostty Configuration - macOS Optimized
+      # Font Configuration
+      font-family = JetBrains Mono
+      font-size = 11
+      font-feature = calt
+      font-feature = liga
+
+      # Theme - Solarized Dark
+      theme = iTerm2 Solarized Dark
+
+      # Window Configuration
+      window-height = 35
+      window-width = 140
+      window-padding-x = 8
+      window-padding-y = 8
+      window-save-state = always
+
+      # Transparency
+      background-opacity = 1.0
+      unfocused-split-opacity = 1.0
+
+      # Performance
+      window-vsync = false
+
+      # Scrollback
+      scrollback-limit = 10000
+
+      # Cursor
+      cursor-style = block
+      cursor-style-blink = true
+
+      # Shell Integration
+      shell-integration = detect
+      shell-integration-features = cursor,sudo,title
+
+      # Mouse Behavior
+      mouse-hide-while-typing = true
+
+      # Keybindings
+      keybind = cmd+c=copy_to_clipboard
+      keybind = cmd+v=paste_from_clipboard
+      keybind = cmd+t=new_tab
+      keybind = cmd+n=new_window
+      keybind = cmd+plus=increase_font_size:1
+      keybind = cmd+minus=decrease_font_size:1
+      keybind = cmd+zero=reset_font_size
+    mode: '0644'
+  become: false
+  when: ansible_distribution == 'MacOSX'

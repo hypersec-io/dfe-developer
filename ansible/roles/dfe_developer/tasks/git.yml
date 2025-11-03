@@ -39,6 +39,9 @@
       - git
       - git-lfs
     state: latest
+  become: false
+  environment:
+    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
   when: ansible_distribution == 'MacOSX'
 
 # Install GitHub CLI
@@ -58,6 +61,9 @@
   community.general.homebrew:
     name: gh
     state: present
+  become: false
+  environment:
+    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
   when: ansible_distribution == 'MacOSX'
 
 # Configure Git LFS

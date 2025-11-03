@@ -180,3 +180,61 @@
     include: dive
     mode: '0755'
   when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+# ============================================================================
+# macOS - Install via Homebrew
+# ============================================================================
+
+- name: Install kubectl via Homebrew (macOS)
+  community.general.homebrew:
+    name: kubernetes-cli
+    state: present
+  become: false
+  environment:
+    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  when: ansible_distribution == 'MacOSX'
+
+- name: Install k9s via Homebrew (macOS)
+  community.general.homebrew:
+    name: k9s
+    state: present
+  become: false
+  environment:
+    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  when: ansible_distribution == 'MacOSX'
+
+- name: Install kubectx via Homebrew (macOS)
+  community.general.homebrew:
+    name: kubectx
+    state: present
+  become: false
+  environment:
+    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  when: ansible_distribution == 'MacOSX'
+
+- name: Install minikube via Homebrew (macOS)
+  community.general.homebrew:
+    name: minikube
+    state: present
+  become: false
+  environment:
+    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  when: ansible_distribution == 'MacOSX'
+
+- name: Install ArgoCD CLI via Homebrew (macOS)
+  community.general.homebrew:
+    name: argocd
+    state: present
+  become: false
+  environment:
+    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  when: ansible_distribution == 'MacOSX'
+
+- name: Install dive via Homebrew (macOS)
+  community.general.homebrew:
+    name: dive
+    state: present
+  become: false
+  environment:
+    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  when: ansible_distribution == 'MacOSX'

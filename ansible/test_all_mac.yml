@@ -1,0 +1,30 @@
+---
+- name: Test All macOS Tasks
+  hosts: all
+  become: false
+  gather_facts: true
+
+  tasks:
+    - name: Test Git
+      ansible.builtin.include_tasks:
+        file: roles/dfe_developer/tasks/git.yml
+
+    - name: Test Cloud tools
+      ansible.builtin.include_tasks:
+        file: roles/dfe_developer/tasks/cloud.yml
+
+    - name: Test K8s tools
+      ansible.builtin.include_tasks:
+        file: roles/dfe_developer/tasks/k8s.yml
+
+    - name: Test VS Code
+      ansible.builtin.include_tasks:
+        file: roles/dfe_developer/tasks/vscode.yml
+
+    - name: Test Chrome
+      ansible.builtin.include_tasks:
+        file: roles/dfe_developer/tasks/chrome.yml
+
+    - name: Test Ghostty
+      ansible.builtin.include_tasks:
+        file: roles/dfe_developer/tasks/ghostty.yml

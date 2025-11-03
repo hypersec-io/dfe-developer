@@ -42,4 +42,8 @@
   community.general.homebrew_cask:
     name: visual-studio-code
     state: present
+  become: false
+  environment:
+    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+    SUDO_ASKPASS: "/tmp/askpass.sh"
   when: ansible_distribution == 'MacOSX'

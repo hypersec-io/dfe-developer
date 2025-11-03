@@ -1,0 +1,68 @@
+---
+# Test playbook for macOS - tests individual components
+- name: Test macOS Components
+  hosts: all
+  become: false
+  gather_facts: true
+
+  pre_tasks:
+    - name: Detect actual user
+      ansible.builtin.set_fact:
+        dfe_actual_user: "{{ ansible_user_id }}"
+
+    - name: Set user home directory (macOS)
+      ansible.builtin.set_fact:
+        dfe_user_home: "{{ ansible_env.HOME }}"
+      when: ansible_distribution == 'MacOSX'
+
+    - name: Set GNOME availability (macOS - N/A)
+      ansible.builtin.set_fact:
+        dfe_has_gnome: false
+      when: ansible_distribution == 'MacOSX'
+
+    - name: Create temporary askpass script (macOS)
+      ansible.builtin.copy:
+        dest: /tmp/askpass.sh
+        content: |
+          #!/bin/sh
+          echo "{{ ansible_become_password | default('') }}"
+        mode: '0700'
+      become: false
+      when: ansible_distribution == "MacOSX"
+
+  tasks:
+    - name: Test Git installation
+      ansible.builtin.include_role:
+        name: dfe_developer
+        tasks_from: git.yml
+      tags: ['git']
+
+    - name: Test Cloud tools installation
+      ansible.builtin.include_role:
+        name: dfe_developer
+        tasks_from: cloud.yml
+      tags: ['cloud']
+
+    - name: Test K8s tools installation
+      ansible.builtin.include_role:
+        name: dfe_developer
+        tasks_from: k8s.yml
+      tags: ['k8s']
+
+    - name: Test VS Code installation
+      ansible.builtin.include_role:
+        name: dfe_developer
+        tasks_from: vscode.yml
+      tags: ['vscode']
+
+    - name: Test Chrome installation
+      ansible.builtin.include_role:
+        name: dfe_developer
+        tasks_from: chrome.yml
+      tags: ['chrome']
+
+    - name: Test Ghostty installation
+      ansible.builtin.include_role:
+        name: dfe_developer
+        tasks_from: ghostty.yml
+      tags: ['ghostty']
