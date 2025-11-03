@@ -56,23 +56,23 @@
 
   roles:
     - role: dfe_developer
-      become: true
+      become: "{{ ansible_distribution != 'MacOSX' }}"
       tags: ['developer', 'base']
 
     - role: dfe_developer_core
-      become: true
+      become: "{{ ansible_distribution != 'MacOSX' }}"
       tags: ['core', 'advanced']
 
     - role: dfe_vm_optimizer
-      become: true
+      become: "{{ ansible_distribution != 'MacOSX' }}"
       tags: ['vm', 'optimizer']
 
     - role: dfe_rdp_optimizer
-      become: true
+      become: "{{ ansible_distribution != 'MacOSX' }}"
       tags: ['rdp', 'optimizer']
 
     - role: dfe_system_cleanup
-      become: true
+      become: "{{ ansible_distribution != 'MacOSX' }}"
       tags: ['always']
 
   post_tasks:
