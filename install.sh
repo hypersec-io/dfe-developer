@@ -169,39 +169,23 @@ if ! sudo -n true 2>/dev/null; then
     }
 fi
 print_success "Sudo access verified"
-
 # Install latest Ansible in temporary Python venv (isolated from OS)
 # This avoids circular dependency if playbook updates system Ansible
 TEMP_ANSIBLE_DIR="$HOME/.dfe-ansible-temp"
 ANSIBLE_BIN="$TEMP_ANSIBLE_DIR/bin/ansible-playbook"
 
-if [[ -f "$ANSIBLE_BIN" ]]; then
-    ANSIBLE_VERSION=$("$TEMP_ANSIBLE_DIR/bin/ansible" --version | head -1 | awk '{print $2}')
-    print_info "Using temporary Ansible venv (version $ANSIBLE_VERSION)"
-
-# ============================================================================
-# INSTALL PREREQUISITES (before checking for venv)
-# ============================================================================
-
+# Always ensure prerequisites are installed first
 print_info "Ensuring prerequisites are installed..."
 case "$OS_FAMILY" in
     fedora)
         if ! command -v python3 &>/dev/null || ! command -v curl &>/dev/null; then
-            print_info "Installing python3 and curl..."
-            sudo dnf install -y python3 python3-pip curl || {
-                print_error "Failed to install prerequisites"
-                exit 1
-            }
+            sudo dnf install -y python3 python3-pip curl
         fi
         ;;
     ubuntu|debian)
         # Always install on Ubuntu/Debian (ensures venv module present)
-        print_info "Installing python3, venv, and curl..."
-        sudo apt update
-        sudo apt install -y python3 python3-pip python3-venv curl || {
-            print_error "Failed to install prerequisites"
-            exit 1
-        }
+        sudo apt update >/dev/null 2>&1
+        sudo apt install -y python3 python3-pip python3-venv curl >/dev/null 2>&1
         ;;
     macos)
         if ! command -v python3 &>/dev/null; then
@@ -211,13 +195,12 @@ case "$OS_FAMILY" in
         # curl pre-installed on macOS
         ;;
 esac
-print_success "Prerequisites installed"
 
-# ============================================================================
-# CREATE ANSIBLE VENV (if not exists)
-# ============================================================================
-
-    esac
+if [[ -f "$ANSIBLE_BIN" ]]; then
+    ANSIBLE_VERSION=$("$TEMP_ANSIBLE_DIR/bin/ansible" --version | head -1 | awk '{print $2}')
+    print_info "Using temporary Ansible venv (version $ANSIBLE_VERSION)"
+else
+    print_info "Creating temporary Ansible environment (isolated from OS)..."
 
     # Create temporary Python venv
     python3 -m venv "$TEMP_ANSIBLE_DIR" || {
@@ -238,9 +221,6 @@ print_success "Prerequisites installed"
     print_info "Location: $TEMP_ANSIBLE_DIR (will be reused on subsequent runs)"
 fi
 
-# Determine script directory and check for ansible directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR" || exit 1
 
 # Check if ansible directory exists, download if not
 if [[ ! -d "ansible" ]]; then
