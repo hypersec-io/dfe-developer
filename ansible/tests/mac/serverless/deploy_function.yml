@@ -26,84 +26,111 @@
           Cost: ~$0.40/month for 720 hourly executions
       when: not (env.DEPLOY_SCALEWAY_IDLE_FUNCTION | default('false') | bool)
 
-    - name: Check if function namespace exists
-      ansible.builtin.uri:
-        url: "https://api.scaleway.com/functions/v1beta1/regions/{{ env.SCALEWAY_REGION }}/namespaces"
-        method: GET
-        headers:
-          X-Auth-Token: "{{ env.SCALEWAY_ACCESS_KEY_SECRET }}"
-        return_content: true
-      register: namespaces
+    - name: Check if function namespace exists using scw CLI
+      ansible.builtin.shell: |
+        export SCW_ACCESS_KEY="{{ env.SCALEWAY_ACCESS_KEY_ID }}"
+        export SCW_SECRET_KEY="{{ env.SCALEWAY_ACCESS_KEY_SECRET }}"
+        export SCW_DEFAULT_PROJECT_ID="{{ env.SCALEWAY_PROJECT_ID }}"
+        export SCW_DEFAULT_REGION="{{ env.SCALEWAY_REGION }}"
+        scw function namespace list region={{ env.SCALEWAY_REGION }} -o json | jq -r '.[] | select(.name == "dfe-test-automation") | .id'
+      register: namespace_check
+      changed_when: false
+      failed_when: false
 
-    - name: Create function namespace if not exists
-      ansible.builtin.uri:
-        url: "https://api.scaleway.com/functions/v1beta1/regions/{{ env.SCALEWAY_REGION }}/namespaces"
-        method: POST
-        headers:
-          X-Auth-Token: "{{ env.SCALEWAY_ACCESS_KEY_SECRET }}"
-          Content-Type: application/json
-        body_format: json
-        body:
-          name: dfe-test-automation
-          project_id: "{{ env.SCALEWAY_PROJECT_ID }}"
-          description: "DFE test infrastructure automation"
-        return_content: true
-      register: namespace
-      when: namespaces.json.namespaces | selectattr('name', 'equalto', 'dfe-test-automation') | list | length == 0
+    - name: Create function namespace if not exists using scw CLI
+      ansible.builtin.shell: |
+        export SCW_ACCESS_KEY="{{ env.SCALEWAY_ACCESS_KEY_ID }}"
+        export SCW_SECRET_KEY="{{ env.SCALEWAY_ACCESS_KEY_SECRET }}"
+        export SCW_DEFAULT_PROJECT_ID="{{ env.SCALEWAY_PROJECT_ID }}"
+        export SCW_DEFAULT_REGION="{{ env.SCALEWAY_REGION }}"
+        scw function namespace create \
+          name=dfe-test-automation \
+          project-id="{{ env.SCALEWAY_PROJECT_ID }}" \
+          description="DFE test infrastructure automation" \
+          region={{ env.SCALEWAY_REGION }} \
+          -o json | jq -r '.id'
+      register: namespace_create
+      when: namespace_check.stdout | length == 0
+      changed_when: true
 
     - name: Set namespace ID
       ansible.builtin.set_fact:
-        namespace_id: "{{ (namespaces.json.namespaces | selectattr('name', 'equalto', 'dfe-test-automation') | first).id if namespaces.json.namespaces | selectattr('name', 'equalto', 'dfe-test-automation') | list | length > 0 else namespace.json.id }}"
+        namespace_id: "{{ namespace_check.stdout if namespace_check.stdout | length > 0 else namespace_create.stdout }}"
 
-    - name: Create function for idle checking
-      ansible.builtin.uri:
-        url: "https://api.scaleway.com/functions/v1beta1/regions/{{ env.SCALEWAY_REGION }}/functions"
-        method: POST
-        headers:
-          X-Auth-Token: "{{ env.SCALEWAY_ACCESS_KEY_SECRET }}"
-          Content-Type: application/json
-        body_format: json
-        body:
-          namespace_id: "{{ namespace_id }}"
-          name: mac-idle-checker
-          runtime: python311
-          handler: idle_checker.handle
-          min_scale: 0
-          max_scale: 1
-          memory_limit: 256
-          timeout: 60s
-          environment_variables:
-            SCALEWAY_SECRET_KEY: "{{ env.SCALEWAY_ACCESS_KEY_SECRET }}"
-            SCALEWAY_ZONE: "{{ env.SCALEWAY_ZONE }}"
-        return_content: true
-      register: function
+    - name: Check if function exists using scw CLI
+      ansible.builtin.shell: |
+        export SCW_ACCESS_KEY="{{ env.SCALEWAY_ACCESS_KEY_ID }}"
+        export SCW_SECRET_KEY="{{ env.SCALEWAY_ACCESS_KEY_SECRET }}"
+        export SCW_DEFAULT_PROJECT_ID="{{ env.SCALEWAY_PROJECT_ID }}"
+        export SCW_DEFAULT_REGION="{{ env.SCALEWAY_REGION }}"
+        scw function function list namespace-id={{ namespace_id }} region={{ env.SCALEWAY_REGION }} -o json | jq -r '.[] | select(.name == "mac-idle-checker") | .id'
+      register: function_check
+      changed_when: false
+      failed_when: false
 
-    - name: Upload function code
-      ansible.builtin.command:
-        cmd: |
-          cd {{ playbook_dir }} && \
-          zip -r /tmp/idle_checker.zip idle_checker.py && \
-          curl -X POST \
-            -H "X-Auth-Token: {{ env.SCALEWAY_ACCESS_KEY_SECRET }}" \
-            -F "file=@/tmp/idle_checker.zip" \
-            "https://api.scaleway.com/functions/v1beta1/regions/{{ env.SCALEWAY_REGION }}/functions/{{ function.json.id }}/upload"
-      when: function is defined
+    - name: Create function for idle checking using scw CLI
+      ansible.builtin.shell: |
+        export SCW_ACCESS_KEY="{{ env.SCALEWAY_ACCESS_KEY_ID }}"
+        export SCW_SECRET_KEY="{{ env.SCALEWAY_ACCESS_KEY_SECRET }}"
+        export SCW_DEFAULT_PROJECT_ID="{{ env.SCALEWAY_PROJECT_ID }}"
+        export SCW_DEFAULT_REGION="{{ env.SCALEWAY_REGION }}"
+        scw function function create \
+          name=mac-idle-checker \
+          namespace-id={{ namespace_id }} \
+          runtime=python311 \
+          handler=idle_checker.handle \
+          min-scale=0 \
+          max-scale=1 \
+          memory-limit=256 \
+          timeout=60s \
+          region={{ env.SCALEWAY_REGION }} \
+          -o json | jq -r '.id'
+      register: function_create
+      when: function_check.stdout | length == 0
+      changed_when: true
 
-    - name: Create CRON trigger (runs every hour)
-      ansible.builtin.uri:
-        url: "https://api.scaleway.com/functions/v1beta1/regions/{{ env.SCALEWAY_REGION }}/triggers"
-        method: POST
-        headers:
-          X-Auth-Token: "{{ env.SCALEWAY_ACCESS_KEY_SECRET }}"
-          Content-Type: application/json
-        body_format: json
-        body:
-          name: idle-check-hourly
-          function_id: "{{ function.json.id }}"
-          config:
-            type: cron
-            schedule: "0 * * * *"  # Every hour
-        return_content: true
+    - name: Set function ID
+      ansible.builtin.set_fact:
+        function_id: "{{ function_check.stdout if function_check.stdout | length > 0 else function_create.stdout }}"
+
+    - name: Upload function code (always update)
+      ansible.builtin.shell: |
+        cd {{ playbook_dir }}
+        zip -r /tmp/idle_checker.zip idle_checker.py
+        export SCW_ACCESS_KEY="{{ env.SCALEWAY_ACCESS_KEY_ID }}"
+        export SCW_SECRET_KEY="{{ env.SCALEWAY_ACCESS_KEY_SECRET }}"
+        export SCW_DEFAULT_PROJECT_ID="{{ env.SCALEWAY_PROJECT_ID }}"
+        export SCW_DEFAULT_REGION="{{ env.SCALEWAY_REGION }}"
+        curl -X POST \
+          -H "X-Auth-Token: {{ env.SCALEWAY_ACCESS_KEY_SECRET }}" \
+          -F "file=@/tmp/idle_checker.zip" \
+          "https://api.scaleway.com/functions/v1beta1/regions/{{ env.SCALEWAY_REGION }}/functions/{{ function_id }}/upload"
+      changed_when: true
+
+    - name: Check if CRON trigger exists using scw CLI
+      ansible.builtin.shell: |
+        export SCW_ACCESS_KEY="{{ env.SCALEWAY_ACCESS_KEY_ID }}"
+        export SCW_SECRET_KEY="{{ env.SCALEWAY_ACCESS_KEY_SECRET }}"
+        export SCW_DEFAULT_PROJECT_ID="{{ env.SCALEWAY_PROJECT_ID }}"
+        export SCW_DEFAULT_REGION="{{ env.SCALEWAY_REGION }}"
+        scw function trigger list function-id={{ function_id }} region={{ env.SCALEWAY_REGION }} -o json | jq -r '.[] | select(.name == "idle-check-hourly") | .id'
+      register: trigger_check
+      changed_when: false
+      failed_when: false
+
+    - name: Create CRON trigger if not exists (runs every hour)
+      ansible.builtin.shell: |
+        export SCW_ACCESS_KEY="{{ env.SCALEWAY_ACCESS_KEY_ID }}"
+        export SCW_SECRET_KEY="{{ env.SCALEWAY_ACCESS_KEY_SECRET }}"
+        export SCW_DEFAULT_PROJECT_ID="{{ env.SCALEWAY_PROJECT_ID }}"
+        export SCW_DEFAULT_REGION="{{ env.SCALEWAY_REGION }}"
+        scw function trigger create \
+          name=idle-check-hourly \
+          function-id={{ function_id }} \
+          region={{ env.SCALEWAY_REGION }} \
+          -o json
+      when: trigger_check.stdout | length == 0
+      changed_when: true
 
     - name: Display deployment info
       ansible.builtin.debug:
