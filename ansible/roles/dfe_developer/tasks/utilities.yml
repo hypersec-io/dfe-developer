@@ -85,3 +85,32 @@
     dest: /usr/local/bin/yq
     mode: '0755'
   when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+# macOS - Install utilities via Homebrew
+- name: Install development utilities (macOS)
+  community.general.homebrew:
+    name:
+      - jq
+      - bat
+      - fzf
+      - ripgrep
+      - fd
+      - httpie
+      - tmux
+      - htop
+      - tree
+      - wget
+      - bind
+      - nmap
+      - telnet
+      - netcat
+      - whois
+      - shellcheck
+      - postgresql@16
+      - ansible
+      - yq
+    state: present
+  environment:
+    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:{{ ansible_env.PATH }}"
+  become: false
+  when: ansible_distribution == 'MacOSX'
