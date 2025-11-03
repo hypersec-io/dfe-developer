@@ -190,8 +190,7 @@
     name: kubernetes-cli
     state: present
   become: false
-  environment:
-    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  environment: "{{ homebrew_env }}"
   when: ansible_distribution == 'MacOSX'
 
 - name: Install k9s via Homebrew (macOS)
@@ -199,8 +198,7 @@
     name: k9s
     state: present
   become: false
-  environment:
-    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  environment: "{{ homebrew_env }}"
   when: ansible_distribution == 'MacOSX'
 
 - name: Install kubectx via Homebrew (macOS)
@@ -208,8 +206,7 @@
     name: kubectx
     state: present
   become: false
-  environment:
-    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  environment: "{{ homebrew_env }}"
   when: ansible_distribution == 'MacOSX'
 
 - name: Install minikube via Homebrew (macOS)
@@ -217,8 +214,7 @@
     name: minikube
     state: present
   become: false
-  environment:
-    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  environment: "{{ homebrew_env }}"
   when: ansible_distribution == 'MacOSX'
 
 - name: Install ArgoCD CLI via Homebrew (macOS)
@@ -226,8 +222,7 @@
     name: argocd
     state: present
   become: false
-  environment:
-    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  environment: "{{ homebrew_env }}"
   when: ansible_distribution == 'MacOSX'
 
 - name: Install dive via Homebrew (macOS)
@@ -235,6 +230,5 @@
     name: dive
     state: present
   become: false
-  environment:
-    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  environment: "{{ homebrew_env }}"
   when: ansible_distribution == 'MacOSX'

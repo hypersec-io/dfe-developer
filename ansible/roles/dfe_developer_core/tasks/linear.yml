@@ -13,7 +13,6 @@
     name: '@digitalstories/linear-cli'
     global: true
     state: present
-  environment:
-    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  environment: "{{ homebrew_env }}"
   become: false
   when: ansible_distribution == 'MacOSX'

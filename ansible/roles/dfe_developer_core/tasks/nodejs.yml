@@ -34,8 +34,7 @@
     name: node
     state: present
   become: false
-  environment:
-    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  environment: "{{ homebrew_env }}"
   when: ansible_distribution == 'MacOSX'
 
 # Configure npm for user-specific global packages
@@ -68,8 +67,7 @@
   ansible.builtin.command:
     cmd: npm config set prefix "{{ dfe_user_home }}/.npm-global"
   become: false
-  environment:
-    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  environment: "{{ homebrew_env }}"
   changed_when: false
   when: ansible_distribution == 'MacOSX'
 
@@ -109,7 +107,7 @@
   ansible.builtin.command:
     cmd: npm install -g npm@latest
   environment:
-    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ dfe_user_home }}/.npm-global/bin:{{ ansible_env.PATH }}"
+    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.npm-global/bin:{{ ansible_env.PATH }}"
   become: false
   changed_when: false
   when: ansible_distribution == 'MacOSX'
@@ -130,9 +128,7 @@
     name: semantic-release
     global: true
     state: present
-  environment:
-    NPM_CONFIG_PREFIX: "{{ dfe_user_home }}/.npm-global"
-    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  environment: "{{ npm_config_env }}"
   become: false
   when: ansible_distribution == 'MacOSX'
 
@@ -168,8 +164,6 @@
     - '@semantic-release/release-notes-generator'
     - '@semantic-release/exec'
     - conventional-changelog-conventionalcommits
-  environment:
-    NPM_CONFIG_PREFIX: "{{ dfe_user_home }}/.npm-global"
-    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  environment: "{{ npm_config_env }}"
   become: false
   when: ansible_distribution == 'MacOSX'
