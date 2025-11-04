@@ -7,18 +7,16 @@
 
 - name: Install latest Git (Fedora)
   block:
-    - name: Enable git-maint COPR
-      community.general.copr:
-        name: '@git-maint/git'
-        state: enabled
+# ============================================================================
+# FEDORA - Git from base repos (Fedora 42+ has recent git)
+# ============================================================================
 
-    - name: Install Git and Git LFS
-      ansible.builtin.dnf:
-        name:
-          - git
-          - git-lfs
-        state: latest
-
+- name: Install latest Git (Fedora)
+  ansible.builtin.dnf:
+    name:
+      - git
+      - git-lfs
+    state: latest
   when: ansible_distribution == 'Fedora'
 
 # ============================================================================
