@@ -87,8 +87,8 @@
       font-feature = calt
       font-feature = liga
 
-      # Theme - Solarized Dark (built-in, always available)
-      theme = solarized-dark
+      # Theme - iTerm2 Solarized Dark (built-in, always available)
+      theme = iTerm2 Solarized Dark
 
       # Terminal Compatibility - Use xterm-256color for SSH compatibility
       # xterm-ghostty is not installed on remote systems by default
@@ -192,8 +192,8 @@
       font-feature = calt
       font-feature = liga
 
-      # Theme - Solarized Dark (built-in, always available)
-      theme = solarized-dark
+      # Theme - iTerm2 Solarized Dark (built-in, always available)
+      theme = iTerm2 Solarized Dark
 
       # Terminal Compatibility - Use xterm-256color for SSH compatibility
       # xterm-ghostty is not installed on remote systems by default
