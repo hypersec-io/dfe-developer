@@ -56,13 +56,13 @@
   ansible.builtin.include_tasks:
     file: vscode.yml
   tags: ['vscode']
-  when: ansible_env.DISPLAY is defined or ansible_env.WAYLAND_DISPLAY is defined
+  when: dfe_has_gnome | default(false)
 
 - name: Install Google Chrome
   ansible.builtin.include_tasks:
     file: chrome.yml
   tags: ['chrome']
-  when: ansible_env.DISPLAY is defined or ansible_env.WAYLAND_DISPLAY is defined
+  when: dfe_has_gnome | default(false)
 
 - name: Install GNOME extensions and Firefox
   ansible.builtin.include_tasks:
