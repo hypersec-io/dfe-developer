@@ -2,34 +2,35 @@
 # Shell configuration (bash history auto-commit, etc.)
 
 # ============================================================================
-# BASH HISTORY AUTO-COMMIT
+# BASH HISTORY AUTO-COMMIT (SYSTEM-WIDE)
 # Commands are written to history immediately (not just on shell exit)
 # ============================================================================
 
-- name: Configure bash history auto-commit (Linux)
-  ansible.builtin.blockinfile:
-    path: "{{ dfe_user_home }}/.bashrc"
-    marker: "# {mark} ANSIBLE MANAGED BLOCK - Bash history auto-commit"
-    block: |
+- name: Configure bash history auto-commit system-wide (Linux)
+  ansible.builtin.copy:
+    dest: /etc/profile.d/bash-history-autocommit.sh
+    content: |
       # Bash history auto-commit: Commands saved immediately
-      shopt -s histappend                      # Append to history file, don't overwrite
-      PROMPT_COMMAND="history -a${PROMPT_COMMAND:+; $PROMPT_COMMAND}"  # Write to history after each command
-      export HISTSIZE=10000                    # Commands in memory
-      export HISTFILESIZE=20000                # Commands in file
-      export HISTCONTROL=ignoredups:erasedups  # No duplicate entries
-      export HISTTIMEFORMAT="%F %T "           # Timestamp format
-    create: true
-    owner: "{{ dfe_actual_user }}"
-    group: "{{ dfe_actual_user }}"
+      # System-wide configuration for all users
+
+      if [ -n "$BASH_VERSION" ]; then
+          shopt -s histappend                      # Append to history file, don't overwrite
+          PROMPT_COMMAND="history -a${PROMPT_COMMAND:+; $PROMPT_COMMAND}"  # Write to history after each command
+          export HISTSIZE=10000                    # Commands in memory
+          export HISTFILESIZE=20000                # Commands in file
+          export HISTCONTROL=ignoredups:erasedups  # No duplicate entries
+          export HISTTIMEFORMAT="%F %T "           # Timestamp format
+      fi
     mode: '0644'
   when: ansible_distribution in ['Fedora', 'Ubuntu']
 
-- name: Configure bash history auto-commit (macOS - zsh)
-  ansible.builtin.blockinfile:
-    path: "{{ dfe_user_home }}/.zshrc"
-    marker: "# {mark} ANSIBLE MANAGED BLOCK - Zsh history auto-commit"
-    block: |
+- name: Configure zsh history auto-commit system-wide (macOS)
+  ansible.builtin.copy:
+    dest: /etc/zshenv
+    content: |
       # Zsh history auto-commit: Commands saved immediately
+      # System-wide configuration for all users
+
       setopt APPEND_HISTORY                    # Append to history file
       setopt INC_APPEND_HISTORY                # Write to history immediately
       setopt HIST_IGNORE_DUPS                  # No duplicate entries
@@ -37,9 +38,6 @@
       export HISTSIZE=10000                    # Commands in memory
       export SAVEHIST=20000                    # Commands in file
       export HISTFILE=~/.zsh_history           # History file location
-    create: true
-    owner: "{{ dfe_actual_user }}"
     mode: '0644'
-  become: false
   when: ansible_distribution == 'MacOSX'
 
