@@ -185,44 +185,73 @@ bats *.bats                # Unit and integration tests
 
 ## Project Structure
 
-- `fedora/` - Fedora Linux installation scripts and tests
+- `ansible/` - Ansible-based multi-platform installer (Fedora, Ubuntu, macOS)
+- `fedora/` - Legacy Fedora Linux installation scripts (bug fixes only)
 - `windows/` - Windows 11 SOE setup scripts and documentation
-- `claude/` - Claude Code utilities
+- `tools/` - Developer utilities and helper scripts
+  - `tools/git/` - Git-related utilities
+  - `tools/claude/` - Claude Code utilities
+- `docs/` - Documentation and guides
 - `VERSION` - Version tracking
 - `CHANGELOG.md` - Release history
 - `TODO.md` - Task tracking
 
-## Claude Contributor Fix Script
+## Developer Utilities
 
-The `claude/claude-contrib-fix.sh` script removes Claude Code from GitHub contributors when it autonomously adds itself without permission.
+### Git Data Spill Cleanup
 
-### Problem
+The [git-spill-cleanup.sh](tools/git/git-spill-cleanup.sh) utility safely removes sensitive data accidentally committed to git history.
 
-Claude Code sometimes adds "Co-Authored-By: Claude" attribution to commits without explicit user consent, causing Claude to appear as a repository contributor on GitHub.
+**Use cases:** Remove `.env` files, API keys, passwords, private keys, or any sensitive data from git history.
 
-### Solution
+```bash
+# List potentially sensitive files in history
+./tools/git/git-spill-cleanup.sh --list
 
-This script removes Claude attribution from commits and forces GitHub to reindex contributors.
+# Remove a specific file from all history
+./tools/git/git-spill-cleanup.sh --file .env
 
-### Usage
+# Remove all files matching a pattern
+./tools/git/git-spill-cleanup.sh --pattern "*.pem"
+
+# Remove a specific string from all files
+./tools/git/git-spill-cleanup.sh --string "sk-abc123secretkey"
+
+# Dry run to preview changes
+./tools/git/git-spill-cleanup.sh --file secrets.yml --dry-run
+```
+
+**Features:**
+- Automatic backups before cleanup (stored in `~/.git-spill-backups/`)
+- Supports `git-filter-repo` (recommended) and BFG Repo-Cleaner
+- Pattern-based file removal (wildcards)
+- String/text removal from all files in history
+- Dry-run mode for safe testing
+- Comprehensive safety checks and warnings
+
+**Documentation:** See [GIT-SPILL-CLEANUP-README.md](tools/git/GIT-SPILL-CLEANUP-README.md) for detailed usage guide, scenarios, and troubleshooting.
+
+### Claude Contributor Fix
+
+The [claude-contrib-fix.sh](tools/claude/claude-contrib-fix.sh) script removes Claude Code from GitHub contributors when it autonomously adds itself without permission.
+
+**Problem:** Claude Code sometimes adds "Co-Authored-By: Claude" attribution to commits without explicit user consent, causing Claude to appear as a repository contributor on GitHub.
+
+**Usage:**
 
 ```bash
 # Use current repository with default branch
 cd dfe-developer
-./claude/claude-contrib-fix.sh
+./tools/claude/claude-contrib-fix.sh
 
 # Specify repository URL
-./claude/claude-contrib-fix.sh https://github.com/owner/repo.git
+./tools/claude/claude-contrib-fix.sh https://github.com/owner/repo.git
 
 # Specify repository and branch
-./claude/claude-contrib-fix.sh https://github.com/owner/repo.git develop
-
-# Clean a non-default branch (no GitHub reindex)
-./claude/claude-contrib-fix.sh https://github.com/owner/repo.git feature-branch
+./tools/claude/claude-contrib-fix.sh https://github.com/owner/repo.git develop
 ```
 
-### Features
-
+**Features:**
 - Removes "Co-Authored-By: Claude" and "Generated with Claude Code" from commit messages
 - Auto-detects repository default branch (main, master, etc.)
 - Optional branch parameter to clean specific branches
@@ -230,16 +259,14 @@ cd dfe-developer
 - For non-default branches: only cleans commits (no gh CLI required)
 - Comprehensive error handling and automatic cleanup
 
-### Requirements
-
+**Requirements:**
 - git (required)
 - gh (GitHub CLI) - only required when working on default branch
 - Push access to the repository
 
-### Help
-
+**Help:**
 ```bash
-./claude/claude-contrib-fix.sh --help
+./tools/claude/claude-contrib-fix.sh --help
 ```
 
 ## Windows 11 SOE
