@@ -6,11 +6,14 @@
 # VALIDATE MIRROR CONNECTIVITY
 # ============================================================================
 
-# No validation needed - using OS default repos with fastestmirror
+# No validation needed - using OS default repos with optimized settings
 
 # ============================================================================
 # FEDORA REPOSITORY CONFIGURATION
 # ============================================================================
+
+# Note: RPM Fusion was in original script but not actually used for any packages
+# Removed to keep dependencies minimal
 
 - name: Create DNF conf.d directory (Fedora)
   ansible.builtin.file:
@@ -19,13 +22,13 @@
     mode: '0755'
   when: ansible_distribution == 'Fedora'
 
-- name: Configure Fedora fastestmirror
+- name: Configure DNF performance optimizations (Fedora)
   ansible.builtin.copy:
     dest: /etc/dnf/dnf.conf.d/99-performance.conf
     content: |
       # Performance optimizations
       max_parallel_downloads=20
-      fastestmirror=True
+      fastestmirror=False
       deltarpm=True
       timeout=30
       retries=10
@@ -34,7 +37,6 @@
     mode: '0644'
   when:
     - ansible_distribution == 'Fedora'
-    - dfe_use_fastestmirror | default(true)
 
 # ============================================================================
 # UBUNTU REPOSITORY CONFIGURATION

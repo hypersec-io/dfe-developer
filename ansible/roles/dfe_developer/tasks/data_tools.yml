@@ -1,0 +1,187 @@
+---
+# Data platform tools (Vector, ClickHouse, Confluent CLI)
+
+# ============================================================================
+# VECTOR - Log aggregation and routing
+# ============================================================================
+
+- name: Install Vector (Fedora)
+  block:
+    - name: Add Vector repository
+      ansible.builtin.yum_repository:
+        name: vector
+        description: Vector
+        baseurl: https://yum.vector.dev/stable/vector-0/$basearch/
+        enabled: true
+        gpgcheck: true
+        repo_gpgcheck: true
+        gpgkey:
+          - https://keys.datadoghq.com/DATADOG_RPM_KEY_CURRENT.public
+          - https://keys.datadoghq.com/DATADOG_RPM_KEY_B01082D3.public
+          - https://keys.datadoghq.com/DATADOG_RPM_KEY_FD4BF915.public
+
+    - name: Install Vector
+      ansible.builtin.dnf:
+        name: vector
+        state: present
+
+  when: ansible_distribution == 'Fedora'
+
+- name: Install Vector (Ubuntu)
+  block:
+    - name: Add Datadog GPG key for Vector
+      ansible.builtin.get_url:
+        url: https://keys.datadoghq.com/DATADOG_RPM_KEY_CURRENT.public
+        dest: /etc/apt/keyrings/vector.asc
+        mode: '0644'
+
+    - name: Add Vector APT repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/vector.asc] https://apt.vector.dev/ stable vector-0"
+        filename: vector
+        state: present
+
+    - name: Install Vector
+      ansible.builtin.apt:
+        name: vector
+        state: present
+        update_cache: true
+
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install Vector via Homebrew (macOS)
+  community.general.homebrew:
+    name: vector
+    state: present
+  become: false
+  environment: "{{ homebrew_env }}"
+  when: ansible_distribution == 'MacOSX'
+
+# ============================================================================
+# CLICKHOUSE - Analytics database client
+# ============================================================================
+
+- name: Install ClickHouse client (Fedora)
+  block:
+    - name: Add ClickHouse repository
+      ansible.builtin.yum_repository:
+        name: clickhouse-stable
+        description: ClickHouse - Stable Repository
+        baseurl: https://packages.clickhouse.com/rpm/stable/
+        enabled: true
+        gpgcheck: false
+
+    - name: Install ClickHouse client
+      ansible.builtin.dnf:
+        name: clickhouse-client
+        state: present
+
+  when: ansible_distribution == 'Fedora'
+
+- name: Install ClickHouse client (Ubuntu)
+  block:
+    - name: Add ClickHouse GPG key
+      ansible.builtin.get_url:
+        url: https://packages.clickhouse.com/rpm/lts/repodata/repomd.xml.key
+        dest: /etc/apt/keyrings/clickhouse.asc
+        mode: '0644'
+
+    - name: Add ClickHouse APT repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/clickhouse.asc] https://packages.clickhouse.com/deb stable main"
+        filename: clickhouse
+        state: present
+
+    - name: Install ClickHouse client
+      ansible.builtin.apt:
+        name: clickhouse-client
+        state: present
+        update_cache: true
+
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install ClickHouse via Homebrew (macOS)
+  community.general.homebrew:
+    name: clickhouse
+    state: present
+  become: false
+  environment: "{{ homebrew_env }}"
+  when: ansible_distribution == 'MacOSX'
+
+# ============================================================================
+# CONFLUENT CLI - Kafka client tools
+# ============================================================================
+
+- name: Install Confluent CLI (Fedora)
+  block:
+    - name: Detect latest Confluent version
+      ansible.builtin.uri:
+        url: https://packages.confluent.io/rpm/
+        return_content: true
+      register: confluent_page
+
+    - name: Extract Confluent version
+      ansible.builtin.set_fact:
+        confluent_version: "{{ confluent_page.content | regex_findall('[0-9]+\\.[0-9]+') | sort | last | default('8.1') }}"
+
+    - name: Import Confluent GPG key
+      ansible.builtin.rpm_key:
+        key: "https://packages.confluent.io/rpm/{{ confluent_version }}/archive.key"
+        state: present
+
+    - name: Add Confluent repository
+      ansible.builtin.yum_repository:
+        name: Confluent
+        description: Confluent repository
+        baseurl: "https://packages.confluent.io/rpm/{{ confluent_version }}"
+        enabled: true
+        gpgcheck: true
+        gpgkey: "https://packages.confluent.io/rpm/{{ confluent_version }}/archive.key"
+
+    - name: Install Confluent CLI
+      ansible.builtin.dnf:
+        name: confluent-cli
+        state: present
+
+  when: ansible_distribution == 'Fedora'
+
+- name: Install Confluent CLI (Ubuntu)
+  block:
+    - name: Detect latest Confluent version
+      ansible.builtin.uri:
+        url: https://packages.confluent.io/deb/
+        return_content: true
+      register: confluent_page_ubuntu
+
+    - name: Extract Confluent version
+      ansible.builtin.set_fact:
+        confluent_version_ubuntu: "{{ confluent_page_ubuntu.content | regex_findall('[0-9]+\\.[0-9]+') | sort | last | default('8.1') }}"
+
+    - name: Add Confluent GPG key
+      ansible.builtin.get_url:
+        url: "https://packages.confluent.io/deb/{{ confluent_version_ubuntu }}/archive.key"
+        dest: /etc/apt/keyrings/confluent.asc
+        mode: '0644'
+
+    - name: Add Confluent APT repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/confluent.asc] https://packages.confluent.io/deb/{{ confluent_version_ubuntu }} stable main"
+        filename: confluent
+        state: present
+
+    - name: Install Confluent CLI
+      ansible.builtin.apt:
+        name: confluent-cli
+        state: present
+        update_cache: true
+
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install Confluent CLI via Homebrew (macOS)
+  community.general.homebrew:
+    name: confluentinc/tap/cli
+    state: present
+  become: false
+  environment: "{{ homebrew_env }}"
+  when: ansible_distribution == 'MacOSX'
+

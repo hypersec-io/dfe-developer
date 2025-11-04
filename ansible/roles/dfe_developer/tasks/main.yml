@@ -47,6 +47,11 @@
     file: k8s.yml
   tags: ['k8s']
 
+- name: Install data platform tools
+  ansible.builtin.include_tasks:
+    file: data_tools.yml
+  tags: ['data']
+
 - name: Install VS Code
   ansible.builtin.include_tasks:
     file: vscode.yml
@@ -59,11 +64,22 @@
   tags: ['chrome']
   when: ansible_env.DISPLAY is defined or ansible_env.WAYLAND_DISPLAY is defined
 
+- name: Install GNOME extensions and Firefox
+  ansible.builtin.include_tasks:
+    file: gnome.yml
+  tags: ['gnome']
+  when: dfe_has_gnome | default(false)
+
 - name: Install Ghostty terminal
   ansible.builtin.include_tasks:
     file: ghostty.yml
   tags: ['ghostty']
   when: dfe_install_ghostty | default(true) | bool
+
+- name: Configure shell (bash history auto-commit)
+  ansible.builtin.include_tasks:
+    file: shell_config.yml
+  tags: ['shell']
 
 - name: Verify base tools installation
   ansible.builtin.include_tasks:

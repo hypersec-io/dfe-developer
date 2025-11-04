@@ -1,0 +1,45 @@
+---
+# Shell configuration (bash history auto-commit, etc.)
+
+# ============================================================================
+# BASH HISTORY AUTO-COMMIT
+# Commands are written to history immediately (not just on shell exit)
+# ============================================================================
+
+- name: Configure bash history auto-commit (Linux)
+  ansible.builtin.blockinfile:
+    path: "{{ dfe_user_home }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - Bash history auto-commit"
+    block: |
+      # Bash history auto-commit: Commands saved immediately
+      shopt -s histappend                      # Append to history file, don't overwrite
+      PROMPT_COMMAND="history -a${PROMPT_COMMAND:+; $PROMPT_COMMAND}"  # Write to history after each command
+      export HISTSIZE=10000                    # Commands in memory
+      export HISTFILESIZE=20000                # Commands in file
+      export HISTCONTROL=ignoredups:erasedups  # No duplicate entries
+      export HISTTIMEFORMAT="%F %T "           # Timestamp format
+    create: true
+    owner: "{{ dfe_actual_user }}"
+    group: "{{ dfe_actual_user }}"
+    mode: '0644'
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+- name: Configure bash history auto-commit (macOS - zsh)
+  ansible.builtin.blockinfile:
+    path: "{{ dfe_user_home }}/.zshrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - Zsh history auto-commit"
+    block: |
+      # Zsh history auto-commit: Commands saved immediately
+      setopt APPEND_HISTORY                    # Append to history file
+      setopt INC_APPEND_HISTORY                # Write to history immediately
+      setopt HIST_IGNORE_DUPS                  # No duplicate entries
+      setopt HIST_FIND_NO_DUPS                 # Don't show duplicates in search
+      export HISTSIZE=10000                    # Commands in memory
+      export SAVEHIST=20000                    # Commands in file
+      export HISTFILE=~/.zsh_history           # History file location
+    create: true
+    owner: "{{ dfe_actual_user }}"
+    mode: '0644'
+  become: false
+  when: ansible_distribution == 'MacOSX'
+

@@ -1,0 +1,123 @@
+---
+# GNOME Desktop customizations and extensions
+
+# ============================================================================
+# GNOME EXTENSIONS & APPLICATIONS (LINUX ONLY)
+# ============================================================================
+
+- name: Install GNOME extensions and Firefox (Fedora)
+  block:
+    - name: Install GNOME extensions and applications
+      ansible.builtin.dnf:
+        name:
+          - firefox
+          - gnome-extensions-app
+          - gnome-shell-extension-system-monitor
+          - gnome-shell-extension-appindicator
+          - gnome-shell-extension-dash-to-panel
+        state: present
+
+  when: ansible_distribution == 'Fedora'
+
+- name: Install GNOME extensions and Firefox (Ubuntu)
+  block:
+    - name: Install Firefox and GNOME extensions app
+      ansible.builtin.apt:
+        name:
+          - firefox
+          - gnome-shell-extensions
+          - gnome-shell-extension-manager
+        state: present
+
+    - name: Install System Monitor extension (Ubuntu)
+      ansible.builtin.apt:
+        name: gnome-shell-extension-system-monitor
+        state: present
+      failed_when: false  # May not be available on all Ubuntu versions
+
+    - name: Install AppIndicator extension (Ubuntu)
+      ansible.builtin.apt:
+        name: gnome-shell-extension-appindicator
+        state: present
+      failed_when: false  # May not be available on all Ubuntu versions
+
+  when: ansible_distribution == 'Ubuntu'
+
+# ============================================================================
+# CONFIGURE GNOME SHELL EXTENSIONS
+# ============================================================================
+
+- name: Configure GNOME Shell extensions
+  block:
+    - name: Enable GNOME Shell extensions
+      community.general.dconf:
+        key: "/org/gnome/shell/enabled-extensions"
+        value: "['system-monitor@gnome-shell-extensions.gcampax.github.com', 'appindicatorsupport@rgcjonas.gmail.com', 'dash-to-panel@jderose9.github.com']"
+        state: present
+      become: false
+
+    - name: Configure System Monitor extension - show CPU
+      community.general.dconf:
+        key: "/org/gnome/shell/extensions/system-monitor/show-cpu"
+        value: "true"
+        state: present
+      become: false
+
+    - name: Configure System Monitor extension - show memory
+      community.general.dconf:
+        key: "/org/gnome/shell/extensions/system-monitor/show-memory"
+        value: "true"
+        state: present
+      become: false
+
+    - name: Configure System Monitor extension - hide download
+      community.general.dconf:
+        key: "/org/gnome/shell/extensions/system-monitor/show-download"
+        value: "false"
+        state: present
+      become: false
+
+    - name: Configure System Monitor extension - hide upload
+      community.general.dconf:
+        key: "/org/gnome/shell/extensions/system-monitor/show-upload"
+        value: "false"
+        state: present
+      become: false
+
+    - name: Configure System Monitor extension - hide swap
+      community.general.dconf:
+        key: "/org/gnome/shell/extensions/system-monitor/show-swap"
+        value: "false"
+        state: present
+      become: false
+
+    - name: Enable window title bar buttons (minimize, maximize, close)
+      community.general.dconf:
+        key: "/org/gnome/desktop/wm/preferences/button-layout"
+        value: "':minimize,maximize,close'"
+        state: present
+      become: false
+
+    - name: Configure Dash to Panel - primary monitor
+      community.general.dconf:
+        key: "/org/gnome/shell/extensions/dash-to-panel/primary-monitor"
+        value: "'MetaVendor-0x000001'"
+        state: present
+      become: false
+
+    - name: Configure Dash to Panel - transparency custom opacity
+      community.general.dconf:
+        key: "/org/gnome/shell/extensions/dash-to-panel/trans-use-custom-opacity"
+        value: "true"
+        state: present
+      become: false
+
+    - name: Configure Dash to Panel - panel opacity
+      community.general.dconf:
+        key: "/org/gnome/shell/extensions/dash-to-panel/trans-panel-opacity"
+        value: "0.4"
+        state: present
+      become: false
+
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
