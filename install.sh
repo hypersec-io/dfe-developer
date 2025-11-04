@@ -186,6 +186,22 @@ else
                 }
             fi
             ;;
+        ubuntu)
+            if ! command -v python3 &>/dev/null || ! command -v curl &>/dev/null; then
+                sudo apt-get update -qq
+                sudo apt-get install -y python3 python3-pip python3-venv curl || {
+                    print_error "Failed to install Python 3 or curl"
+                    exit 1
+                }
+            elif ! python3 -m venv --help &>/dev/null; then
+                # Python exists but venv module missing
+                sudo apt-get update -qq
+                sudo apt-get install -y python3-venv || {
+                    print_error "Failed to install python3-venv"
+                    exit 1
+                }
+            fi
+            ;;
         macos)
             if ! command -v python3 &>/dev/null; then
                 print_error "Python 3 not found. Install from https://www.python.org or use: brew install python3"
