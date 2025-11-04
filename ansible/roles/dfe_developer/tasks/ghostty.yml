@@ -90,6 +90,10 @@
       # Theme - Nord (Arctic-inspired, clean, excellent readability)
       theme = nord
 
+      # Terminal Compatibility - Use xterm-256color for SSH compatibility
+      # xterm-ghostty is not installed on remote systems by default
+      term = xterm-256color
+
       # Window Configuration
       window-height = 35
       window-width = 140
@@ -190,6 +194,10 @@
 
       # Theme - Nord (Arctic-inspired, clean, excellent readability)
       theme = nord
+
+      # Terminal Compatibility - Use xterm-256color for SSH compatibility
+      # xterm-ghostty is not installed on remote systems by default
+      term = xterm-256color
 
       # Window Configuration
       window-height = 35
