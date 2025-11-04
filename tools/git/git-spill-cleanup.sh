@@ -41,21 +41,60 @@ SENSITIVE_PATTERNS=(
 
 # AI assistant artifact patterns
 AI_PATTERNS=(
+    # Claude Code
     ".claude/"
     ".claude/*"
     "CLAUDE.md"
     "STATE.md"
-    ".codex/"
-    ".codex/*"
+
+    # Cursor
     ".cursor/"
     ".cursor/*"
+
+    # Aider
     ".aider/"
     ".aider/*"
+    ".aider.*"
+    ".aiderignore"
+
+    # Continue
+    ".continue/"
+    ".continue/*"
+
+    # GitHub Copilot
     ".copilot/"
     ".copilot/*"
-    "codex.md"
+
+    # Windsurf/Codeium
     ".windsurf/"
     ".windsurf/*"
+    ".codeium/"
+    ".codeium/*"
+
+    # Tabnine
+    ".tabnine/"
+    ".tabnine/*"
+    ".tabnineignore"
+    ".tabnine_root"
+
+    # Codex
+    ".codex/"
+    ".codex/*"
+    "codex.md"
+
+    # Cline (formerly Claude Dev)
+    ".cline/"
+    ".cline/*"
+
+    # Replit AI
+    ".replit/"
+    ".replit/*"
+    "replit.nix"
+
+    # Common AI session files
+    "*.ai-session"
+    ".ai-cache/"
+    ".ai-cache/*"
 )
 
 # Functions
@@ -138,25 +177,20 @@ history. It's the officially recommended replacement for git-filter-branch.
 
 ${GREEN}Quick Installation:${NC}
 
-  ${BLUE}macOS (Homebrew):${NC}
-    brew install git-filter-repo
+  ${BLUE}Fedora/RHEL (recommended):${NC}
+    sudo dnf install git-filter-repo
 
-  ${BLUE}Ubuntu/Debian:${NC}
+  ${BLUE}Ubuntu/Debian (recommended):${NC}
     sudo apt update
     sudo apt install git-filter-repo
 
-  ${BLUE}Fedora/RHEL:${NC}
-    sudo dnf install git-filter-repo
+  ${BLUE}macOS (Homebrew - recommended):${NC}
+    brew install git-filter-repo
 
-  ${BLUE}Using pip (any platform):${NC}
-    pip install --user git-filter-repo
-    # Or with pipx:
-    pipx install git-filter-repo
-
-  ${BLUE}From source:${NC}
+  ${BLUE}From source (if not available in repos):${NC}
     curl -O https://raw.githubusercontent.com/newren/git-filter-repo/main/git-filter-repo
     chmod +x git-filter-repo
-    sudo mv git-filter-repo /usr/local/bin/
+    sudo mv git-filter-repo /usr/libexec/git-core/
 
 ${GREEN}After installation:${NC}
   Run this script again to continue.
@@ -186,7 +220,8 @@ check_prerequisites() {
     fi
 
     # Check for git-filter-repo (required)
-    if ! command -v git-filter-repo &> /dev/null; then
+    # Try both as standalone command and as git subcommand
+    if ! command -v git-filter-repo &> /dev/null && ! git filter-repo --version &> /dev/null; then
         log_error "git-filter-repo is not installed!"
         show_install_guidance
         exit 1

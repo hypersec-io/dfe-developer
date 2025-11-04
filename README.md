@@ -190,7 +190,6 @@ bats *.bats                # Unit and integration tests
 - `windows/` - Windows 11 SOE setup scripts and documentation
 - `tools/` - Developer utilities and helper scripts
   - `tools/git/` - Git-related utilities
-  - `tools/claude/` - Claude Code utilities
 - `docs/` - Documentation and guides
 - `VERSION` - Version tracking
 - `CHANGELOG.md` - Release history
@@ -211,6 +210,12 @@ The [git-spill-cleanup.sh](tools/git/git-spill-cleanup.sh) utility safely remove
 # Remove a specific file from all history
 ./tools/git/git-spill-cleanup.sh --file .env
 
+# Remove entire directory and all contents
+./tools/git/git-spill-cleanup.sh --directory .claude
+
+# Remove all AI assistant artifacts
+./tools/git/git-spill-cleanup.sh --ai
+
 # Remove all files matching a pattern
 ./tools/git/git-spill-cleanup.sh --pattern "*.pem"
 
@@ -222,18 +227,20 @@ The [git-spill-cleanup.sh](tools/git/git-spill-cleanup.sh) utility safely remove
 ```
 
 **Features:**
+- Uses git-filter-repo (modern, GitHub-recommended tool)
 - Automatic backups before cleanup (stored in `~/.git-spill-backups/`)
-- Supports `git-filter-repo` (recommended) and BFG Repo-Cleaner
-- Pattern-based file removal (wildcards)
+- Remove files, directories, or patterns (wildcards)
+- Remove AI assistant artifacts with `--ai` option (Claude, Cursor, Aider, Continue, Copilot, Windsurf, Codeium, Tabnine, etc.)
 - String/text removal from all files in history
 - Dry-run mode for safe testing
+- Friendly install guidance if git-filter-repo is missing
 - Comprehensive safety checks and warnings
 
-**Documentation:** See [GIT-SPILL-CLEANUP-README.md](tools/git/GIT-SPILL-CLEANUP-README.md) for detailed usage guide, scenarios, and troubleshooting.
+**Documentation:** See [tools/git/README.md](tools/git/README.md) for detailed usage guide, scenarios, and troubleshooting.
 
-### Claude Contributor Fix
+### Git Claude Contributor Fix
 
-The [claude-contrib-fix.sh](tools/claude/claude-contrib-fix.sh) script removes Claude Code from GitHub contributors when it autonomously adds itself without permission.
+The [git-claude-contrib-fix.sh](tools/git/git-claude-contrib-fix.sh) script removes Claude Code from GitHub contributors when it autonomously adds itself without permission.
 
 **Problem:** Claude Code sometimes adds "Co-Authored-By: Claude" attribution to commits without explicit user consent, causing Claude to appear as a repository contributor on GitHub.
 
@@ -242,13 +249,13 @@ The [claude-contrib-fix.sh](tools/claude/claude-contrib-fix.sh) script removes C
 ```bash
 # Use current repository with default branch
 cd dfe-developer
-./tools/claude/claude-contrib-fix.sh
+./tools/git/git-claude-contrib-fix.sh
 
 # Specify repository URL
-./tools/claude/claude-contrib-fix.sh https://github.com/owner/repo.git
+./tools/git/git-claude-contrib-fix.sh https://github.com/owner/repo.git
 
 # Specify repository and branch
-./tools/claude/claude-contrib-fix.sh https://github.com/owner/repo.git develop
+./tools/git/git-claude-contrib-fix.sh https://github.com/owner/repo.git develop
 ```
 
 **Features:**
@@ -264,9 +271,11 @@ cd dfe-developer
 - gh (GitHub CLI) - only required when working on default branch
 - Push access to the repository
 
+**Documentation:** See [tools/git/README.md](tools/git/README.md) for detailed usage guide, scenarios, and troubleshooting.
+
 **Help:**
 ```bash
-./tools/claude/claude-contrib-fix.sh --help
+./tools/git/git-claude-contrib-fix.sh --help
 ```
 
 ## Windows 11 SOE

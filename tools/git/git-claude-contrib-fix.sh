@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# claude-contrib-fix.sh - Remove Claude from GitHub Contributors
+# git-claude-contrib-fix.sh - Remove Claude from GitHub Contributors
 # ============================================================================
 # This script fixes the GitHub contributors list after Claude Code deliberately
 # added itself as a contributor by including "Co-Authored-By: Claude" in commits.
@@ -25,22 +25,23 @@
 #   8. Removes the cloned directory
 #
 # USAGE:
-#   ./claude-contrib-fix.sh [repo-url]
-#   ./claude-contrib-fix.sh --help
+#   ./git-claude-contrib-fix.sh [repo-url] [branch]
+#   ./git-claude-contrib-fix.sh --help
 #
 # ARGUMENTS:
 #   repo-url  - Optional. Git repository URL (if not provided, uses current repo's remote URL)
+#   branch    - Optional. Branch to clean (default: repository's default branch)
 #   --help    - Show this help message
 #
 # REQUIREMENTS:
-#   - gh (GitHub CLI) must be installed and authenticated
+#   - gh (GitHub CLI) must be installed and authenticated (for default branch)
 #   - git must be installed
 #   - Must have push access to the repository
 #
 # LICENSE:
 #   (c) HyperSec 2025
 #   Licensed under the Apache License, Version 2.0
-#   See ../LICENSE file for full license text
+#   See ../../LICENSE file for full license text
 # ============================================================================
 
 set -euo pipefail
@@ -48,14 +49,14 @@ set -euo pipefail
 # Help function
 show_help() {
     cat << EOF
-claude-contrib-fix.sh - Remove Claude from GitHub Contributors
+git-claude-contrib-fix.sh - Remove Claude from GitHub Contributors
 
 This script fixes the GitHub contributors list after Claude Code added itself
 as a contributor by including "Co-Authored-By: Claude" in commit messages.
 
 USAGE:
-    ./claude-contrib-fix.sh [REPO_URL] [BRANCH]
-    ./claude-contrib-fix.sh --help
+    ./git-claude-contrib-fix.sh [REPO_URL] [BRANCH]
+    ./git-claude-contrib-fix.sh --help
 
 ARGUMENTS:
     REPO_URL    Optional. GitHub repository URL (HTTPS or SSH)
@@ -70,16 +71,16 @@ OPTIONS:
 
 EXAMPLES:
     # Use current repository with main branch
-    ./claude-contrib-fix.sh
+    ./git-claude-contrib-fix.sh
 
     # Specify repository URL with main branch
-    ./claude-contrib-fix.sh https://github.com/owner/repo.git
+    ./git-claude-contrib-fix.sh https://github.com/owner/repo.git
 
     # Specify repository and branch
-    ./claude-contrib-fix.sh https://github.com/owner/repo.git develop
+    ./git-claude-contrib-fix.sh https://github.com/owner/repo.git develop
 
     # Clean a non-default branch (only removes attribution, no GitHub reindex)
-    ./claude-contrib-fix.sh https://github.com/owner/repo.git feature-branch
+    ./git-claude-contrib-fix.sh https://github.com/owner/repo.git feature-branch
 
 REQUIREMENTS:
     - git must be installed

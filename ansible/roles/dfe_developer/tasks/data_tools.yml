@@ -29,15 +29,18 @@
 
 - name: Install Vector (Ubuntu)
   block:
-    - name: Add Datadog GPG key for Vector
-      ansible.builtin.get_url:
-        url: https://keys.datadoghq.com/DATADOG_RPM_KEY_CURRENT.public
-        dest: /etc/apt/keyrings/vector.asc
-        mode: '0644'
+    - name: Add Datadog GPG keys for Vector (multiple keys)
+      ansible.builtin.shell: |
+        curl -fsSL https://keys.datadoghq.com/DATADOG_RPM_KEY_CURRENT.public | gpg --dearmor -o /etc/apt/keyrings/vector.gpg
+        curl -fsSL https://keys.datadoghq.com/DATADOG_RPM_KEY_B01082D3.public | gpg --dearmor -o /etc/apt/keyrings/vector-B01082D3.gpg
+        curl -fsSL https://keys.datadoghq.com/DATADOG_RPM_KEY_FD4BF915.public | gpg --dearmor -o /etc/apt/keyrings/vector-FD4BF915.gpg
+        chmod 644 /etc/apt/keyrings/vector*.gpg
+      args:
+        creates: /etc/apt/keyrings/vector.gpg
 
     - name: Add Vector APT repository
       ansible.builtin.apt_repository:
-        repo: "deb [signed-by=/etc/apt/keyrings/vector.asc] https://apt.vector.dev/ stable vector-0"
+        repo: "deb [signed-by=/etc/apt/keyrings/vector.gpg] https://apt.vector.dev/ stable vector-0"
         filename: vector
         state: present
 
