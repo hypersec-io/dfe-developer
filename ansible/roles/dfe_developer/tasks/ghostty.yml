@@ -88,7 +88,7 @@
       font-feature = liga
 
       # Theme - Nord (Arctic-inspired, clean, excellent readability)
-      theme = nord
+      theme = Nord
 
       # Terminal Compatibility - Use xterm-256color for SSH compatibility
       # xterm-ghostty is not installed on remote systems by default
@@ -193,7 +193,7 @@
       font-feature = liga
 
       # Theme - Nord (Arctic-inspired, clean, excellent readability)
-      theme = nord
+      theme = Nord
 
       # Terminal Compatibility - Use xterm-256color for SSH compatibility
       # xterm-ghostty is not installed on remote systems by default
