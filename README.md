@@ -37,6 +37,93 @@ cd dfe-developer
 
 The Ansible-based installer automatically detects your OS and installs the appropriate packages.
 
+### Selective Installation (Advanced)
+
+You can install specific components using Ansible tags. **Dependencies (init tasks) always run automatically.**
+
+#### Using install.sh with tags:
+```bash
+# Install only Docker on macOS
+./install.sh --tags docker
+
+# Install only Git and GitHub CLI
+./install.sh --tags git
+
+# Install Kubernetes tools only
+./install.sh --tags k8s
+
+# Install multiple specific tools
+./install.sh --tags "docker,git,k8s"
+```
+
+#### Using Ansible directly:
+```bash
+cd ansible
+
+# Install only Docker (dependencies run automatically)
+ansible-playbook -i inventories/localhost/inventory.yml playbooks/main.yml --tags docker
+
+# Install Git + Cloud tools
+ansible-playbook -i inventories/localhost/inventory.yml playbooks/main.yml --tags "git,cloud"
+
+# Install everything EXCEPT Ghostty terminal
+ansible-playbook -i inventories/localhost/inventory.yml playbooks/main.yml --skip-tags ghostty
+```
+
+#### Available Tags
+
+**Base Developer Tools:**
+- `docker` - Docker Desktop (macOS) or Docker CE (Linux)
+- `git` - Latest Git + GitHub CLI + Git LFS
+- `cloud` - AWS CLI, Helm, Terraform, Vault
+- `k8s` - kubectl, k9s, kubectx, minikube, argocd, dive
+- `python` - UV Python manager
+- `utilities` - Development utilities (jq, bat, fzf, ripgrep, etc.)
+- `vscode` - Visual Studio Code
+- `chrome` - Google Chrome
+- `ghostty` - Ghostty terminal emulator
+
+**Core Developer Tools:**
+- `jfrog` - JFrog CLI
+- `azure` - Azure CLI
+- `nodejs` - Node.js + semantic-release
+- `linear` - Linear CLI
+- `openvpn` - OpenVPN 3 client
+- `claude` - Claude Code CLI
+- `slack` - Slack (GUI)
+
+**System:**
+- `repository` - Configure package repositories (Linux only)
+- `security` - Automatic security updates
+- `wallpaper` - Custom wallpaper (if provided)
+- `verify` - Verify all installations
+
+#### How It Works
+
+**Dependencies always run:**
+- Init tasks (tagged `always`) run before any other tasks
+- Variables, user detection, platform detection
+- Ensures all prerequisites met
+
+**Example: Install only Docker on macOS**
+```bash
+./install.sh --tags docker
+```
+
+This will:
+1. ✅ Run init tasks (detect user, set variables)
+2. ✅ Install Docker Desktop via Homebrew
+3. ✅ Configure Docker
+4. ⏭️  Skip all other tools (Git, K8s, etc.)
+
+**Example: Install multiple specific tools**
+```bash
+./install.sh --tags "git,docker,vscode"
+```
+
+This installs only Git, Docker, and VS Code (plus their dependencies).
+
+
 ## Fedora Linux (Legacy)
 
 **Fedora-only shell scripts - bug fixes only, no new features.**
