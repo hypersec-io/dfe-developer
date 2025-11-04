@@ -99,7 +99,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --check              Run in check mode (dry-run, no changes)"
             echo "  --tags TAGS          Run specific Ansible tags (comma-separated)"
             echo "  --branch BRANCH      Git branch to use (default: main)"
-  --no-wallpaper       Skip custom wallpaper installation
+            echo "  --no-wallpaper       Skip custom wallpaper installation"
             echo "  --no-ghostty         Skip Ghostty terminal installation"
             echo "  --no-fastestmirror   Disable automatic mirror selection (use OS defaults)"
             echo "  --core               Install core developer tools (JFrog, Azure, Node.js, etc.)"
