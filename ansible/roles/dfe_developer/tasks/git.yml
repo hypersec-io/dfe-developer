@@ -11,8 +11,6 @@
       - git
       - git-lfs
       - git-filter-repo
-      - lazygit
-      - git-delta
     state: latest
   when: ansible_distribution == 'Fedora'
 
@@ -57,8 +55,6 @@
           - git
           - git-lfs
           - git-filter-repo
-          - lazygit
-          - git-delta
         state: latest
         update_cache: true
 
@@ -74,8 +70,6 @@
       - git
       - git-lfs
       - git-filter-repo
-      - lazygit
-      - git-delta
     state: latest
   become: false
   environment: "{{ homebrew_env }}"
