@@ -36,7 +36,7 @@
   when:
     - ansible_distribution == 'Fedora'
     - ansible_virtualization_role == 'guest'
-    - ansible_facts.firmware == 'bios'
+    - ansible_facts.firmware | default('bios') == 'bios'
   failed_when: false
   changed_when: false
 
@@ -45,7 +45,7 @@
   when:
     - ansible_distribution == 'Fedora'
     - ansible_virtualization_role == 'guest'
-    - ansible_facts.firmware == 'uefi'
+    - ansible_facts.firmware | default('bios') == 'uefi'
   failed_when: false
   changed_when: false
 
