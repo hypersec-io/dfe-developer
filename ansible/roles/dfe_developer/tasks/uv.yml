@@ -84,7 +84,7 @@
 
 - name: Install pipx via system package manager (Fedora)
   ansible.builtin.dnf:
-    name: python3-pipx
+    name: pipx
     state: present
   when: ansible_distribution == 'Fedora'
 
