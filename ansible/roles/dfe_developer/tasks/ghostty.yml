@@ -87,8 +87,8 @@
       font-feature = calt
       font-feature = liga
 
-      # Theme - Nord (Arctic-inspired, clean, excellent readability)
-      theme = Nord
+      # Theme - Solarized Dark (built-in, always available)
+      theme = solarized-dark
 
       # Terminal Compatibility - Use xterm-256color for SSH compatibility
       # xterm-ghostty is not installed on remote systems by default
@@ -192,8 +192,8 @@
       font-feature = calt
       font-feature = liga
 
-      # Theme - Nord (Arctic-inspired, clean, excellent readability)
-      theme = Nord
+      # Theme - Solarized Dark (built-in, always available)
+      theme = solarized-dark
 
       # Terminal Compatibility - Use xterm-256color for SSH compatibility
       # xterm-ghostty is not installed on remote systems by default
