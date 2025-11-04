@@ -54,7 +54,7 @@
   become: false
 
 - name: Verify Linear CLI
-  ansible.builtin.command: "{{ dfe_user_home }}/.npm-global/bin/linear --version"
+  ansible.builtin.command: "linear --version"
   register: verify_linear
   changed_when: false
   failed_when: verify_linear.rc != 0
