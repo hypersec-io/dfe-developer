@@ -10,6 +10,15 @@
     - ansible_distribution == 'Fedora'
     - ansible_virtualization_role == 'guest'
 
+- name: Create journald.conf.d directory
+  ansible.builtin.file:
+    path: /etc/systemd/journald.conf.d
+    state: directory
+    mode: '0755'
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_virtualization_role == 'guest'
+
 - name: Limit systemd journal size
   ansible.builtin.copy:
     dest: /etc/systemd/journald.conf.d/vm-optimizer.conf
