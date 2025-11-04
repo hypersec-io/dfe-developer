@@ -71,7 +71,7 @@
   register: verify_git_subtree
   changed_when: false
   failed_when: verify_git_subtree.rc != 0
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_distribution == 'Ubuntu'
 
 - name: Verify Git subtree (macOS - skip, not in Homebrew git)
   ansible.builtin.set_fact:
