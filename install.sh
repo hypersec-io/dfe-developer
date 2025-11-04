@@ -137,13 +137,9 @@ if [[ -f /etc/os-release ]]; then
             OS_FAMILY="ubuntu"
             print_info "Detected: Ubuntu $VERSION_ID"
             ;;
-        debian)
-            OS_FAMILY="debian"
-            print_info "Detected: Debian $VERSION_ID"
-            ;;
         *)
             print_error "Unsupported Linux distribution: $ID"
-            print_info "Supported: Ubuntu 24.04+, Fedora 42+, Debian"
+            print_info "Supported: Ubuntu 24.04+, Fedora 42+, macOS"
             exit 1
             ;;
     esac
@@ -189,14 +185,6 @@ else
                     exit 1
                 }
             fi
-            ;;
-        ubuntu|debian)
-            # Always install prerequisites (venv check unreliable on Ubuntu)
-            sudo apt update >/dev/null 2>&1
-            sudo apt install -y python3 python3-pip python3-venv curl >/dev/null 2>&1 || {
-                print_error "Failed to install Python 3, venv, or curl"
-                exit 1
-            }
             ;;
         macos)
             if ! command -v python3 &>/dev/null; then
