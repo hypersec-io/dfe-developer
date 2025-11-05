@@ -1,35 +1,149 @@
 # DFE Developer Environment
 
-Standardised complete developer environment setup for HyperSec DFE developers on Fedora Linux and Windows 11.
+Standardised complete developer environment setup for HyperSec DFE developers across multiple platforms.
 
 ## Platform Support
 
-- **[Fedora Linux](#fedora-linux-quick-start)** - Complete development environment for Fedora 42+
+- **[Multi-Platform (Recommended)](#multi-platform-quick-start)** - Ansible-based setup for Fedora, Ubuntu, and macOS
+- **[Fedora Linux (Legacy)](#fedora-linux-legacy)** - Shell script-based setup (bug fixes only)
 - **[Windows 11](#windows-11-soe)** - Productivity and VM host setup with Hyper-V
 
-## Fedora Linux Quick Start
+## Multi-Platform Quick Start
 
-To be installed onto Fedora Linux 42+
+**Recommended for all new installations.** Supports Ubuntu 24.04+ (primary), Fedora 42+, and macOS.
+
+**v3.0+**: Ubuntu is now the primary supported platform, with Fedora and macOS as secondary platforms.
+
+```bash
+# Clone the repository
+git clone https://github.com/hypersec-io/dfe-developer
+cd dfe-developer
+
+# Install base developer environment (default)
+./install.sh
+
+# Install with core developer tools
+./install.sh --core
+
+# Install everything (base + core + VM + RDP optimizers)
+./install.sh --all
+
+# Other options:
+./install.sh --no-ghostty      # Skip Ghostty terminal
+./install.sh --vm              # Add VM optimizations
+./install.sh --rdp             # Add RDP optimizations (Linux only)
+./install.sh --check           # Dry-run (no changes)
+```
+
+The Ansible-based installer automatically detects your OS and installs the appropriate packages.
+
+### Selective Installation (Advanced)
+
+You can install specific components using Ansible tags. **Dependencies (init tasks) always run automatically.**
+
+#### Using install.sh with tags:
+```bash
+# Install only Docker on macOS
+./install.sh --tags docker
+
+# Install only Git and GitHub CLI
+./install.sh --tags git
+
+# Install Kubernetes tools only
+./install.sh --tags k8s
+
+# Install multiple specific tools
+./install.sh --tags "docker,git,k8s"
+```
+
+#### Using Ansible directly:
+```bash
+cd ansible
+
+# Install only Docker (dependencies run automatically)
+ansible-playbook -i inventories/localhost/inventory.yml playbooks/main.yml --tags docker
+
+# Install Git + Cloud tools
+ansible-playbook -i inventories/localhost/inventory.yml playbooks/main.yml --tags "git,cloud"
+
+# Install everything EXCEPT Ghostty terminal
+ansible-playbook -i inventories/localhost/inventory.yml playbooks/main.yml --skip-tags ghostty
+```
+
+#### Available Tags
+
+**Base Developer Tools:**
+- `docker` - Docker Desktop (macOS) or Docker CE (Linux)
+- `git` - Latest Git + GitHub CLI + Git LFS
+- `cloud` - AWS CLI, Helm, Terraform, Vault
+- `k8s` - kubectl, k9s, kubectx, minikube, argocd, dive
+- `python` - UV Python manager
+- `utilities` - Development utilities (jq, bat, fzf, ripgrep, etc.)
+- `vscode` - Visual Studio Code
+- `chrome` - Google Chrome
+- `ghostty` - Ghostty terminal emulator
+
+**Core Developer Tools:**
+- `jfrog` - JFrog CLI
+- `azure` - Azure CLI
+- `nodejs` - Node.js + semantic-release
+- `linear` - Linear CLI
+- `openvpn` - OpenVPN 3 client
+- `claude` - Claude Code CLI
+- `slack` - Slack (GUI)
+
+**System:**
+- `repository` - Configure package repositories (Linux only)
+- `security` - Automatic security updates
+- `wallpaper` - Custom wallpaper (if provided)
+- `verify` - Verify all installations
+
+#### How It Works
+
+**Dependencies always run:**
+- Init tasks (tagged `always`) run before any other tasks
+- Variables, user detection, platform detection
+- Ensures all prerequisites met
+
+**Example: Install only Docker on macOS**
+```bash
+./install.sh --tags docker
+```
+
+This will:
+1. ✅ Run init tasks (detect user, set variables)
+2. ✅ Install Docker Desktop via Homebrew
+3. ✅ Configure Docker
+4. ⏭️  Skip all other tools (Git, K8s, etc.)
+
+**Example: Install multiple specific tools**
+```bash
+./install.sh --tags "git,docker,vscode"
+```
+
+This installs only Git, Docker, and VS Code (plus their dependencies).
+
+
+## Fedora Linux (Legacy)
+
+**Fedora-only shell scripts - bug fixes only, no new features.**
 
 ```bash
 # Clone the repository
 git clone https://github.com/hypersec-io/dfe-developer
 cd dfe-developer/fedora
 
-# Complete installation (recommended)
+# Complete installation
 ./install-all.sh 2>&1 | tee install.log
 
 # OR install components individually:
-./install-dfe-developer.sh      # Base developer tools (includes Ghostty terminal)
+./install-dfe-developer.sh      # Base developer tools
 ./install-dfe-developer-core.sh # Core DFE tools
 ./install-vm-optimizer.sh       # VM optimizations
 ./install-rdp-optimizer.sh      # RDP optimizations
-
-# Optional: Enable passwordless sudo (development machines only)
-./install-dfe-developer.sh --sudoers
 ```
 
-**Note:** Passwordless sudo is NOT configured by default for security. The scripts will prompt for your password when needed. Use `--sudoers` flag only on development machines (NOT on admin, bastion, or production systems).
+**Note:** The `/fedora` scripts are maintained for bug fixes only. All new features and enhancements go into the Ansible playbooks. Use `./install.sh` (Ansible) for new installations.
 
 ## What Gets Installed
 
@@ -71,44 +185,80 @@ bats *.bats                # Unit and integration tests
 
 ## Project Structure
 
-- `fedora/` - Fedora Linux installation scripts and tests
+- `ansible/` - Ansible-based multi-platform installer (Fedora, Ubuntu, macOS)
+- `fedora/` - Legacy Fedora Linux installation scripts (bug fixes only)
 - `windows/` - Windows 11 SOE setup scripts and documentation
-- `claude/` - Claude Code utilities
+- `tools/` - Developer utilities and helper scripts
+  - `tools/git/` - Git-related utilities
+- `docs/` - Documentation and guides
 - `VERSION` - Version tracking
 - `CHANGELOG.md` - Release history
 - `TODO.md` - Task tracking
 
-## Claude Contributor Fix Script
+## Developer Utilities
 
-The `claude/claude-contrib-fix.sh` script removes Claude Code from GitHub contributors when it autonomously adds itself without permission.
+### Git Data Spill Cleanup
 
-### Problem
+The [git-spill-cleanup.sh](tools/git/git-spill-cleanup.sh) utility safely removes sensitive data accidentally committed to git history.
 
-Claude Code sometimes adds "Co-Authored-By: Claude" attribution to commits without explicit user consent, causing Claude to appear as a repository contributor on GitHub.
+**Use cases:** Remove `.env` files, API keys, passwords, private keys, or any sensitive data from git history.
 
-### Solution
+```bash
+# List potentially sensitive files in history
+./tools/git/git-spill-cleanup.sh --list
 
-This script removes Claude attribution from commits and forces GitHub to reindex contributors.
+# Remove a specific file from all history
+./tools/git/git-spill-cleanup.sh --file .env
 
-### Usage
+# Remove entire directory and all contents
+./tools/git/git-spill-cleanup.sh --directory .claude
+
+# Remove all AI assistant artifacts
+./tools/git/git-spill-cleanup.sh --ai
+
+# Remove all files matching a pattern
+./tools/git/git-spill-cleanup.sh --pattern "*.pem"
+
+# Remove a specific string from all files
+./tools/git/git-spill-cleanup.sh --string "sk-abc123secretkey"
+
+# Dry run to preview changes
+./tools/git/git-spill-cleanup.sh --file secrets.yml --dry-run
+```
+
+**Features:**
+- Uses git-filter-repo (modern, GitHub-recommended tool)
+- Automatic backups before cleanup (stored in `~/.git-spill-backups/`)
+- Remove files, directories, or patterns (wildcards)
+- Remove AI assistant artifacts with `--ai` option (Claude, Cursor, Aider, Continue, Copilot, Windsurf, Codeium, Tabnine, etc.)
+- String/text removal from all files in history
+- Dry-run mode for safe testing
+- Friendly install guidance if git-filter-repo is missing
+- Comprehensive safety checks and warnings
+
+**Documentation:** See [tools/git/README.md](tools/git/README.md) for detailed usage guide, scenarios, and troubleshooting.
+
+### Git Claude Contributor Fix
+
+The [git-claude-contrib-fix.sh](tools/git/git-claude-contrib-fix.sh) script removes Claude Code from GitHub contributors when it autonomously adds itself without permission.
+
+**Problem:** Claude Code sometimes adds "Co-Authored-By: Claude" attribution to commits without explicit user consent, causing Claude to appear as a repository contributor on GitHub.
+
+**Usage:**
 
 ```bash
 # Use current repository with default branch
 cd dfe-developer
-./claude/claude-contrib-fix.sh
+./tools/git/git-claude-contrib-fix.sh
 
 # Specify repository URL
-./claude/claude-contrib-fix.sh https://github.com/owner/repo.git
+./tools/git/git-claude-contrib-fix.sh https://github.com/owner/repo.git
 
 # Specify repository and branch
-./claude/claude-contrib-fix.sh https://github.com/owner/repo.git develop
-
-# Clean a non-default branch (no GitHub reindex)
-./claude/claude-contrib-fix.sh https://github.com/owner/repo.git feature-branch
+./tools/git/git-claude-contrib-fix.sh https://github.com/owner/repo.git develop
 ```
 
-### Features
-
+**Features:**
 - Removes "Co-Authored-By: Claude" and "Generated with Claude Code" from commit messages
 - Auto-detects repository default branch (main, master, etc.)
 - Optional branch parameter to clean specific branches
@@ -116,16 +266,16 @@ cd dfe-developer
 - For non-default branches: only cleans commits (no gh CLI required)
 - Comprehensive error handling and automatic cleanup
 
-### Requirements
-
+**Requirements:**
 - git (required)
 - gh (GitHub CLI) - only required when working on default branch
 - Push access to the repository
 
-### Help
+**Documentation:** See [tools/git/README.md](tools/git/README.md) for detailed usage guide, scenarios, and troubleshooting.
 
+**Help:**
 ```bash
-./claude/claude-contrib-fix.sh --help
+./tools/git/git-claude-contrib-fix.sh --help
 ```
 
 ## Windows 11 SOE

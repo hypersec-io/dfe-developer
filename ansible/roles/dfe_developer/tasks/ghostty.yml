@@ -1,0 +1,240 @@
+---
+# Ghostty terminal emulator installation
+
+# Install JetBrains Mono font (all platforms)
+- name: Install JetBrains Mono font (Fedora)
+  ansible.builtin.dnf:
+    name: jetbrains-mono-fonts
+    state: present
+  when: ansible_distribution == 'Fedora'
+
+- name: Install JetBrains Mono font (Ubuntu)
+  ansible.builtin.apt:
+    name: fonts-jetbrains-mono
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+# Fedora - COPR repository
+- name: Enable scottames/ghostty COPR (Fedora)
+  community.general.copr:
+    name: scottames/ghostty
+    state: enabled
+  when: ansible_distribution == 'Fedora'
+
+- name: Install Ghostty (Fedora)
+  ansible.builtin.dnf:
+    name: ghostty
+    state: present
+  when: ansible_distribution == 'Fedora'
+
+# Ubuntu - Use pre-built .deb from mkasberg/ghostty-ubuntu
+- name: Get latest Ghostty release
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/mkasberg/ghostty-ubuntu/releases/latest
+    return_content: true
+  register: ghostty_latest
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Find .deb file for detected Ubuntu version
+  ansible.builtin.set_fact:
+    ghostty_deb_url: "{{ item.browser_download_url }}"
+  loop: "{{ ghostty_latest.json.assets }}"
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - "'_amd64_' + ansible_distribution_version + '.deb' in item.name"
+
+- name: Download Ghostty .deb
+  ansible.builtin.get_url:
+    url: "{{ ghostty_deb_url }}"
+    dest: /tmp/ghostty.deb
+    mode: '0644'
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - ghostty_deb_url is defined
+
+- name: Install Ghostty (Ubuntu)
+  ansible.builtin.apt:
+    deb: /tmp/ghostty.deb
+    state: present
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - ghostty_deb_url is defined
+
+- name: Remove Ghostty .deb
+  ansible.builtin.file:
+    path: /tmp/ghostty.deb
+    state: absent
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - ghostty_deb_url is defined
+
+# Configure Ghostty with Solarized Dark theme (system-wide default for Linux)
+- name: Create Ghostty config directory in /etc/skel (Linux)
+  ansible.builtin.file:
+    path: /etc/skel/.config/ghostty
+    state: directory
+    mode: '0755'
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+- name: Deploy Ghostty system-wide default configuration (Linux)
+  ansible.builtin.copy:
+    dest: /etc/skel/.config/ghostty/config
+    content: |
+      # Ghostty Configuration - Fedora Optimized
+      # Font Configuration
+      font-family = JetBrains Mono
+      font-size = 11
+      font-feature = calt
+      font-feature = liga
+
+      # Theme - iTerm2 Solarized Dark (built-in, always available)
+      theme = iTerm2 Solarized Dark
+
+      # Terminal Compatibility - Use xterm-256color for SSH compatibility
+      # xterm-ghostty is not installed on remote systems by default
+      term = xterm-256color
+
+      # Window Configuration
+      window-height = 35
+      window-width = 140
+      window-padding-x = 8
+      window-padding-y = 8
+      window-save-state = always
+
+      # Transparency - disabled for RDP optimization
+      background-opacity = 1.0
+      unfocused-split-opacity = 1.0
+
+      # Performance - VSync disabled for RDP
+      window-vsync = false
+      gtk-single-instance = false
+
+      # Scrollback
+      scrollback-limit = 10000
+
+      # Cursor
+      cursor-style = block
+      cursor-style-blink = true
+
+      # Shell Integration
+      shell-integration = detect
+      shell-integration-features = cursor,sudo,title
+
+      # Mouse Behavior
+      mouse-hide-while-typing = true
+
+      # Keybindings
+      keybind = ctrl+shift+c=copy_to_clipboard
+      keybind = ctrl+shift+v=paste_from_clipboard
+      keybind = ctrl+shift+t=new_tab
+      keybind = ctrl+shift+n=new_window
+      keybind = ctrl+plus=increase_font_size:1
+      keybind = ctrl+minus=decrease_font_size:1
+      keybind = ctrl+zero=reset_font_size
+    mode: '0644'
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+# Also deploy to current user if running for first time (Linux)
+- name: Create Ghostty config directory for actual user (Linux)
+  ansible.builtin.file:
+    path: "{{ dfe_user_home }}/.config/ghostty"
+    state: directory
+    mode: '0755'
+    owner: "{{ dfe_actual_user }}"
+    group: "{{ dfe_actual_user }}"
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+- name: Deploy Ghostty configuration for actual user (Linux)
+  ansible.builtin.copy:
+    src: /etc/skel/.config/ghostty/config
+    dest: "{{ dfe_user_home }}/.config/ghostty/config"
+    mode: '0644'
+    owner: "{{ dfe_actual_user }}"
+    group: "{{ dfe_actual_user }}"
+    remote_src: true
+    force: false
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+# macOS - Install via Homebrew cask
+- name: Install JetBrains Mono font via Homebrew cask (macOS)
+  community.general.homebrew_cask:
+    name: font-jetbrains-mono
+    state: present
+  become: false
+  environment: "{{ homebrew_cask_env }}"
+  when: ansible_distribution == 'MacOSX'
+
+- name: Install Ghostty via Homebrew cask (macOS)
+  community.general.homebrew_cask:
+    name: ghostty
+    state: present
+  become: false
+  environment: "{{ homebrew_cask_env }}"
+  when: ansible_distribution == 'MacOSX'
+
+# Configure Ghostty for macOS
+- name: Create Ghostty config directory for actual user (macOS)
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.config/ghostty"
+    state: directory
+    mode: '0755'
+  become: false
+  when: ansible_distribution == 'MacOSX'
+
+- name: Deploy Ghostty configuration for actual user (macOS)
+  ansible.builtin.copy:
+    dest: "{{ ansible_env.HOME }}/.config/ghostty/config"
+    content: |
+      # Ghostty Configuration - macOS Optimized
+      # Font Configuration
+      font-family = JetBrains Mono
+      font-size = 11
+      font-feature = calt
+      font-feature = liga
+
+      # Theme - iTerm2 Solarized Dark (built-in, always available)
+      theme = iTerm2 Solarized Dark
+
+      # Terminal Compatibility - Use xterm-256color for SSH compatibility
+      # xterm-ghostty is not installed on remote systems by default
+      term = xterm-256color
+
+      # Window Configuration
+      window-height = 35
+      window-width = 140
+      window-padding-x = 8
+      window-padding-y = 8
+      window-save-state = always
+
+      # Transparency
+      background-opacity = 1.0
+      unfocused-split-opacity = 1.0
+
+      # Performance
+      window-vsync = false
+
+      # Scrollback
+      scrollback-limit = 10000
+
+      # Cursor
+      cursor-style = block
+      cursor-style-blink = true
+
+      # Shell Integration
+      shell-integration = detect
+      shell-integration-features = cursor,sudo,title
+
+      # Mouse Behavior
+      mouse-hide-while-typing = true
+
+      # Keybindings
+      keybind = cmd+c=copy_to_clipboard
+      keybind = cmd+v=paste_from_clipboard
+      keybind = cmd+t=new_tab
+      keybind = cmd+n=new_window
+      keybind = cmd+plus=increase_font_size:1
+      keybind = cmd+minus=decrease_font_size:1
+      keybind = cmd+zero=reset_font_size
+    mode: '0644'
+  become: false
+  when: ansible_distribution == 'MacOSX'

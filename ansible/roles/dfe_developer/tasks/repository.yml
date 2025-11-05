@@ -1,0 +1,57 @@
+---
+# Configure OS package repositories (mirrors, performance settings)
+# Does NOT add vendor repos (Docker, VS Code, etc.) - those are in individual task files
+
+# ============================================================================
+# VALIDATE MIRROR CONNECTIVITY
+# ============================================================================
+
+# No validation needed - using OS default repos with optimized settings
+
+# ============================================================================
+# FEDORA REPOSITORY CONFIGURATION
+# ============================================================================
+
+# Note: RPM Fusion was in original script but not actually used for any packages
+# Removed to keep dependencies minimal
+
+- name: Create DNF conf.d directory (Fedora)
+  ansible.builtin.file:
+    path: /etc/dnf/dnf.conf.d
+    state: directory
+    mode: '0755'
+  when: ansible_distribution == 'Fedora'
+
+- name: Configure DNF performance optimizations (Fedora)
+  ansible.builtin.copy:
+    dest: /etc/dnf/dnf.conf.d/99-performance.conf
+    content: |
+      # Performance optimizations
+      max_parallel_downloads=20
+      fastestmirror=False
+      deltarpm=True
+      timeout=30
+      retries=10
+      skip_if_unavailable=True
+      metadata_expire=7200
+    mode: '0644'
+  when:
+    - ansible_distribution == 'Fedora'
+
+# ============================================================================
+# UBUNTU REPOSITORY CONFIGURATION
+# ============================================================================
+
+- name: Configure Ubuntu APT performance
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/99-performance
+    content: |
+      # Performance optimizations
+      Acquire::http::Dl-Limit "0";
+      Acquire::https::Dl-Limit "0";
+      Acquire::Queue-Mode "host";
+      APT::Get::Assume-Yes "false";
+    mode: '0644'
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - dfe_use_fastestmirror | default(true)

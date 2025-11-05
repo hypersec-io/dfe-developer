@@ -1,0 +1,110 @@
+---
+# DFE Developer Environment - Main Playbook
+# Installs and configures complete development environment
+#
+# Usage:
+#   ansible-playbook playbooks/main.yml
+#   ansible-playbook playbooks/main.yml --check         # Dry-run
+#   ansible-playbook playbooks/main.yml --tags docker   # Specific tags
+
+- name: DFE Developer Environment Setup
+  hosts: all
+  become: false
+  gather_facts: true
+
+  pre_tasks:
+    - name: Display system information
+      ansible.builtin.debug:
+        msg: |
+          OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+          Architecture: {{ ansible_architecture }}
+          Python: {{ ansible_python_version }}
+      tags: ['always']
+
+    - name: Validate supported operating system
+      ansible.builtin.fail:
+        msg: "Unsupported OS: {{ ansible_distribution }} {{ ansible_distribution_version }}. Supported: Fedora 42+, Ubuntu 24.04+, macOS"
+      when: >
+        (ansible_distribution not in ['Fedora', 'Ubuntu', 'MacOSX']) or
+        (ansible_distribution == 'Fedora' and ansible_distribution_major_version|int < 42) or
+        (ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('24.04', '<'))
+      tags: ['always']
+
+    - name: Detect actual user (for sudo operations)
+      ansible.builtin.set_fact:
+        dfe_actual_user: "{{ ansible_env.SUDO_USER | default(ansible_user_id, true) }}"
+      tags: ['always']
+
+    - name: Set actual user home directory (Linux)
+      ansible.builtin.set_fact:
+        dfe_user_home: "{{ '/home/' + dfe_actual_user if dfe_actual_user != 'root' else '/root' }}"
+      when: ansible_distribution in ['Fedora', 'Ubuntu']
+      tags: ['always']
+
+    - name: Set actual user home directory (macOS)
+      ansible.builtin.set_fact:
+        dfe_user_home: "{{ '/Users/' + dfe_actual_user }}"
+      when: ansible_distribution == 'MacOSX'
+      tags: ['always']
+
+    - name: Display user information
+      ansible.builtin.debug:
+        msg: "Installing for user: {{ dfe_actual_user }} (home: {{ dfe_user_home }})"
+      tags: ['always']
+
+    - name: Detect if GNOME is running (Linux only)
+      ansible.builtin.command: pgrep -x gnome-shell
+      register: gnome_running_check
+      failed_when: false
+      changed_when: false
+      when: ansible_distribution in ['Fedora', 'Ubuntu']
+      tags: ['always']
+
+    - name: Set GNOME availability fact (Linux)
+      ansible.builtin.set_fact:
+        dfe_has_gnome: "{{ gnome_running_check.rc == 0 }}"
+      when: ansible_distribution in ['Fedora', 'Ubuntu']
+      tags: ['always']
+
+    - name: Set GNOME availability fact (macOS - N/A)
+      ansible.builtin.set_fact:
+        dfe_has_gnome: false
+      when: ansible_distribution == 'MacOSX'
+      tags: ['always']
+
+    - name: Display GNOME status
+      ansible.builtin.debug:
+        msg: "GNOME desktop: {{ 'Detected' if dfe_has_gnome else 'Not detected' }}"
+      tags: ['always']
+
+  roles:
+    - role: dfe_developer
+      become: "{{ ansible_distribution != 'MacOSX' }}"
+      tags: ['developer', 'base']
+
+    - role: dfe_developer_core
+      become: "{{ ansible_distribution != 'MacOSX' }}"
+      tags: ['core', 'advanced']
+
+    - role: dfe_vm_optimizer
+      become: "{{ ansible_distribution != 'MacOSX' }}"
+      tags: ['vm', 'optimizer']
+
+    - role: dfe_rdp_optimizer
+      become: "{{ ansible_distribution != 'MacOSX' }}"
+      tags: ['rdp', 'optimizer']
+
+    - role: dfe_system_cleanup
+      become: "{{ ansible_distribution != 'MacOSX' }}"
+      tags: ['always']
+
+  post_tasks:
+    - name: Display completion message
+      ansible.builtin.debug:
+        msg: |
+          DFE Developer Environment installation complete!
+
+          Next steps:
+          1. Log out and back in for Docker group membership
+          2. Reboot to apply all optimizations
+          3. Configure your tools (Git, AWS CLI, etc.)

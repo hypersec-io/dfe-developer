@@ -14,7 +14,7 @@
 #   - semantic-release and npm packages
 #   - JFrog CLI, GitHub CLI, Azure CLI
 #   - OpenVPN 3 client
-#   - Claude Code CLI with auto-update, MCP Server Memory
+#   - Claude Code CLI with auto-update
 #   - UV and Nox Python tools
 #   - Slack (Flatpak)
 #
@@ -126,10 +126,6 @@ npm install -g @anthropic-ai/claude-code
 # Enable auto-update for Claude Code
 print_info "Configuring Claude Code auto-update..."
 PATH="$HOME/.npm-global/bin:$PATH" claude config set auto_update true || true
-
-# Model Context Protocol - Server Memory (user-specific installation)
-print_info "Installing MCP Server Memory via npm (user-specific)..."
-npm install -g @modelcontextprotocol/server-memory
 
 # Linear.app CLI tool (system-wide installation)
 sudo npm install -g @digitalstories/linear-cli

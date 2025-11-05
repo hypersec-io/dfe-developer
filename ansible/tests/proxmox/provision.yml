@@ -1,0 +1,79 @@
+---
+# Provision/reset Proxmox VMs for testing
+# Reads configuration from ../.env file
+
+- name: Provision Proxmox test VMs
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Setup .env (CRUD - Create/Read/Update)
+      ansible.builtin.include_tasks:
+        file: ../common/setup_env.yml
+
+    - name: Rollback Fedora VM to snapshot
+      community.general.proxmox_snap:
+        api_host: "{{ env.PROXMOX_HOST }}"
+        api_user: "{{ env.PROXMOX_USER }}"
+        api_password: "{{ env.PROXMOX_PASSWORD }}"
+        vmid: "{{ env.PROXMOX_FEDORA_VMID }}"
+        snapname: "{{ env.PROXMOX_FEDORA_SNAPSHOT }}"
+        state: rollback
+      delegate_to: localhost
+
+    - name: Start Fedora VM
+      community.general.proxmox:
+        api_host: "{{ env.PROXMOX_HOST }}"
+        api_user: "{{ env.PROXMOX_USER }}"
+        api_password: "{{ env.PROXMOX_PASSWORD }}"
+        vmid: "{{ env.PROXMOX_FEDORA_VMID }}"
+        state: started
+      delegate_to: localhost
+
+    - name: Rollback Ubuntu VM to snapshot
+      community.general.proxmox_snap:
+        api_host: "{{ env.PROXMOX_HOST }}"
+        api_user: "{{ env.PROXMOX_USER }}"
+        api_password: "{{ env.PROXMOX_PASSWORD }}"
+        vmid: "{{ env.PROXMOX_UBUNTU_VMID }}"
+        snapname: "{{ env.PROXMOX_UBUNTU_SNAPSHOT }}"
+        state: rollback
+      delegate_to: localhost
+
+    - name: Start Ubuntu VM
+      community.general.proxmox:
+        api_host: "{{ env.PROXMOX_HOST }}"
+        api_user: "{{ env.PROXMOX_USER }}"
+        api_password: "{{ env.PROXMOX_PASSWORD }}"
+        vmid: "{{ env.PROXMOX_UBUNTU_VMID }}"
+        state: started
+      delegate_to: localhost
+
+    - name: Wait for VMs to boot
+      ansible.builtin.pause:
+        seconds: 40
+
+    - name: Generate dynamic inventory
+      ansible.builtin.copy:
+        content: |
+          [fedora]
+          {{ env.PROXMOX_FEDORA_HOSTNAME }} ansible_user={{ env.PROXMOX_FEDORA_USER }} ansible_password={{ env.PROXMOX_FEDORA_PASSWORD }} ansible_become_password={{ env.PROXMOX_FEDORA_PASSWORD }}
+
+          [ubuntu]
+          {{ env.PROXMOX_UBUNTU_HOSTNAME }} ansible_user={{ env.PROXMOX_UBUNTU_USER }} ansible_password={{ env.PROXMOX_UBUNTU_PASSWORD }} ansible_become_password={{ env.PROXMOX_UBUNTU_PASSWORD }}
+
+          [test_vms:children]
+          fedora
+          ubuntu
+        dest: "{{ playbook_dir }}/inventory_proxmox.yml"
+
+    - name: Display connection info
+      ansible.builtin.debug:
+        msg: |
+          ✅ Proxmox VMs ready:
+          - Fedora: ssh {{ env.PROXMOX_FEDORA_USER }}@{{ env.PROXMOX_FEDORA_HOSTNAME }}
+          - Ubuntu: ssh {{ env.PROXMOX_UBUNTU_USER }}@{{ env.PROXMOX_UBUNTU_HOSTNAME }}
+
+          Inventory: {{ playbook_dir }}/inventory_proxmox.yml
+
+          Next: ansible-playbook -i tests/proxmox/inventory_proxmox.yml playbooks/main.yml

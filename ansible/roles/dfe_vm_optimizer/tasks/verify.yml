@@ -1,0 +1,59 @@
+---
+# Verification - VM optimizer (functional checks)
+
+- name: Verify virtualization detection
+  ansible.builtin.debug:
+    msg: "Virtualization: {{ ansible_virtualization_type }} (role: {{ ansible_virtualization_role }})"
+
+- name: Skip verification if not a VM
+  ansible.builtin.meta: end_play
+  when: ansible_virtualization_role != 'guest'
+
+# Check VM-specific services enabled (will be active after reboot)
+- name: Verify QEMU guest agent enabled (KVM)
+  ansible.builtin.systemd:
+    name: qemu-guest-agent.service
+  register: verify_qemu
+  failed_when: verify_qemu.status.UnitFileState not in ['enabled', 'static']
+  when:
+    - ansible_virtualization_type in ['kvm', 'qemu']
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+
+- name: Verify VMware tools enabled (VMware)
+  ansible.builtin.systemd:
+    name: vmtoolsd.service
+  register: verify_vmtools
+  failed_when: verify_vmtools.status.UnitFileState != 'enabled'
+  when:
+    - ansible_virtualization_type == 'VMware'
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+
+# Check journal size limit
+- name: Verify journal size limit
+  ansible.builtin.command: journalctl --disk-usage
+  register: verify_journal
+  changed_when: false
+
+# Config file validation
+- name: Verify sysctl config file exists
+  ansible.builtin.stat:
+    path: /etc/sysctl.d/98-vm-optimizer.conf
+  register: verify_sysctl_conf
+  failed_when: not verify_sysctl_conf.stat.exists
+
+- name: Verify journal config file exists
+  ansible.builtin.stat:
+    path: /etc/systemd/journald.conf.d/vm-optimizer.conf
+  register: verify_journal_conf
+  failed_when: not verify_journal_conf.stat.exists
+
+- name: Display VM optimizer verification
+  ansible.builtin.debug:
+    msg: |
+      ✅ VM Optimizer Configured (reboot required):
+      - VM Type: {{ ansible_virtualization_type }}
+      - Sysctl config: /etc/sysctl.d/98-vm-optimizer.conf ✅
+      - Journal config: /etc/systemd/journald.conf.d/vm-optimizer.conf ✅
+      - Guest tools: {{ 'qemu-guest-agent enabled' if ansible_virtualization_type in ['kvm', 'qemu'] else 'vmtoolsd enabled' if ansible_virtualization_type == 'VMware' else 'N/A' }}
+      - Journal current size: {{ verify_journal.stdout }}
+      - Status: Settings will apply after reboot

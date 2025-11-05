@@ -1,0 +1,30 @@
+---
+# DFE Developer Environment - Defaults
+
+# Mirror/repository optimization configuration
+dfe_use_fastestmirror: true  # Enable fastest mirror selection (automatic mirror selection)
+# Note: Fedora uses fastestmirror, Ubuntu uses mirror selection in sources.list
+# Set to false with --no-fastestmirror flag to use default repos only
+
+# Supported platforms (used for validation in init.yml)
+dfe_supported_distros:
+  - Fedora
+  - Ubuntu
+  - MacOSX
+dfe_min_fedora_version: 42
+dfe_min_ubuntu_version: "24.04"
+
+# Ghostty installation
+dfe_install_ghostty: true
+
+# Docker configuration
+dfe_docker_users:
+  - "{{ ansible_user_id }}"
+dfe_docker_install_desktop: true
+dfe_docker_repo_base_url: "https://download.docker.com/linux"
+dfe_docker_distro_name: "{{ ansible_distribution | lower }}"
+dfe_docker_gpg_url: "{{ dfe_docker_repo_base_url }}/{{ dfe_docker_distro_name }}/gpg"
+dfe_docker_repo_url: "{{ dfe_docker_repo_base_url }}/{{ dfe_docker_distro_name }}"
+dfe_docker_desktop_url_ubuntu: "https://desktop.docker.com/linux/main/amd64/docker-desktop-amd64.deb"
+dfe_docker_desktop_url_fedora: "https://desktop.docker.com/linux/main/amd64/docker-desktop-x86_64.rpm"
+dfe_docker_arch: "amd64"

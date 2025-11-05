@@ -298,9 +298,47 @@ All contributions must pass:
 
 ### Manual Testing
 
-Test on clean Fedora 42 system:
+**Test Systems:**
 
+For HyperSec developers, test systems are available. See STATE.md (not public) for access details.
+
+**Fedora (clean VM):**
 ```bash
+# Reset Fedora test VM (fast - uses snapshot)
+# Contact maintainers for test system access
+
+# Test playbook:
+ansible-playbook -i tests/fedora/inventory.yml playbooks/main.yml
+```
+
+**Ubuntu (clean VM):**
+```bash
+# Reset Ubuntu test VM (fast - uses snapshot)
+# Contact maintainers for test system access
+
+# Test playbook:
+ansible-playbook -i tests/ubuntu/inventory.yml playbooks/main.yml
+```
+
+**macOS (clean system):**
+```bash
+# ⚠️ WARNING: Mac mini provisioning takes 20-30 minutes!
+# Only reset when absolutely necessary (major changes, broken state)
+# Use sparingly to avoid unnecessary costs and time
+# Contact maintainers for test system access
+
+# Reset Mac mini test system (SLOW - full OS install)
+cd ansible
+ansible-playbook -i tests/mac/inventory_scaleway.yml tests/provision_scaleway_mac.yml
+
+# Test playbook:
+ansible-playbook -i tests/mac/inventory_scaleway.yml playbooks/main.yml
+```
+
+**Legacy Fedora Shell Scripts:**
+```bash
+cd fedora
+
 # Standard installation
 ./install-dfe-developer.sh
 

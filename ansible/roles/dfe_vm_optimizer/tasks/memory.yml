@@ -1,0 +1,39 @@
+---
+# Memory optimizations for VMs
+
+- name: Disable dnf-makecache timer
+  ansible.builtin.systemd:
+    name: dnf-makecache.timer
+    enabled: false
+  failed_when: false
+  when:
+    - ansible_distribution == 'Fedora'
+    - ansible_virtualization_role == 'guest'
+
+- name: Create journald.conf.d directory
+  ansible.builtin.file:
+    path: /etc/systemd/journald.conf.d
+    state: directory
+    mode: '0755'
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_virtualization_role == 'guest'
+
+- name: Limit systemd journal size
+  ansible.builtin.copy:
+    dest: /etc/systemd/journald.conf.d/vm-optimizer.conf
+    content: |
+      [Journal]
+      SystemMaxUse=100M
+      RuntimeMaxUse=100M
+    mode: '0644'
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_virtualization_role == 'guest'
+
+- name: Vacuum journal to 100M
+  ansible.builtin.command: journalctl --vacuum-size=100M
+  changed_when: false
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_virtualization_role == 'guest'

@@ -1,0 +1,48 @@
+---
+# DFE RDP Optimizer - Main Tasks
+# Maps to: fedora/install-rdp-optimizer.sh
+# Optimizes GNOME Remote Desktop for auto-resize and low-latency
+
+# Skip on macOS (not applicable)
+- name: Skip RDP optimizer on macOS
+  ansible.builtin.debug:
+    msg: "RDP optimizer not applicable on macOS - skipping"
+  when: ansible_distribution == 'MacOSX'
+
+# Skip if no GNOME desktop
+- name: Skip RDP optimizer if no GNOME
+  ansible.builtin.debug:
+    msg: "GNOME desktop not detected - skipping RDP optimizer"
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - not dfe_has_gnome
+
+- name: Configure RDP certificates
+  ansible.builtin.include_tasks:
+    file: certificates.yml
+  tags: ['certificates']
+
+- name: Configure GNOME Remote Desktop
+  ansible.builtin.include_tasks:
+    file: dconf.yml
+  tags: ['dconf']
+
+- name: Configure TCP optimizations
+  ansible.builtin.include_tasks:
+    file: tcp.yml
+  tags: ['tcp']
+
+- name: Configure MTU settings
+  ansible.builtin.include_tasks:
+    file: mtu.yml
+  tags: ['mtu']
+
+- name: Enable RDP service
+  ansible.builtin.include_tasks:
+    file: service.yml
+  tags: ['service']
+
+- name: Verify RDP optimizations
+  ansible.builtin.include_tasks:
+    file: verify.yml
+  tags: ['verify']

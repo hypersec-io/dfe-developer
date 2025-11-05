@@ -1,0 +1,106 @@
+---
+# Security configuration - automatic updates
+
+# ============================================================================
+# FEDORA - dnf-automatic for security updates
+# ============================================================================
+
+- name: Configure automatic security updates (Fedora)
+  block:
+    - name: Install dnf-automatic
+      ansible.builtin.dnf:
+        name: dnf-automatic
+        state: present
+
+    - name: Ensure dnf-automatic.conf exists
+      ansible.builtin.file:
+        path: /etc/dnf/automatic.conf
+        state: touch
+        mode: '0644'
+        modification_time: preserve
+        access_time: preserve
+
+    - name: Configure dnf-automatic for security updates only
+      ansible.builtin.ini_file:
+        path: /etc/dnf/automatic.conf
+        section: commands
+        option: upgrade_type
+        value: security
+        mode: '0644'
+
+    - name: Enable automatic downloads
+      ansible.builtin.ini_file:
+        path: /etc/dnf/automatic.conf
+        section: commands
+        option: download_updates
+        value: "yes"
+        mode: '0644'
+
+    - name: Enable automatic application of security updates
+      ansible.builtin.ini_file:
+        path: /etc/dnf/automatic.conf
+        section: commands
+        option: apply_updates
+        value: "yes"
+        mode: '0644'
+
+    - name: Enable and start dnf-automatic timer
+      ansible.builtin.systemd:
+        name: dnf-automatic.timer
+        enabled: true
+        state: started
+
+  when: ansible_distribution == 'Fedora'
+
+# ============================================================================
+# UBUNTU - unattended-upgrades for security updates
+# ============================================================================
+
+- name: Configure automatic security updates (Ubuntu)
+  block:
+    - name: Install unattended-upgrades
+      ansible.builtin.apt:
+        name:
+          - unattended-upgrades
+          - apt-listchanges
+        state: present
+
+    - name: Configure automatic security updates
+      ansible.builtin.copy:
+        dest: /etc/apt/apt.conf.d/50unattended-upgrades
+        content: |
+          // Automatic security updates configuration
+          Unattended-Upgrade::Allowed-Origins {
+              "${distro_id}:${distro_codename}-security";
+              "${distro_id}ESMApps:${distro_codename}-apps-security";
+              "${distro_id}ESM:${distro_codename}-infra-security";
+          };
+
+          // Remove unused dependencies
+          Unattended-Upgrade::Remove-Unused-Dependencies "true";
+          Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
+
+          // Automatic reboot if required (at 3 AM)
+          Unattended-Upgrade::Automatic-Reboot "true";
+          Unattended-Upgrade::Automatic-Reboot-Time "03:00";
+        mode: '0644'
+
+    - name: Enable automatic updates
+      ansible.builtin.copy:
+        dest: /etc/apt/apt.conf.d/20auto-upgrades
+        content: |
+          APT::Periodic::Update-Package-Lists "1";
+          APT::Periodic::Download-Upgradeable-Packages "1";
+          APT::Periodic::Unattended-Upgrade "1";
+          APT::Periodic::AutocleanInterval "7";
+        mode: '0644'
+
+  when: ansible_distribution == 'Ubuntu'
+
+# ============================================================================
+# STATUS DISPLAY
+# ============================================================================
+
+- name: Display automatic updates status
+  ansible.builtin.debug:
+    msg: "Automatic security updates: ENABLED ({{ 'dnf-automatic' if ansible_distribution == 'Fedora' else 'unattended-upgrades' }})"

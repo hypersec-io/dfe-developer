@@ -1,0 +1,50 @@
+---
+# Verification - RDP optimizer (functional checks)
+
+- name: Skip if no GNOME
+  ansible.builtin.meta: end_play
+  when: not dfe_has_gnome
+
+# Check gnome-remote-desktop service enabled (will be active after reboot)
+- name: Verify gnome-remote-desktop service enabled
+  ansible.builtin.systemd:
+    name: gnome-remote-desktop.service
+  register: verify_grd_service
+  failed_when: verify_grd_service.status.UnitFileState != 'enabled'
+
+# Check certificates exist
+- name: Verify RDP TLS certificate exists
+  ansible.builtin.stat:
+    path: /var/lib/gnome-remote-desktop/.local/share/gnome-remote-desktop/certificates/rdp-tls.crt
+  register: verify_rdp_cert
+  failed_when: not verify_rdp_cert.stat.exists
+
+- name: Verify RDP TLS key exists
+  ansible.builtin.stat:
+    path: /var/lib/gnome-remote-desktop/.local/share/gnome-remote-desktop/certificates/rdp-tls.key
+  register: verify_rdp_key
+  failed_when: not verify_rdp_key.stat.exists
+
+# Config file validation (network settings apply after reboot)
+- name: Verify RDP TCP config file exists
+  ansible.builtin.stat:
+    path: /etc/sysctl.d/99-rdp-optimization.conf
+  register: verify_rdp_tcp_conf
+  failed_when: not verify_rdp_tcp_conf.stat.exists
+
+- name: Verify RDP MTU config file exists
+  ansible.builtin.stat:
+    path: /etc/sysctl.d/99-rdp-mtu.conf
+  register: verify_rdp_mtu_conf
+  failed_when: not verify_rdp_mtu_conf.stat.exists
+
+- name: Display RDP optimizer verification
+  ansible.builtin.debug:
+    msg: |
+      ✅ RDP Optimizer Configured (reboot required):
+      - gnome-remote-desktop: {{ verify_grd_service.status.UnitFileState }} ✅
+      - TLS Cert: {{ verify_rdp_cert.stat.mode }} ✅
+      - TLS Key: {{ verify_rdp_key.stat.mode }} ✅
+      - TCP config: /etc/sysctl.d/99-rdp-optimization.conf ✅
+      - MTU config: /etc/sysctl.d/99-rdp-mtu.conf ✅
+      - Status: RDP with auto-resize will be active after reboot on port 3389

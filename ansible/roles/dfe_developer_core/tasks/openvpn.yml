@@ -1,0 +1,63 @@
+---
+# OpenVPN 3 client installation
+
+# ============================================================================
+# FEDORA - Enable COPR and install
+# ============================================================================
+
+- name: Install OpenVPN 3 (Fedora)
+  block:
+    - name: Enable OpenVPN 3 COPR repository
+      community.general.copr:
+        name: dsommers/openvpn3
+        state: enabled
+
+    - name: Install OpenVPN 3 client
+      ansible.builtin.dnf:
+        name: openvpn3-client
+        state: present
+
+  when: ansible_distribution == 'Fedora'
+
+# ============================================================================
+# UBUNTU - Add OpenVPN repository and install
+# ============================================================================
+
+- name: Install OpenVPN 3 (Ubuntu - optional, warn on failure)
+  block:
+    - name: Add OpenVPN GPG key
+      ansible.builtin.get_url:
+        url: https://packages.openvpn.net/packages-repo.gpg
+        dest: /etc/apt/keyrings/openvpn.asc
+        mode: '0644'
+
+    - name: Add OpenVPN 3 repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/openvpn.asc] https://packages.openvpn.net/openvpn3/debian {{ ansible_distribution_release }} main"
+        filename: openvpn3
+        state: present
+
+    - name: Install OpenVPN 3
+      ansible.builtin.apt:
+        name: openvpn3
+        state: present
+        update_cache: true
+
+  rescue:
+    - name: Warn about OpenVPN 3 installation failure
+      ansible.builtin.debug:
+        msg: "⚠️  WARNING: OpenVPN 3 installation failed (repository may not support {{ ansible_distribution_release }} yet). Install manually if needed for SSO web auth."
+
+  when: ansible_distribution == 'Ubuntu'
+
+# ============================================================================
+# macOS - Install via Homebrew
+# ============================================================================
+
+- name: Install OpenVPN via Homebrew (macOS)
+  community.general.homebrew:
+    name: openvpn
+    state: present
+  become: false
+  environment: "{{ homebrew_env }}"
+  when: ansible_distribution == 'MacOSX'

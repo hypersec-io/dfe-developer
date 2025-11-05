@@ -1,0 +1,18 @@
+---
+# Linear.app CLI installation (system-wide via npm)
+
+- name: Install Linear CLI system-wide (Linux)
+  community.general.npm:
+    name: '@digitalstories/linear-cli'
+    global: true
+    state: present
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+- name: Install Linear CLI system-wide (macOS)
+  community.general.npm:
+    name: '@digitalstories/linear-cli'
+    global: true
+    state: present
+  environment: "{{ homebrew_env }}"
+  become: false
+  when: ansible_distribution == 'MacOSX'

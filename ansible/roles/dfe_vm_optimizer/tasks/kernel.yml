@@ -1,0 +1,36 @@
+---
+# Kernel parameter optimizations for VMs
+
+- name: Configure VM kernel parameters
+  ansible.builtin.copy:
+    dest: /etc/sysctl.d/98-vm-optimizer.conf
+    content: |
+      # VM Optimizer Settings
+
+      # Memory optimizations
+      vm.swappiness = 10
+      vm.dirty_ratio = 15
+      vm.dirty_background_ratio = 5
+      vm.vfs_cache_pressure = 50
+
+      # Scheduler optimizations
+      kernel.sched_min_granularity_ns = 10000000
+      kernel.sched_wakeup_granularity_ns = 15000000
+
+      # Network optimizations
+      net.core.netdev_max_backlog = 5000
+      net.ipv4.tcp_congestion_control = bbr
+      net.core.default_qdisc = fq
+
+      # Security
+      net.ipv4.conf.all.accept_source_route = 0
+      net.ipv6.conf.all.accept_source_route = 0
+
+      # IPv6 disable (reduces overhead in VMs)
+      net.ipv6.conf.all.disable_ipv6 = 1
+      net.ipv6.conf.default.disable_ipv6 = 1
+    mode: '0644'
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_virtualization_role == 'guest'
+

@@ -1,0 +1,35 @@
+---
+# C development tools (gcc, make, build-essential)
+
+# Fedora - C Development group
+- name: Install C development tools group (Fedora)
+  ansible.builtin.dnf:
+    name: '@c-development'
+    state: present
+  when: ansible_distribution == 'Fedora'
+
+# Ubuntu - build-essential meta-package
+- name: Install build-essential (Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - build-essential
+      - gcc
+      - g++
+      - make
+      - cmake
+      - pkg-config
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+# macOS - Xcode Command Line Tools
+- name: Check if Xcode Command Line Tools installed (macOS)
+  ansible.builtin.command: xcode-select -p
+  register: xcode_check
+  failed_when: false
+  changed_when: false
+  when: ansible_distribution == 'MacOSX'
+
+- name: Display Xcode status (macOS)
+  ansible.builtin.debug:
+    msg: "{{ 'Xcode Command Line Tools already installed' if xcode_check.rc == 0 else 'Install manually: xcode-select --install' }}"
+  when: ansible_distribution == 'MacOSX'

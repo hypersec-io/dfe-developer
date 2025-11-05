@@ -5,6 +5,70 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.3] - 2025-11-05
+
+### Fixed
+- **[Ansible]** Ubuntu Vector GPG keys - Changed from RPM keys to APT keys (DATADOG_APT_KEY_*)
+- **[Ansible]** Ubuntu VS Code repository conflicts - Added cleanup of pre-existing repos
+- **[Ansible]** Missing verify.yml reference - Removed dead playbook reference
+- **[Ansible]** QEMU guest agent verification - Accept 'static' UnitFileState on Ubuntu
+
+### Changed
+- **[Testing]** All platforms tested on fresh VMs (Ubuntu 24.04: 275 tasks/0 failed, Fedora 42: 257 tasks/0 failed)
+- **[macOS]** Complete macOS Sequoia 15.3.1 support verified (120 tasks, 0 failures)
+
+## [2.4.2] - 2025-10-31
+
+### Fixed
+- **[Ansible]** git-subtree not available as separate package on Ubuntu (included in git)
+- **[Ansible]** Ghostty uses dynamic Ubuntu version (ansible_distribution_version)
+- **[Ansible]** kubectl moved to k8s.yml with dynamic K8s version detection
+- **[Ansible]** Added HashiCorp repository for Fedora (Terraform/Vault not in default repos)
+- **[Ansible]** Ghostty Ubuntu uses pre-built .deb from mkasberg/ghostty-ubuntu
+
+### Changed
+- **[Ansible]** Dynamic Kubernetes version from https://dl.k8s.io/release/stable.txt
+- **[Ansible]** Both Ubuntu and Fedora fully working (0 failures on both)
+
+## [2.4.1] - 2025-10-31
+
+### Added
+- **[Ansible]** Complete dfe_developer role with Docker, Python (UV), Git, Cloud tools, K8s tools, Utilities
+- **[Ansible]** Mirror validation before system modification
+- **[Ansible]** GNOME detection in pre_tasks as dfe_has_gnome fact
+- **[Ansible]** Repository backups before modification
+- **[Ansible]** git-core PPA for latest Git on Ubuntu
+
+### Changed
+- **[Ansible]** Simplified Python to UV only (no pyenv/pipx)
+- **[Ansible]** Task ordering: repository → utilities → Docker → Python → Git → cloud → k8s
+- **[Ansible]** Renamed dfe_use_aarnet_mirrors → dfe_use_mirrors
+- **[Ansible]** Consolidated Docker into single task file
+- **[Ansible]** Ghostty skipped on Ubuntu (PPA doesn't support noble)
+- **[Ansible]** Each task file adds its own vendor repositories
+
+### Fixed
+- **[Ansible]** Ubuntu 24.04 fully working (78 tasks, 0 failures, fully tested)
+- **[Ansible]** Correct Ubuntu mirror path (/ubuntu/archive/)
+- **[Ansible]** Podman removal ignores errors if not installed
+
+## [2.4.0] - 2025-10-31
+
+### Added
+- **[Ansible]** Ansible-based deployment system for cross-platform support
+- **[Ansible]** install.sh bootstrap script for Ubuntu, Fedora, and macOS
+- **[Ansible]** Role-based architecture (4 roles matching bash scripts)
+- **[Ansible]** dfe_developer role (Docker installation working on Ubuntu + Fedora)
+- **[Ansible]** Task-based organization with distro conditionals inside tasks
+- **[Ansible]** Complete role structure for all components (stubs created)
+- **[Ansible]** Ansible 12+ compatibility with modern callback plugins
+- **[Ansible]** Tested successfully on Ubuntu 24.04 and Fedora 42
+
+### Changed
+- **[Project]** Multi-platform support via Ansible (Ubuntu, Fedora, macOS)
+- **[Project]** Declarative infrastructure-as-code approach
+- **[Project]** Idempotent deployments (safe to re-run)
+
 ## [2.3.4] - 2025-10-31
 
 ### Fixed

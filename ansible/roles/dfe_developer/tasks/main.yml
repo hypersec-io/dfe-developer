@@ -1,0 +1,87 @@
+---
+# DFE Developer Environment - Main Tasks
+# Maps to: fedora/install-dfe-developer.sh
+
+- name: Initialize - Setup common variables
+  ansible.builtin.include_tasks:
+    file: init.yml
+  tags: ['always']
+
+- name: Configure OS repositories (mirrors, performance)
+  ansible.builtin.include_tasks:
+    file: repository.yml
+  tags: ['repository']
+
+- name: Configure security (automatic updates)
+  ansible.builtin.include_tasks:
+    file: security.yml
+  tags: ['security']
+
+- name: Install Docker
+  ansible.builtin.include_tasks:
+    file: docker.yml
+  tags: ['docker']
+
+- name: Install development utilities
+  ansible.builtin.include_tasks:
+    file: utilities.yml
+  tags: ['utilities']
+
+- name: Install Python development tools
+  ansible.builtin.include_tasks:
+    file: uv.yml
+  tags: ['python']
+
+- name: Install Git and version control tools
+  ansible.builtin.include_tasks:
+    file: git.yml
+  tags: ['git']
+
+- name: Install cloud tools
+  ansible.builtin.include_tasks:
+    file: cloud.yml
+  tags: ['cloud']
+
+- name: Install Kubernetes tools
+  ansible.builtin.include_tasks:
+    file: k8s.yml
+  tags: ['k8s']
+
+- name: Install data platform tools
+  ansible.builtin.include_tasks:
+    file: data_tools.yml
+  tags: ['data']
+
+- name: Install VS Code
+  ansible.builtin.include_tasks:
+    file: vscode.yml
+  tags: ['vscode']
+  when: dfe_has_gnome | default(false)
+
+- name: Install Google Chrome
+  ansible.builtin.include_tasks:
+    file: chrome.yml
+  tags: ['chrome']
+  when: dfe_has_gnome | default(false)
+
+- name: Install GNOME extensions and Firefox
+  ansible.builtin.include_tasks:
+    file: gnome.yml
+  tags: ['gnome']
+  when: dfe_has_gnome | default(false)
+
+- name: Install Ghostty terminal
+  ansible.builtin.include_tasks:
+    file: ghostty.yml
+  tags: ['ghostty']
+  when: dfe_install_ghostty | default(true) | bool
+
+- name: Configure shell (bash history auto-commit)
+  ansible.builtin.include_tasks:
+    file: shell_config.yml
+  tags: ['shell']
+
+- name: Verify base tools installation
+  ansible.builtin.include_tasks:
+    file: verify.yml
+  tags: ['verify']

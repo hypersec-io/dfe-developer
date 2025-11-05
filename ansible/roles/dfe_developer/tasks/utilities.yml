@@ -1,0 +1,143 @@
+---
+# Development utilities installation (jq, yq, bat, fzf, ripgrep, flatpak, etc.)
+
+# Install Flatpak first (needed for GUI apps)
+- name: Install Flatpak (Ubuntu)
+  ansible.builtin.apt:
+    name: flatpak
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install Flatpak (Fedora)
+  ansible.builtin.dnf:
+    name: flatpak
+    state: present
+  when: ansible_distribution == 'Fedora'
+
+# Configure Flathub repository (system-wide)
+- name: Add Flathub repository (system-wide)
+  community.general.flatpak_remote:
+    name: flathub
+    state: present
+    flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
+    method: system
+
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+# Configure Flathub for user-level installations (for apps like Freelens, Slack)
+- name: Add Flathub repository (user-level)
+  community.general.flatpak_remote:
+    name: flathub
+    state: present
+    flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
+    method: user
+  become: false
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - dfe_has_gnome | default(false)
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+# Common development utilities
+- name: Install development utilities (Fedora)
+  ansible.builtin.dnf:
+    name:
+      - jq
+      - bat
+      - fzf
+      - ripgrep
+      - fd-find
+      - httpie
+      - tmux
+      - htop
+      - lsof
+      - tree
+      - wget
+      - bind-utils
+      - net-tools
+      - traceroute
+      - nmap
+      - telnet
+      - nc
+      - whois
+      - ShellCheck
+      - postgresql
+      - ansible
+    state: present
+  when: ansible_distribution == 'Fedora'
+
+- name: Install development utilities (Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - jq
+      - bat
+      - fzf
+      - ripgrep
+      - fd-find
+      - httpie
+      - tmux
+      - htop
+      - lsof
+      - tree
+      - wget
+      - dnsutils
+      - net-tools
+      - traceroute
+      - nmap
+      - telnet
+      - netcat-openbsd
+      - whois
+      - shellcheck
+      - postgresql-client
+      - ansible
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+# yq - Binary download
+- name: Download yq
+  ansible.builtin.get_url:
+    url: https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+    dest: /usr/local/bin/yq
+    mode: '0755'
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+# macOS - Install utilities via Homebrew
+- name: Install development utilities (macOS)
+  community.general.homebrew:
+    name:
+      - jq
+      - bat
+      - fzf
+      - ripgrep
+      - fd
+      - httpie
+      - tmux
+      - htop
+      - tree
+      - wget
+      - bind
+      - nmap
+      - telnet
+      - netcat
+      - whois
+      - shellcheck
+      - postgresql@16
+      - ansible
+      - yq
+    state: present
+  environment: "{{ homebrew_env }}"
+  become: false
+  when: ansible_distribution == 'MacOSX'
+
+# Remmina - Remote Desktop Client (Linux GUI only)
+# Using Flatpak for latest version (PPA discontinued as of 2025)
+# Flatpak provides better updates and cross-distro compatibility
+- name: Install Remmina via Flatpak (user-specific)
+  community.general.flatpak:
+    name: org.remmina.Remmina
+    state: present
+    method: user
+  become: false
+  environment:
+    FLATPAK_TTY_PROGRESS: "0"
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - dfe_has_gnome | default(false)

@@ -1,0 +1,203 @@
+---
+# Cloud tools installation (AWS CLI, Helm, Terraform, Vault)
+# Note: kubectl moved to k8s.yml
+
+# ============================================================================
+# HASHICORP REPOSITORY (for Terraform, Vault)
+# ============================================================================
+
+- name: Configure HashiCorp repository (Ubuntu)
+  block:
+    - name: Add HashiCorp GPG key
+      ansible.builtin.get_url:
+        url: https://apt.releases.hashicorp.com/gpg
+        dest: /usr/share/keyrings/hashicorp-archive-keyring.asc
+        mode: '0644'
+
+    - name: Add HashiCorp repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.asc] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main"
+        filename: hashicorp
+        state: present
+
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Configure HashiCorp repository (Fedora)
+  block:
+    - name: Import HashiCorp GPG key
+      ansible.builtin.rpm_key:
+        state: present
+        key: https://rpm.releases.hashicorp.com/gpg
+
+    - name: Add HashiCorp repository
+      ansible.builtin.yum_repository:
+        name: hashicorp
+        description: HashiCorp Stable
+        baseurl: https://rpm.releases.hashicorp.com/fedora/$releasever/$basearch/stable
+        enabled: true
+        gpgcheck: true
+        gpgkey: https://rpm.releases.hashicorp.com/gpg
+
+  when: ansible_distribution == 'Fedora'
+
+# ============================================================================
+# AWS CLI V2 (Linux binary install)
+# ============================================================================
+
+- name: Install AWS CLI v2 (Linux)
+  block:
+    - name: Download AWS CLI v2 installer
+      ansible.builtin.get_url:
+        url: https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+        dest: /tmp/awscliv2.zip
+        mode: '0644'
+
+    - name: Install unzip for AWS CLI
+      ansible.builtin.package:
+        name: unzip
+        state: present
+
+    - name: Unzip AWS CLI installer
+      ansible.builtin.unarchive:
+        src: /tmp/awscliv2.zip
+        dest: /tmp/
+        remote_src: true
+
+    - name: Install AWS CLI v2 system-wide
+      ansible.builtin.command:
+        cmd: /tmp/aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update
+      args:
+        creates: /usr/local/bin/aws
+
+    - name: Remove AWS CLI installer files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /tmp/awscliv2.zip
+        - /tmp/aws
+
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+# ============================================================================
+# HELM (Linux binary install)
+# ============================================================================
+
+- name: Install Helm via binary download (Linux)
+  block:
+    - name: Get latest Helm version from GitHub API
+      ansible.builtin.uri:
+        url: https://api.github.com/repos/helm/helm/releases/latest
+        return_content: true
+      register: helm_latest_release
+
+    - name: Set Helm version fact
+      ansible.builtin.set_fact:
+        helm_version: "{{ helm_latest_release.json.tag_name }}"
+
+    - name: Determine Helm binary architecture
+      ansible.builtin.set_fact:
+        helm_arch: >-
+          {%- if ansible_architecture == 'x86_64' -%}
+          linux-amd64
+          {%- elif ansible_architecture == 'aarch64' -%}
+          linux-arm64
+          {%- else -%}
+          unsupported
+          {%- endif -%}
+
+    - name: Download Helm binary tarball
+      ansible.builtin.get_url:
+        url: "https://get.helm.sh/helm-{{ helm_version }}-{{ helm_arch }}.tar.gz"
+        dest: "/tmp/helm-{{ helm_version }}-{{ helm_arch }}.tar.gz"
+        mode: '0644'
+
+    - name: Extract Helm binary
+      ansible.builtin.unarchive:
+        src: "/tmp/helm-{{ helm_version }}-{{ helm_arch }}.tar.gz"
+        dest: /tmp
+        remote_src: true
+
+    - name: Install Helm binary
+      ansible.builtin.copy:
+        src: "/tmp/{{ helm_arch }}/helm"
+        dest: /usr/local/bin/helm
+        mode: '0755'
+        remote_src: true
+
+    - name: Remove Helm installation files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/tmp/helm-{{ helm_version }}-{{ helm_arch }}.tar.gz"
+        - "/tmp/{{ helm_arch }}"
+
+    - name: Install Helm Dashboard plugin
+      ansible.builtin.command: helm plugin install https://github.com/komodorio/helm-dashboard.git
+      become: false
+      failed_when: false
+      changed_when: false
+
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+# ============================================================================
+# TERRAFORM & VAULT (from HashiCorp repos)
+# ============================================================================
+
+- name: Install Terraform and Vault (Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - terraform
+      - vault
+    state: present
+    update_cache: true
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install Terraform and Vault (Fedora)
+  ansible.builtin.dnf:
+    name:
+      - terraform
+      - vault
+    state: present
+  when: ansible_distribution == 'Fedora'
+
+# ============================================================================
+# macOS - Install via Homebrew
+# ============================================================================
+
+- name: Install cloud tools via Homebrew (macOS)
+  block:
+    - name: Install AWS CLI
+      community.general.homebrew:
+        name: awscli
+        state: present
+
+    - name: Install Helm
+      community.general.homebrew:
+        name: helm
+        state: present
+
+    - name: Install Terraform
+      community.general.homebrew:
+        name: terraform
+        state: present
+
+    - name: Tap HashiCorp formulae
+      community.general.homebrew_tap:
+        name: hashicorp/tap
+        state: present
+
+    - name: Install Vault
+      community.general.homebrew:
+        name: hashicorp/tap/vault
+        state: present
+
+    - name: Install Helm Dashboard plugin
+      ansible.builtin.command: helm plugin install https://github.com/komodorio/helm-dashboard.git
+      failed_when: false
+      changed_when: false
+
+  become: false
+  environment: "{{ homebrew_env }}"
+  when: ansible_distribution == 'MacOSX'

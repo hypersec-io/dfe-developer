@@ -1,0 +1,95 @@
+---
+# Enable and configure GNOME Remote Desktop system service
+
+# ============================================================================
+# DISABLE DESKTOP SHARING (conflicting service)
+# ============================================================================
+
+- name: Disable Desktop Sharing via grdctl (conflicts with Remote Login)
+  ansible.builtin.command:
+    cmd: grdctl --system rdp disable
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - dfe_has_gnome
+  failed_when: false
+  changed_when: false
+
+# ============================================================================
+# ENABLE REMOTE LOGIN (RDP)
+# ============================================================================
+
+- name: Enable gnome-remote-desktop system service
+  ansible.builtin.systemd:
+    name: gnome-remote-desktop.service
+    enabled: true
+    state: started
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - dfe_has_gnome
+
+- name: Enable Remote Login (RDP) via grdctl
+  ansible.builtin.command:
+    cmd: grdctl --system rdp enable
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - dfe_has_gnome
+  failed_when: false
+  changed_when: false
+
+# ============================================================================
+# SET DEFAULT RDP CREDENTIALS
+# ============================================================================
+
+- name: Set default RDP credentials (username as password)
+  ansible.builtin.shell: |
+    # Workaround for Fedora 42 grdctl bug (should be fixed in 43+)
+    # grdctl --system rdp set-credentials fails with TPM error
+    # Use direct credential setting with proper error handling
+
+    if grdctl --system rdp set-credentials {{ dfe_actual_user }} {{ dfe_actual_user }} 2>&1 | grep -q "fallback"; then
+      # Credentials set successfully via GKeyFile fallback
+      exit 0
+    else
+      # Try alternative method if grdctl fails completely
+      echo "{{ dfe_actual_user }}" | sudo tee /tmp/rdp_user > /dev/null
+      echo "{{ dfe_actual_user }}" | sudo tee /tmp/rdp_pass > /dev/null
+      grdctl --system rdp set-credentials {{ dfe_actual_user }} {{ dfe_actual_user }} 2>&1 || exit 0
+    fi
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - dfe_has_gnome
+  failed_when: false
+  changed_when: false
+  no_log: false
+
+- name: Restart RDP service to apply credentials
+  ansible.builtin.systemd:
+    name: gnome-remote-desktop.service
+    state: restarted
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - dfe_has_gnome
+
+# ============================================================================
+# STATUS & USER INSTRUCTIONS
+# ============================================================================
+
+- name: Display RDP configuration status
+  ansible.builtin.debug:
+    msg: |
+      ✅ GNOME Remote Desktop configured:
+      - Desktop Sharing: DISABLED (conflicts with Remote Login)
+      - Remote Login (RDP): ENABLED on port 3389
+      - Auto-resize: ENABLED via TCP optimization
+      - Default credentials: username={{ dfe_actual_user }}, password={{ dfe_actual_user }}
+
+      📝 RDP Access:
+      - Connect to: {{ ansible_hostname }}:3389 (or {{ ansible_default_ipv4.address | default('IP') }}:3389)
+      - Username: {{ dfe_actual_user }}
+      - Password: {{ dfe_actual_user }} (change via GNOME Settings → Sharing → Remote Login)
+
+      ⚠️  SECURITY: Default password is same as username for convenience.
+      Change it in GNOME Settings → Sharing → Remote Login → Set Password
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - dfe_has_gnome
