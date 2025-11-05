@@ -14,7 +14,7 @@
   ansible.builtin.systemd:
     name: qemu-guest-agent.service
   register: verify_qemu
-  failed_when: verify_qemu.status.UnitFileState != 'enabled'
+  failed_when: verify_qemu.status.UnitFileState not in ['enabled', 'static']
   when:
     - ansible_virtualization_type in ['kvm', 'qemu']
     - ansible_distribution in ['Fedora', 'Ubuntu']

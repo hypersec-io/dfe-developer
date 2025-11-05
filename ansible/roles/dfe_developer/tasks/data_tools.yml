@@ -29,12 +29,37 @@
 
 - name: Install Vector (Ubuntu)
   block:
-    - name: Add Datadog GPG keys for Vector (multiple keys)
+    - name: Ensure APT keyrings directory exists
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Remove old Vector GPG keyring (if exists with wrong keys)
+      ansible.builtin.file:
+        path: /etc/apt/keyrings/vector.gpg
+        state: absent
+      when: false  # Only needed for migration, can remove this task after deployment
+
+    - name: Download Datadog APT GPG keys for Vector
+      ansible.builtin.get_url:
+        url: "{{ item.url }}"
+        dest: "{{ item.dest }}"
+        mode: '0644'
+      loop:
+        - url: https://keys.datadoghq.com/DATADOG_APT_KEY_CURRENT.public
+          dest: /tmp/vector-current.pub
+        - url: https://keys.datadoghq.com/DATADOG_APT_KEY_C0962C7D.public
+          dest: /tmp/vector-C0962C7D.pub
+        - url: https://keys.datadoghq.com/DATADOG_APT_KEY_F14F620E.public
+          dest: /tmp/vector-F14F620E.pub
+
+    - name: Convert and combine GPG keys for Vector
       ansible.builtin.shell: |
-        curl -fsSL https://keys.datadoghq.com/DATADOG_RPM_KEY_CURRENT.public | gpg --dearmor -o /etc/apt/keyrings/vector.gpg
-        curl -fsSL https://keys.datadoghq.com/DATADOG_RPM_KEY_B01082D3.public | gpg --dearmor -o /etc/apt/keyrings/vector-B01082D3.gpg
-        curl -fsSL https://keys.datadoghq.com/DATADOG_RPM_KEY_FD4BF915.public | gpg --dearmor -o /etc/apt/keyrings/vector-FD4BF915.gpg
-        chmod 644 /etc/apt/keyrings/vector*.gpg
+        gpg --dearmor < /tmp/vector-current.pub > /etc/apt/keyrings/vector.gpg
+        gpg --dearmor < /tmp/vector-C0962C7D.pub >> /etc/apt/keyrings/vector.gpg
+        gpg --dearmor < /tmp/vector-F14F620E.pub >> /etc/apt/keyrings/vector.gpg
+        chmod 644 /etc/apt/keyrings/vector.gpg
       args:
         creates: /etc/apt/keyrings/vector.gpg
 

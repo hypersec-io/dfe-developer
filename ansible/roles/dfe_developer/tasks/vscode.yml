@@ -34,6 +34,15 @@
 
 - name: Install VS Code (Ubuntu)
   block:
+    - name: Remove conflicting VS Code repository files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/apt/sources.list.d/vscode.list
+        - /etc/apt/sources.list.d/vscode.sources
+        - /usr/share/keyrings/microsoft.gpg
+
     - name: Create APT keyrings directory
       ansible.builtin.file:
         path: /etc/apt/keyrings

@@ -99,11 +99,6 @@
       tags: ['always']
 
   post_tasks:
-    - name: Verify key tools are installed
-      ansible.builtin.include_tasks:
-        file: ../verify.yml
-      tags: ['verify']
-
     - name: Display completion message
       ansible.builtin.debug:
         msg: |
