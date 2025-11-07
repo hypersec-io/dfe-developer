@@ -48,6 +48,11 @@
     file: claude.yml
   tags: ['claude', 'ai']
 
+- name: Install Gitleaks (secret detection)
+  ansible.builtin.include_tasks:
+    file: gitleaks.yml
+  tags: ['gitleaks', 'security']
+
 - name: Verify core tools installation
   ansible.builtin.include_tasks:
     file: verify.yml
