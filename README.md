@@ -30,7 +30,7 @@ cd dfe-developer
 
 # Other options:
 ./install.sh --no-ghostty      # Skip Ghostty terminal
-./install.sh --vm              # Add VM optimizations
+./install.sh --vm              # Add VM optimizations (Linux only)
 ./install.sh --rdp             # Add RDP optimizations (Linux only)
 ./install.sh --check           # Dry-run (no changes)
 ```
