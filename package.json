@@ -1,0 +1,31 @@
+{
+  "name": "dfe-developer",
+  "version": "2.4.4",
+  "private": true,
+  "description": "Standardised complete developer environment setup for HyperSec DFE developers",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hypersec-io/dfe-developer.git"
+  },
+  "scripts": {
+    "release": "semantic-release",
+    "release:dry-run": "semantic-release --dry-run",
+    "release:no-ci": "semantic-release --no-ci"
+  },
+  "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/exec": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "semantic-release": "^25.0.1"
+  },
+  "keywords": [
+    "developer-environment",
+    "ansible",
+    "devops",
+    "ubuntu",
+    "fedora",
+    "macos"
+  ],
+  "author": "HyperSec",
+  "license": "MIT"
+}
