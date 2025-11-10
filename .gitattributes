@@ -27,3 +27,21 @@ lib.sh text eol=lf
 *.zip binary
 *.tar binary
 *.gz binary
+
+# GitHub Linguist - Language Detection
+# Ansible is the primary codebase (not PowerShell)
+*.yml linguist-language=YAML
+ansible/** linguist-detectable=true
+
+# Windows PowerShell is supporting code (not primary)
+windows/*.ps1 linguist-detectable=true
+
+# Fedora shell scripts are legacy (bug fixes only)
+fedora/*.sh linguist-detectable=true
+
+# Documentation
+*.md linguist-documentation=true
+docs/** linguist-documentation=true
+
+# Vendored/generated code
+node_modules/** linguist-vendored=true
