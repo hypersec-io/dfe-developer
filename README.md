@@ -1,5 +1,12 @@
 # DFE Developer Environment
 
+[![Latest Release](https://img.shields.io/github/v/release/hypersec-io/dfe-developer)](https://github.com/hypersec-io/dfe-developer/releases/latest)
+[![Release Date](https://img.shields.io/github/release-date/hypersec-io/dfe-developer)](https://github.com/hypersec-io/dfe-developer/releases/latest)
+[![License](https://img.shields.io/github/license/hypersec-io/dfe-developer)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Ubuntu%20%7C%20Fedora%20%7C%20macOS-blue)](#platform-support)
+[![Last Commit](https://img.shields.io/github/last-commit/hypersec-io/dfe-developer)](https://github.com/hypersec-io/dfe-developer/commits/main)
+[![Stars](https://img.shields.io/github/stars/hypersec-io/dfe-developer?style=social)](https://github.com/hypersec-io/dfe-developer/stargazers)
+
 Standardised complete developer environment setup for HyperSec DFE developers across multiple platforms.
 
 ## Platform Support
