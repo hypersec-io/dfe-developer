@@ -166,6 +166,15 @@ cd dfe-developer/fedora
 
 ## System Requirements
 
+### Multi-Platform (Ansible)
+- **Ubuntu:** 24.04 LTS or later (primary)
+- **Fedora:** 42 or later (secondary)
+- **macOS:** Sequoia 15.3.1 or later (secondary)
+- 4GB RAM minimum (8GB recommended)
+- 20GB available disk space
+- Internet connection
+
+### Legacy Fedora (Shell Scripts)
 - Fedora 42 or later
 - 4GB RAM minimum (8GB recommended)
 - 20GB available disk space
