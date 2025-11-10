@@ -12,7 +12,7 @@ Standardised complete developer environment setup for HyperSec DFE developers ac
 
 **Recommended for all new installations.** Supports Ubuntu 24.04+ (primary), Fedora 42+, and macOS.
 
-**v3.0+**: Ubuntu is now the primary supported platform, with Fedora and macOS as secondary platforms.
+**v2.4+**: Ubuntu is now the primary supported platform, with Fedora and macOS as secondary platforms.
 
 ```bash
 # Clone the repository

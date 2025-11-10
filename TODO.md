@@ -31,8 +31,8 @@
 - ⚠️ Test wallpaper on macOS with desktoppr
 
 **Documentation:**
-- ⚠️ Update CHANGELOG.md with version bump (v3.0?)
-- ⚠️ Update README.md with macOS notes
+- ✅ CHANGELOG.md updated (v2.4.4 - latest)
+- ✅ README.md updated with macOS notes
 - ⚠️ Add macOS troubleshooting section
 
 ---
