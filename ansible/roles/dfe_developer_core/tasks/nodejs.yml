@@ -145,6 +145,7 @@
     - '@semantic-release/release-notes-generator'
     - '@semantic-release/exec'
     - conventional-changelog-conventionalcommits
+    - tokenx
   environment:
     NPM_CONFIG_PREFIX: "{{ dfe_user_home }}/.npm-global"
   become: false
@@ -164,6 +165,7 @@
     - '@semantic-release/release-notes-generator'
     - '@semantic-release/exec'
     - conventional-changelog-conventionalcommits
+    - tokenx
   environment: "{{ npm_config_env }}"
   become: false
   when: ansible_distribution == 'MacOSX'
