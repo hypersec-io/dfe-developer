@@ -21,8 +21,8 @@
     state: present
     flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
     method: system
-
   when: ansible_distribution in ['Fedora', 'Ubuntu']
+
 # Configure Flathub for user-level installations (for apps like Freelens, Slack)
 - name: Add Flathub repository (user-level)
   community.general.flatpak_remote:
@@ -34,7 +34,6 @@
   when:
     - ansible_distribution in ['Fedora', 'Ubuntu']
     - dfe_has_gnome | default(false)
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
 
 # Common development utilities
 - name: Install development utilities (Fedora)
@@ -61,6 +60,7 @@
       - ShellCheck
       - postgresql
       - ansible
+      - parallel
     state: present
   when: ansible_distribution == 'Fedora'
 
@@ -88,6 +88,7 @@
       - shellcheck
       - postgresql-client
       - ansible
+      - parallel
     state: present
   when: ansible_distribution == 'Ubuntu'
 
@@ -122,6 +123,7 @@
       - postgresql@16
       - ansible
       - yq
+      - parallel
     state: present
   environment: "{{ homebrew_env }}"
   become: false
