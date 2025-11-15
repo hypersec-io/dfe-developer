@@ -97,6 +97,21 @@
   failed_when: verify_gitleaks.rc != 0
   when: ansible_distribution == 'MacOSX'
 
+- name: Verify MCP Toolbox (Linux)
+  ansible.builtin.command: toolbox version
+  register: verify_toolbox
+  changed_when: false
+  failed_when: verify_toolbox.rc != 0
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+- name: Verify MCP Toolbox (macOS)
+  ansible.builtin.command: toolbox version
+  environment: "{{ homebrew_env }}"
+  register: verify_toolbox
+  changed_when: false
+  failed_when: verify_toolbox.rc != 0
+  when: ansible_distribution == 'MacOSX'
+
 - name: Display core tools verification
   ansible.builtin.debug:
     msg: |
@@ -109,3 +124,4 @@
       - OpenVPN: {{ verify_openvpn.stdout | default('installed') }}
       - Claude Code CLI: {{ verify_claude.stdout | default('installed') }}
       - Gitleaks: {{ verify_gitleaks.stdout | default('installed') }}
+      - MCP Toolbox: {{ verify_toolbox.stdout | default('installed') }}

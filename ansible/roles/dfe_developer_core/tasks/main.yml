@@ -53,6 +53,11 @@
     file: gitleaks.yml
   tags: ['gitleaks', 'security']
 
+- name: Install GenAI Toolbox (MCP Toolbox)
+  ansible.builtin.include_tasks:
+    file: genai_toolbox.yml
+  tags: ['genai_toolbox', 'ai', 'mcp']
+
 - name: Verify core tools installation
   ansible.builtin.include_tasks:
     file: verify.yml
