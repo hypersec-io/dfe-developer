@@ -123,28 +123,8 @@
 - name: Verify yq
   ansible.builtin.command: yq --version
   register: verify_yq
-  register: verify_kubectl
-  register: verify_helm
-  register: verify_terraform
-  register: verify_git
-  register: verify_git_subtree
-  register: verify_git_lfs
-  register: verify_uv
-  register: verify_uv_python
-  register: verify_aws
-  register: verify_yq
   environment:
     PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_env.PATH }}"
-  register: verify_kubectl
-  register: verify_helm
-  register: verify_terraform
-  register: verify_git
-  register: verify_git_subtree
-  register: verify_git_lfs
-  register: verify_uv
-  register: verify_uv_python
-  register: verify_aws
-  register: verify_yq
   changed_when: false
   failed_when: verify_yq.rc != 0
 
