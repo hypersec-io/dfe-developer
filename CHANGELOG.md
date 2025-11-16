@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.1](https://github.com/hypersec-io/dfe-developer/compare/v2.5.0...v2.5.1) (2025-11-16)
+
+
+### Bug Fixes
+
+* Add GenAI Toolbox (MCP Toolbox) to core role ([c6cc07b](https://github.com/hypersec-io/dfe-developer/commit/c6cc07b058aa3508bef603b13fd804e3b0a32747))
+* Add GNU Parallel to utilities and remove duplicate when condition ([08dc54c](https://github.com/hypersec-io/dfe-developer/commit/08dc54cd3b21ac66ddfbd1da8b19e97a2be1f07e))
+* Add tokenx to global npm packages in core role ([0b7fe54](https://github.com/hypersec-io/dfe-developer/commit/0b7fe5442bc0e738e15c85b40564f4b581d35dcd))
+* Configure GitHub linguist to detect Ansible as primary language ([c2455f0](https://github.com/hypersec-io/dfe-developer/commit/c2455f09a4752189392e39725feb7ec8c315e91b))
+* Correct MCP Toolbox verification command and remove duplicate register ([87fc6b6](https://github.com/hypersec-io/dfe-developer/commit/87fc6b6d583ca384366341d4aa2dfeb3b1705d84))
+
+
+### Reverts
+
+* Revert "fix: Add tokenx to global npm packages in core role" ([2ac0f60](https://github.com/hypersec-io/dfe-developer/commit/2ac0f6026895dee2c951af77ac7790cf2fb2cd69))
+
 # [2.5.0](https://github.com/hypersec-io/dfe-developer/compare/v2.4.4...v2.5.0) (2025-11-10)
 
 
