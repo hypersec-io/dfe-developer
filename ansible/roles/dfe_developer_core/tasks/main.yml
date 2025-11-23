@@ -58,6 +58,11 @@
     file: genai_toolbox.yml
   tags: ['genai_toolbox', 'ai', 'mcp']
 
+- name: Install act (GitHub Actions runner)
+  ansible.builtin.include_tasks:
+    file: act.yml
+  tags: ['act', 'ci']
+
 - name: Verify core tools installation
   ansible.builtin.include_tasks:
     file: verify.yml

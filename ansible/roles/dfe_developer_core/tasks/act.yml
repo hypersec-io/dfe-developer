@@ -1,0 +1,46 @@
+---
+# act - Run GitHub Actions locally
+
+# ============================================================================
+# FEDORA - Install via COPR repository
+# ============================================================================
+
+- name: Install act (Fedora)
+  block:
+    - name: Enable act COPR repository
+      ansible.builtin.command:
+        cmd: dnf copr enable -y goncalossilva/act
+      args:
+        creates: /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:goncalossilva:act.repo
+
+    - name: Install act-cli
+      ansible.builtin.dnf:
+        name: act-cli
+        state: present
+
+  when: ansible_distribution == 'Fedora'
+
+# ============================================================================
+# UBUNTU - Install via official installation script
+# ============================================================================
+
+- name: Install act (Ubuntu)
+  block:
+    - name: Download and install act
+      ansible.builtin.shell:
+        cmd: curl -s https://raw.githubusercontent.com/nektos/act/master/install.sh | bash
+        creates: /usr/local/bin/act
+
+  when: ansible_distribution == 'Ubuntu'
+
+# ============================================================================
+# MACOS - Install via Homebrew
+# ============================================================================
+
+- name: Install act (macOS)
+  community.general.homebrew:
+    name: act
+    state: present
+  become: false
+  environment: "{{ homebrew_env }}"
+  when: ansible_distribution == 'MacOSX'
