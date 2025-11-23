@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.2](https://github.com/hypersec-io/dfe-developer/compare/v2.5.1...v2.5.2) (2025-11-23)
+
+
+### Bug Fixes
+
+* Add act (GitHub Actions runner) to core role ([905894e](https://github.com/hypersec-io/dfe-developer/commit/905894e543fb8581e64a6c699c0068d64a1af187))
+* Use direct binary download for act on Ubuntu instead of curl-bash ([e523fd6](https://github.com/hypersec-io/dfe-developer/commit/e523fd638b2ef4ced8d0bf33dc7e43a986f2ba8e))
+
 ## [2.5.1](https://github.com/hypersec-io/dfe-developer/compare/v2.5.0...v2.5.1) (2025-11-16)
 
 
