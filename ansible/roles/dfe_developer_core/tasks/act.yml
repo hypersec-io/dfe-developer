@@ -21,15 +21,49 @@
   when: ansible_distribution == 'Fedora'
 
 # ============================================================================
-# UBUNTU - Install via official installation script
+# UBUNTU - Install via binary from GitHub releases
 # ============================================================================
 
 - name: Install act (Ubuntu)
   block:
-    - name: Download and install act
-      ansible.builtin.shell:
-        cmd: curl -s https://raw.githubusercontent.com/nektos/act/master/install.sh | bash
-        creates: /usr/local/bin/act
+    - name: Get latest act version from GitHub API
+      ansible.builtin.uri:
+        url: https://api.github.com/repos/nektos/act/releases/latest
+        return_content: true
+      register: act_release
+
+    - name: Set act version fact
+      ansible.builtin.set_fact:
+        act_version: "{{ act_release.json.tag_name }}"
+
+    - name: Download act binary tarball
+      ansible.builtin.get_url:
+        url: "https://github.com/nektos/act/releases/download/{{ act_version }}/act_Linux_x86_64.tar.gz"
+        dest: /tmp/act.tar.gz
+        mode: '0644'
+
+    - name: Extract act binary
+      ansible.builtin.unarchive:
+        src: /tmp/act.tar.gz
+        dest: /tmp
+        remote_src: true
+
+    - name: Install act binary
+      ansible.builtin.copy:
+        src: /tmp/act
+        dest: /usr/local/bin/act
+        mode: '0755'
+        remote_src: true
+
+    - name: Remove act installation files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /tmp/act.tar.gz
+        - /tmp/act
+        - /tmp/LICENSE
+        - /tmp/README.md
 
   when: ansible_distribution == 'Ubuntu'
 
