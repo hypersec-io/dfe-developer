@@ -43,6 +43,7 @@
           - firefox
           - gnome-shell-extensions
           - gnome-shell-extension-manager
+          - pipx
         state: present
 
     - name: Install System Monitor extension (Ubuntu)
@@ -57,6 +58,27 @@
         state: present
       failed_when: false  # May not be available on all Ubuntu versions
 
+    - name: Install gnome-extensions-cli via pipx
+      ansible.builtin.command:
+        cmd: pipx install gnome-extensions-cli --include-deps
+      args:
+        creates: "{{ dfe_user_home }}/.local/bin/gext"
+      become: false
+
+    - name: Ensure pipx bin directory is in PATH
+      ansible.builtin.command:
+        cmd: pipx ensurepath
+      become: false
+      changed_when: false
+
+    - name: Install Dash to Panel extension via gext
+      ansible.builtin.shell:
+        cmd: "{{ dfe_user_home }}/.local/bin/gext install dash-to-panel@jderose9.github.com"
+      become: false
+      register: gext_install
+      changed_when: "'is now installed' in gext_install.stdout or 'is already installed' not in gext_install.stdout"
+      failed_when: false  # Don't fail if already installed
+
   when: ansible_distribution == 'Ubuntu'
 
 # ============================================================================
@@ -65,12 +87,27 @@
 
 - name: Configure GNOME Shell extensions
   block:
+    - name: Enable global extensions toggle
+      community.general.dconf:
+        key: "/org/gnome/shell/disable-user-extensions"
+        value: "false"
+        state: present
+      become: false
+
     - name: Enable GNOME Shell extensions
       community.general.dconf:
         key: "/org/gnome/shell/enabled-extensions"
         value: "['system-monitor@gnome-shell-extensions.gcampax.github.com', 'appindicatorsupport@rgcjonas.gmail.com', 'dash-to-panel@jderose9.github.com']"
         state: present
       become: false
+
+    - name: Disable Ubuntu Dock (conflicts with Dash to Panel)
+      community.general.dconf:
+        key: "/org/gnome/shell/disabled-extensions"
+        value: "['ubuntu-dock@ubuntu.com']"
+        state: present
+      become: false
+      when: ansible_distribution == 'Ubuntu'
 
     - name: Configure System Monitor extension - show CPU
       community.general.dconf:

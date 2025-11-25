@@ -53,11 +53,6 @@
     file: gitleaks.yml
   tags: ['gitleaks', 'security']
 
-- name: Install GenAI Toolbox (MCP Toolbox)
-  ansible.builtin.include_tasks:
-    file: genai_toolbox.yml
-  tags: ['genai_toolbox', 'ai', 'mcp']
-
 - name: Install act (GitHub Actions runner)
   ansible.builtin.include_tasks:
     file: act.yml

@@ -30,23 +30,21 @@
     - dfe_has_gnome
 
 - name: Set GNOME wallpaper (light mode)
-  ansible.builtin.command:
-    cmd: gsettings set org.gnome.desktop.background picture-uri "file:///usr/share/backgrounds/{{ dfe_wallpaper_name }}"
+  community.general.dconf:
+    key: "/org/gnome/desktop/background/picture-uri"
+    value: "'file:///usr/share/backgrounds/{{ dfe_wallpaper_name }}'"
+    state: present
   become: false
-  become_user: "{{ dfe_actual_user }}"
-  failed_when: false
-  changed_when: false
   when:
     - wallpaper_files.matched > 0
     - dfe_has_gnome
 
 - name: Set GNOME wallpaper (dark mode)
-  ansible.builtin.command:
-    cmd: gsettings set org.gnome.desktop.background picture-uri-dark "file:///usr/share/backgrounds/{{ dfe_wallpaper_name }}"
+  community.general.dconf:
+    key: "/org/gnome/desktop/background/picture-uri-dark"
+    value: "'file:///usr/share/backgrounds/{{ dfe_wallpaper_name }}'"
+    state: present
   become: false
-  become_user: "{{ dfe_actual_user }}"
-  failed_when: false
-  changed_when: false
   when:
     - wallpaper_files.matched > 0
     - dfe_has_gnome
