@@ -56,7 +56,7 @@ Restart when prompted. Hyper-V and security features need a reboot to activate.
 - **Office 365 Business** (Outlook, Word, Excel, PowerPoint, Teams) - optional with -IncludeM365
 - **Development Tools** (Git, PowerShell 7, Visual Studio Code, GitHub Desktop, WinMerge)
 - **Browsers** (Firefox, Chrome - you'll need to set default manually)
-- **Network Tools** (PuTTY, WinSCP, OpenVPN GUI, Royal TS, TigerVNC)
+- **Network Tools** (PuTTY, WinSCP, OpenVPN GUI, TigerVNC)
 - **Media & Utilities** (VLC, 7-Zip, OBS Studio, Paint.NET)
 - **Communication** (Slack)
 - **Cloud Storage** (Microsoft OneDrive)

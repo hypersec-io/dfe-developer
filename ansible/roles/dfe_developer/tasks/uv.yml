@@ -82,13 +82,6 @@
     path: "/tmp/uv-{{ uv_arch }}.tar.gz"
     state: absent
 
-- name: Install claude-monitor via UV tool
-  ansible.builtin.command: "{{ dfe_user_home }}/.cargo/bin/uv tool install claude-monitor"
-  become: false
-  args:
-    creates: "{{ dfe_user_home }}/.local/bin/claude-monitor"
-  failed_when: false
-
 - name: Display UV installation info
   ansible.builtin.debug:
     msg: |
@@ -99,6 +92,3 @@
         uv venv                      # Create virtual environment
         uv pip install <package>     # Install packages
       UV replaces: pip, pyenv, pipx, virtualenv
-
-      Additional tools installed:
-        claude-monitor - Claude API monitoring tool (via uv tool)

@@ -318,7 +318,7 @@ cd windows
 - **Development Tools** - Git, PowerShell 7, Visual Studio Code, GitHub Desktop, WinMerge
 - **Browsers** - Firefox, Chrome (manual default setting required)
 - **Office Suite** - Microsoft 365 Business (optional with -IncludeM365)
-- **Network Tools** - PuTTY, WinSCP, OpenVPN GUI, Royal TS, TigerVNC
+- **Network Tools** - PuTTY, WinSCP, OpenVPN GUI, TigerVNC
 - **Media & Utilities** - VLC, 7-Zip, OBS Studio, Paint.NET, PDFGear
 - **Communication** - Slack, Microsoft Teams (with M365)
 

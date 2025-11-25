@@ -293,7 +293,6 @@ SOFTWARE INSTALLED:
         - PuTTY
         - WinSCP
         - TigerVNC
-        - Royal TS (Remote Connection Manager)
     
     Utilities:
         - 7-Zip
@@ -994,7 +993,6 @@ $Packages = @(
     @{Name = "onedrive"; DisplayName = "Microsoft OneDrive"; Category = "Productivity"},
     @{Name = "putty"; DisplayName = "PuTTY"; Category = "Network"},
     @{Name = "winscp"; DisplayName = "WinSCP"; Category = "Network"},
-    @{Name = "royalts-v7-x64"; DisplayName = "Royal TS"; Category = "Network"},
     @{Name = "openvpn"; DisplayName = "OpenVPN GUI"; Category = "Network"},
     @{Name = "telnet"; DisplayName = "Telnet Client"; Category = "Network"},
     @{Name = "7zip"; DisplayName = "7-Zip"; Category = "Utility"},
@@ -1681,7 +1679,6 @@ $commonDesktopIcons = @(
     "*OBS*",
     "*PuTTY*",
     "*WinSCP*",
-    "*Royal TS*",
     "*SourceTree*",
     "*Visual Studio Code*",
     "*PDFGear*",
@@ -2425,7 +2422,7 @@ Write-Log "Manual actions required:" "Yellow"
 Write-Log "  1. Set default browser: Settings > Apps > Default apps > Firefox or Chrome" "White"
 Write-Log "  2. Sign into Microsoft 365 (if installed)" "White"
 Write-Log "  3. Configure Slack workspace" "White"
-Write-Log "  4. Configure GitHub Desktop and Royal TS with your accounts" "White"
+Write-Log "  4. Configure GitHub Desktop with your account" "White"
 Write-Log "  5. Create Linux VM(s) in Hyper-V Manager for development work" "White"
 
 Write-Log ""
