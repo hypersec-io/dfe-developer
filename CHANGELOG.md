@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.5](https://github.com/hypersec-io/dfe-developer/compare/v2.5.4...v2.5.5) (2025-12-05)
+
+
+### Bug Fixes
+
+* Add RDP role, GNOME defaults, package lock protection, and CI workflow ([38f293a](https://github.com/hypersec-io/dfe-developer/commit/38f293ac99b501f606dfc4e0b76df7d3d0dbc3ea))
+
 ## [2.5.4](https://github.com/hypersec-io/dfe-developer/compare/v2.5.3...v2.5.4) (2025-11-26)
 
 
