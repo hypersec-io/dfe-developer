@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.7](https://github.com/hypersec-io/dfe-developer/compare/v2.5.6...v2.5.7) (2025-12-05)
+
+
+### Bug Fixes
+
+* Fix Dash to Panel extension permissions after extraction ([8ec0f27](https://github.com/hypersec-io/dfe-developer/commit/8ec0f2747cefbb3e7be5107c31a3dca0e11796ae))
+
 ## [2.5.6](https://github.com/hypersec-io/dfe-developer/compare/v2.5.5...v2.5.6) (2025-12-05)
 
 
