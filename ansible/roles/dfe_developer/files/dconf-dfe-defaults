@@ -1,0 +1,34 @@
+# DFE Developer GNOME defaults
+# Deployed to /etc/dconf/db/local.d/00-dfe-defaults
+# Run 'dconf update' after modifying
+
+[org/gnome/shell]
+# Enable user extensions globally
+disable-user-extensions=false
+
+# Extensions to enable by default
+enabled-extensions=['system-monitor@gnome-shell-extensions.gcampax.github.com', 'appindicatorsupport@rgcjonas.gmail.com', 'dash-to-panel@jderose9.github.com', 'ubuntu-appindicators@ubuntu.com']
+
+# Extensions to disable by default (Ubuntu dock conflicts with Dash to Panel)
+disabled-extensions=['ubuntu-dock@ubuntu.com', 'workspace-indicator@gnome-shell-extensions.gcampax.github.com', 'apps-menu@gnome-shell-extensions.gcampax.github.com']
+
+[org/gnome/shell/extensions/system-monitor]
+# System monitor configuration
+show-cpu=true
+show-memory=true
+show-download=false
+show-upload=false
+show-swap=false
+
+[org/gnome/shell/extensions/dash-to-panel]
+# Dash to Panel configuration
+trans-use-custom-opacity=true
+trans-panel-opacity=0.40000000000000002
+
+[org/gnome/desktop/wm/preferences]
+# Window buttons: minimize, maximize, close on right side
+button-layout=':minimize,maximize,close'
+
+[org/gnome/desktop/interface]
+# Prefer dark theme
+color-scheme='prefer-dark'

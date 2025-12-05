@@ -16,7 +16,7 @@
     - ../../roles/dfe_developer
     - ../../roles/dfe_developer_core
     - ../../roles/dfe_vm_optimizer
-    - ../../roles/dfe_rdp_optimizer
+    - ../../roles/dfe_rdp
     - ../../roles/dfe_system_cleanup
 
 - name: TEST 2 - Direct Ansible on Ubuntu
@@ -26,7 +26,7 @@
     - ../../roles/dfe_developer
     - ../../roles/dfe_developer_core
     - ../../roles/dfe_vm_optimizer
-    - ../../roles/dfe_rdp_optimizer
+    - ../../roles/dfe_rdp
     - ../../roles/dfe_system_cleanup
 
 - name: Reset VMs for install.sh tests

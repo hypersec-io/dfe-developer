@@ -7,6 +7,23 @@
     file: macos.yml
   when: ansible_distribution == 'MacOSX'
 
+# Wait for DNF lock before Fedora updates (auto-updates may have started during playbook)
+- name: Wait for DNF lock to be released (Fedora cleanup)
+  ansible.builtin.shell: |
+    while pgrep -x dnf >/dev/null 2>&1 || [ -f /var/run/dnf.pid ]; do
+      echo "Waiting for DNF lock..."
+      sleep 5
+    done
+    echo "DNF lock released"
+  args:
+    executable: /bin/bash
+  register: dnf_lock_wait
+  changed_when: false
+  when: ansible_distribution == 'Fedora'
+  retries: 30
+  delay: 10
+  until: dnf_lock_wait.rc == 0
+
 - name: Update all packages (Fedora)
   ansible.builtin.dnf:
     name: "*"
@@ -23,6 +40,23 @@
   ansible.builtin.command: dnf clean all
   changed_when: false
   when: ansible_distribution == 'Fedora'
+
+# Wait for APT lock before Ubuntu updates (auto-updates may have started during playbook)
+- name: Wait for APT lock to be released (Ubuntu cleanup)
+  ansible.builtin.shell: |
+    while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 || fuser /var/lib/apt/lists/lock >/dev/null 2>&1; do
+      echo "Waiting for APT lock..."
+      sleep 5
+    done
+    echo "APT lock released"
+  args:
+    executable: /bin/bash
+  register: apt_lock_wait
+  changed_when: false
+  when: ansible_distribution == 'Ubuntu'
+  retries: 30
+  delay: 10
+  until: apt_lock_wait.rc == 0
 
 - name: Update all packages (Ubuntu)
   ansible.builtin.apt:
@@ -60,6 +94,34 @@
 - name: Display cleanup status
   ansible.builtin.debug:
     msg: "System updated and cleaned successfully"
+
+# Re-enable automatic updates (stopped in pre_tasks to prevent lock conflicts)
+- name: Re-enable apt-daily timers (Ubuntu)
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop:
+    - apt-daily.timer
+    - apt-daily-upgrade.timer
+  when: ansible_distribution == 'Ubuntu'
+  failed_when: false
+
+- name: Re-enable unattended-upgrades service (Ubuntu)
+  ansible.builtin.systemd:
+    name: unattended-upgrades
+    state: started
+    enabled: true
+  when: ansible_distribution == 'Ubuntu'
+  failed_when: false
+
+- name: Re-enable dnf-automatic timer (Fedora)
+  ansible.builtin.systemd:
+    name: dnf-automatic.timer
+    state: started
+    enabled: true
+  when: ansible_distribution == 'Fedora'
+  failed_when: false
 
 - name: Remove temporary askpass script (macOS)
   ansible.builtin.file:

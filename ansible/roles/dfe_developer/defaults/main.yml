@@ -17,6 +17,10 @@ dfe_min_ubuntu_version: "24.04"
 # Ghostty installation
 dfe_install_ghostty: true
 
+# GNOME Shell customizations (Dash to Panel, system monitor, dark theme, etc.)
+# Set to false to keep vanilla Ubuntu/Fedora GNOME experience
+dfe_customize_gnome_shell: true
+
 # Docker configuration
 dfe_docker_users:
   - "{{ ansible_user_id }}"

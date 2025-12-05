@@ -1,6 +1,7 @@
 ---
 # Bootstrap tasks - run once at the start
 # Sets up common variables and validates platform
+# NOTE: Package manager lock wait is handled in playbooks/main.yml pre_tasks
 
 - name: Validate supported distribution
   ansible.builtin.fail:

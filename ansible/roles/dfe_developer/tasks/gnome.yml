@@ -71,10 +71,9 @@
       become: false
       changed_when: false
 
-    - name: Install Dash to Panel extension via gext
+    - name: Install Dash to Panel extension via gext (to system-wide location)
       ansible.builtin.shell:
-        cmd: "{{ dfe_user_home }}/.local/bin/gext install dash-to-panel@jderose9.github.com"
-      become: false
+        cmd: "{{ dfe_user_home }}/.local/bin/gext install --system dash-to-panel@jderose9.github.com"
       register: gext_install
       changed_when: "'is now installed' in gext_install.stdout or 'is already installed' not in gext_install.stdout"
       failed_when: false  # Don't fail if already installed
@@ -82,10 +81,53 @@
   when: ansible_distribution == 'Ubuntu'
 
 # ============================================================================
-# CONFIGURE GNOME SHELL EXTENSIONS
+# SYSTEM-WIDE DCONF DEFAULTS (applies to ALL users)
 # ============================================================================
+# This sets defaults that new users get automatically.
+# Users can still override these in their own dconf settings.
 
-- name: Configure GNOME Shell extensions
+- name: Configure system-wide GNOME defaults
+  block:
+    - name: Create dconf local.d directory
+      ansible.builtin.file:
+        path: /etc/dconf/db/local.d
+        state: directory
+        mode: '0755'
+
+    - name: Create dconf profile directory
+      ansible.builtin.file:
+        path: /etc/dconf/profile
+        state: directory
+        mode: '0755'
+
+    - name: Deploy dconf profile for users
+      ansible.builtin.copy:
+        src: dconf-profile-user
+        dest: /etc/dconf/profile/user
+        mode: '0644'
+
+    - name: Deploy DFE GNOME defaults
+      ansible.builtin.copy:
+        src: dconf-dfe-defaults
+        dest: /etc/dconf/db/local.d/00-dfe-defaults
+        mode: '0644'
+      register: dconf_defaults
+
+    - name: Update dconf database
+      ansible.builtin.command:
+        cmd: dconf update
+      when: dconf_defaults.changed
+
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - dfe_customize_gnome_shell | default(true) | bool
+
+# ============================================================================
+# CONFIGURE ANSIBLE USER (for immediate effect without re-login)
+# ============================================================================
+# Apply same settings to the Ansible user so they take effect immediately.
+
+- name: Configure GNOME Shell extensions for Ansible user
   block:
     - name: Enable global extensions toggle
       community.general.dconf:
@@ -97,17 +139,16 @@
     - name: Enable GNOME Shell extensions
       community.general.dconf:
         key: "/org/gnome/shell/enabled-extensions"
-        value: "['system-monitor@gnome-shell-extensions.gcampax.github.com', 'appindicatorsupport@rgcjonas.gmail.com', 'dash-to-panel@jderose9.github.com']"
+        value: "['system-monitor@gnome-shell-extensions.gcampax.github.com', 'appindicatorsupport@rgcjonas.gmail.com', 'dash-to-panel@jderose9.github.com', 'ubuntu-appindicators@ubuntu.com']"
         state: present
       become: false
 
     - name: Disable Ubuntu Dock (conflicts with Dash to Panel)
       community.general.dconf:
         key: "/org/gnome/shell/disabled-extensions"
-        value: "['ubuntu-dock@ubuntu.com']"
+        value: "['ubuntu-dock@ubuntu.com', 'workspace-indicator@gnome-shell-extensions.gcampax.github.com', 'apps-menu@gnome-shell-extensions.gcampax.github.com']"
         state: present
       become: false
-      when: ansible_distribution == 'Ubuntu'
 
     - name: Configure System Monitor extension - show CPU
       community.general.dconf:
@@ -151,13 +192,6 @@
         state: present
       become: false
 
-    - name: Configure Dash to Panel - primary monitor
-      community.general.dconf:
-        key: "/org/gnome/shell/extensions/dash-to-panel/primary-monitor"
-        value: "'MetaVendor-0x000001'"
-        state: present
-      become: false
-
     - name: Configure Dash to Panel - transparency custom opacity
       community.general.dconf:
         key: "/org/gnome/shell/extensions/dash-to-panel/trans-use-custom-opacity"
@@ -172,5 +206,14 @@
         state: present
       become: false
 
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+    - name: Set dark theme preference
+      community.general.dconf:
+        key: "/org/gnome/desktop/interface/color-scheme"
+        value: "'prefer-dark'"
+        state: present
+      become: false
+
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - dfe_customize_gnome_shell | default(true) | bool
 

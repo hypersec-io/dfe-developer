@@ -1,0 +1,70 @@
+# Project:      DFE Developer
+# File:         .github/workflows/semantic-release.yml
+# Purpose:      Create version tags using semantic-release
+# License:      MIT
+# Copyright:    (c) 2025 HyperSec Pty Ltd
+
+name: Semantic Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release:
+    name: Create Version and Tag
+    runs-on: ${{ vars.GH_RUNNER_DEFAULT || 'ubuntu-latest' }}
+
+    steps:
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install semantic-release
+        run: |
+          npm install -g \
+            semantic-release@latest \
+            @semantic-release/changelog@latest \
+            @semantic-release/commit-analyzer@latest \
+            @semantic-release/release-notes-generator@latest \
+            @semantic-release/exec@latest \
+            @semantic-release/git@latest \
+            @semantic-release/github@latest \
+            conventional-changelog-conventionalcommits@latest
+
+      - name: Run semantic-release
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          semantic-release
+
+          # Check if a version was created
+          if [ -f VERSION ]; then
+            VERSION=$(cat VERSION)
+            echo "Released version: ${VERSION}"
+          else
+            echo "No version created (no releasable commits)"
+          fi

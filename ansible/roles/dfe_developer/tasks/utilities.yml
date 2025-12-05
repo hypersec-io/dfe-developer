@@ -44,18 +44,18 @@
       - fzf
       - ripgrep
       - fd-find
+      - miller                # data processing (mlr command)
+      - rsync
       - httpie
       - tmux
       - htop
       - lsof
       - tree
-      - wget
       - bind-utils
       - net-tools
       - traceroute
       - nmap
       - telnet
-      - nc
       - whois
       - ShellCheck
       - postgresql
@@ -72,6 +72,9 @@
       - fzf
       - ripgrep
       - fd-find
+      - sd                    # sane sed replacement
+      - miller                # data processing (mlr command)
+      - rsync
       - httpie
       - tmux
       - htop
@@ -100,6 +103,26 @@
     mode: '0755'
   when: ansible_distribution in ['Fedora', 'Ubuntu']
 
+# sd - sane sed replacement (binary download for Fedora, apt for Ubuntu)
+- name: Get latest sd version
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/chmln/sd/releases/latest
+    return_content: true
+  register: sd_release
+  when: ansible_distribution == 'Fedora'
+
+- name: Download and extract sd (Fedora)
+  ansible.builtin.unarchive:
+    src: "https://github.com/chmln/sd/releases/download/{{ sd_release.json.tag_name }}/sd-{{ sd_release.json.tag_name }}-x86_64-unknown-linux-gnu.tar.gz"
+    dest: /usr/local/bin
+    remote_src: true
+    extra_opts:
+      - --strip-components=1
+      - --wildcards
+      - "*/sd"
+    mode: '0755'
+  when: ansible_distribution == 'Fedora'
+
 # macOS - Install utilities via Homebrew
 - name: Install development utilities (macOS)
   community.general.homebrew:
@@ -109,6 +132,9 @@
       - fzf
       - ripgrep
       - fd
+      - sd                    # sane sed replacement
+      - miller                # data processing (mlr command)
+      - rsync
       - httpie
       - tmux
       - htop
@@ -143,3 +169,17 @@
   when:
     - ansible_distribution in ['Fedora', 'Ubuntu']
     - dfe_has_gnome | default(false)
+
+# ============================================================================
+# DFE ADMIN TOOLS
+# ============================================================================
+
+# add-dev-user - Script to add new developer users with full environment access
+- name: Install add-dev-user script
+  ansible.builtin.copy:
+    src: add-dev-user
+    dest: /usr/local/sbin/add-dev-user
+    owner: root
+    group: root
+    mode: '0755'
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
