@@ -80,6 +80,13 @@
         remote_src: true
       when: dash_to_panel_download.changed
 
+    - name: Fix Dash to Panel extension permissions
+      ansible.builtin.file:
+        path: /usr/share/gnome-shell/extensions/dash-to-panel@jderose9.github.com
+        state: directory
+        recurse: true
+        mode: 'u=rwX,g=rX,o=rX'
+
     - name: Clean up Dash to Panel zip
       ansible.builtin.file:
         path: /tmp/dash-to-panel.zip
