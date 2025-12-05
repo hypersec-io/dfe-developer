@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.6](https://github.com/hypersec-io/dfe-developer/compare/v2.5.5...v2.5.6) (2025-12-05)
+
+
+### Bug Fixes
+
+* Fix Dash to Panel and wallpaper installation on Ubuntu ([8b3432f](https://github.com/hypersec-io/dfe-developer/commit/8b3432f644aa7fafd631a232b4b60312193a3af6))
+
 ## [2.5.5](https://github.com/hypersec-io/dfe-developer/compare/v2.5.4...v2.5.5) (2025-12-05)
 
 
