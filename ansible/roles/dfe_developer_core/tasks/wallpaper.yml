@@ -1,32 +1,22 @@
 ---
-# Optional wallpaper installation
-# Checks for default-background.{svg,png,jpg} and applies it if found
+# Default wallpaper installation
+# Uses default-background.svg from role's files directory
 
-- name: Check for wallpaper files
-  ansible.builtin.find:
-    paths: "{{ playbook_dir }}"
-    patterns:
-      - 'default-background.svg'
-      - 'default-background.png'
-      - 'default-background.jpg'
-      - 'default-background.jpeg'
-  register: wallpaper_files
-  delegate_to: localhost
-  become: false
-
-- name: Set wallpaper file path if found
+- name: Set wallpaper filename
   ansible.builtin.set_fact:
-    dfe_wallpaper_file: "{{ wallpaper_files.files[0].path }}"
-    dfe_wallpaper_name: "{{ wallpaper_files.files[0].path | basename }}"
-  when: wallpaper_files.matched > 0
+    dfe_wallpaper_name: "default-background.svg"
 
-- name: Copy wallpaper to system backgrounds directory
+# ============================================================================
+# LINUX - Copy wallpaper and set via dconf
+# ============================================================================
+
+- name: Copy wallpaper to system backgrounds directory (Linux)
   ansible.builtin.copy:
-    src: "{{ dfe_wallpaper_file }}"
+    src: "{{ dfe_wallpaper_name }}"
     dest: "/usr/share/backgrounds/{{ dfe_wallpaper_name }}"
     mode: '0644'
   when:
-    - wallpaper_files.matched > 0
+    - ansible_distribution in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
 
 - name: Set GNOME wallpaper (light mode)
@@ -36,7 +26,7 @@
     state: present
   become: false
   when:
-    - wallpaper_files.matched > 0
+    - ansible_distribution in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
 
 - name: Set GNOME wallpaper (dark mode)
@@ -46,12 +36,13 @@
     state: present
   become: false
   when:
-    - wallpaper_files.matched > 0
+    - ansible_distribution in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
 
-- name: Display wallpaper status
+- name: Display wallpaper status (Linux)
   ansible.builtin.debug:
-    msg: "{{ 'Wallpaper set: ' + dfe_wallpaper_name if wallpaper_files.matched > 0 else 'No wallpaper file found - skipping' }}"
+    msg: "Wallpaper set: {{ dfe_wallpaper_name }}"
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
 
 # ============================================================================
 # macOS - Install desktoppr and set wallpaper
@@ -63,19 +54,15 @@
     state: present
   become: false
   environment: "{{ homebrew_env }}"
-  when:
-    - ansible_distribution == 'MacOSX'
-    - wallpaper_files.matched > 0
+  when: ansible_distribution == 'MacOSX'
 
 - name: Copy wallpaper to user Pictures directory (macOS)
   ansible.builtin.copy:
-    src: "{{ dfe_wallpaper_file }}"
+    src: "{{ dfe_wallpaper_name }}"
     dest: "{{ dfe_user_home }}/Pictures/{{ dfe_wallpaper_name }}"
     mode: '0644'
   become: false
-  when:
-    - ansible_distribution == 'MacOSX'
-    - wallpaper_files.matched > 0
+  when: ansible_distribution == 'MacOSX'
 
 - name: Set macOS wallpaper using desktoppr
   ansible.builtin.command:
@@ -83,6 +70,9 @@
   environment: "{{ homebrew_env }}"
   become: false
   changed_when: false
-  when:
-    - ansible_distribution == 'MacOSX'
-    - wallpaper_files.matched > 0
+  when: ansible_distribution == 'MacOSX'
+
+- name: Display wallpaper status (macOS)
+  ansible.builtin.debug:
+    msg: "Wallpaper set: {{ dfe_wallpaper_name }}"
+  when: ansible_distribution == 'MacOSX'

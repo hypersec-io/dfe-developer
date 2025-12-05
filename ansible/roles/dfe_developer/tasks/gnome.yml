@@ -43,7 +43,7 @@
           - firefox
           - gnome-shell-extensions
           - gnome-shell-extension-manager
-          - pipx
+          - unzip
         state: present
 
     - name: Install System Monitor extension (Ubuntu)
@@ -58,25 +58,32 @@
         state: present
       failed_when: false  # May not be available on all Ubuntu versions
 
-    - name: Install gnome-extensions-cli via pipx
-      ansible.builtin.command:
-        cmd: pipx install gnome-extensions-cli --include-deps
-      args:
-        creates: "{{ dfe_user_home }}/.local/bin/gext"
-      become: false
+    # Download Dash to Panel directly from extensions.gnome.org
+    # GNOME 46 compatible version (shell-version=46)
+    - name: Create Dash to Panel extension directory
+      ansible.builtin.file:
+        path: /usr/share/gnome-shell/extensions/dash-to-panel@jderose9.github.com
+        state: directory
+        mode: '0755'
 
-    - name: Ensure pipx bin directory is in PATH
-      ansible.builtin.command:
-        cmd: pipx ensurepath
-      become: false
-      changed_when: false
+    - name: Download Dash to Panel extension
+      ansible.builtin.get_url:
+        url: "https://extensions.gnome.org/extension-data/dash-to-paneljderose9.github.com.v66.shell-extension.zip"
+        dest: /tmp/dash-to-panel.zip
+        mode: '0644'
+      register: dash_to_panel_download
 
-    - name: Install Dash to Panel extension via gext (to system-wide location)
-      ansible.builtin.shell:
-        cmd: "{{ dfe_user_home }}/.local/bin/gext install --system dash-to-panel@jderose9.github.com"
-      register: gext_install
-      changed_when: "'is now installed' in gext_install.stdout or 'is already installed' not in gext_install.stdout"
-      failed_when: false  # Don't fail if already installed
+    - name: Extract Dash to Panel extension
+      ansible.builtin.unarchive:
+        src: /tmp/dash-to-panel.zip
+        dest: /usr/share/gnome-shell/extensions/dash-to-panel@jderose9.github.com
+        remote_src: true
+      when: dash_to_panel_download.changed
+
+    - name: Clean up Dash to Panel zip
+      ansible.builtin.file:
+        path: /tmp/dash-to-panel.zip
+        state: absent
 
   when: ansible_distribution == 'Ubuntu'
 
