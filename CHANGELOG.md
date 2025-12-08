@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.8](https://github.com/hypersec-io/dfe-developer/compare/v2.5.7...v2.5.8) (2025-12-08)
+
+
+### Bug Fixes
+
+* Configure Ubuntu Dock as Windows-like taskbar on Ubuntu 24.04 ([3fb65e6](https://github.com/hypersec-io/dfe-developer/commit/3fb65e6355ceb7423a1f39a3d1e3852c685d9277))
+
 ## [2.5.7](https://github.com/hypersec-io/dfe-developer/compare/v2.5.6...v2.5.7) (2025-12-05)
 
 
