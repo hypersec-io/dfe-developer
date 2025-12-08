@@ -58,39 +58,9 @@
         state: present
       failed_when: false  # May not be available on all Ubuntu versions
 
-    # Download Dash to Panel directly from extensions.gnome.org
-    # GNOME 46 compatible version (shell-version=46)
-    - name: Create Dash to Panel extension directory
-      ansible.builtin.file:
-        path: /usr/share/gnome-shell/extensions/dash-to-panel@jderose9.github.com
-        state: directory
-        mode: '0755'
-
-    - name: Download Dash to Panel extension
-      ansible.builtin.get_url:
-        url: "https://extensions.gnome.org/extension-data/dash-to-paneljderose9.github.com.v66.shell-extension.zip"
-        dest: /tmp/dash-to-panel.zip
-        mode: '0644'
-      register: dash_to_panel_download
-
-    - name: Extract Dash to Panel extension
-      ansible.builtin.unarchive:
-        src: /tmp/dash-to-panel.zip
-        dest: /usr/share/gnome-shell/extensions/dash-to-panel@jderose9.github.com
-        remote_src: true
-      when: dash_to_panel_download.changed
-
-    - name: Fix Dash to Panel extension permissions
-      ansible.builtin.file:
-        path: /usr/share/gnome-shell/extensions/dash-to-panel@jderose9.github.com
-        state: directory
-        recurse: true
-        mode: 'u=rwX,g=rX,o=rX'
-
-    - name: Clean up Dash to Panel zip
-      ansible.builtin.file:
-        path: /tmp/dash-to-panel.zip
-        state: absent
+    # NOTE: Dash to Panel extension has compatibility issues with Ubuntu 24.04/GNOME 46
+    # The extension system shows "already installed...will not be loaded" errors
+    # Instead, we configure Ubuntu Dock to behave more like a Windows-style taskbar
 
   when: ansible_distribution == 'Ubuntu'
 
@@ -153,14 +123,14 @@
     - name: Enable GNOME Shell extensions
       community.general.dconf:
         key: "/org/gnome/shell/enabled-extensions"
-        value: "['system-monitor@gnome-shell-extensions.gcampax.github.com', 'appindicatorsupport@rgcjonas.gmail.com', 'dash-to-panel@jderose9.github.com', 'ubuntu-appindicators@ubuntu.com']"
+        value: "['system-monitor@gnome-shell-extensions.gcampax.github.com', 'appindicatorsupport@rgcjonas.gmail.com', 'dash-to-panel@jderose9.github.com', 'ubuntu-appindicators@ubuntu.com', 'ubuntu-dock@ubuntu.com']"
         state: present
       become: false
 
-    - name: Disable Ubuntu Dock (conflicts with Dash to Panel)
+    - name: Disable unused extensions
       community.general.dconf:
         key: "/org/gnome/shell/disabled-extensions"
-        value: "['ubuntu-dock@ubuntu.com', 'workspace-indicator@gnome-shell-extensions.gcampax.github.com', 'apps-menu@gnome-shell-extensions.gcampax.github.com']"
+        value: "['workspace-indicator@gnome-shell-extensions.gcampax.github.com', 'apps-menu@gnome-shell-extensions.gcampax.github.com']"
         state: present
       become: false
 
@@ -199,24 +169,111 @@
         state: present
       become: false
 
+    # -------------------------------------------------------------------------
+    # Ubuntu Dock configuration (Windows-like taskbar)
+    # Only applies on Ubuntu where dash-to-panel doesn't work
+    # -------------------------------------------------------------------------
+
+    - name: Configure Ubuntu Dock - position at bottom
+      community.general.dconf:
+        key: "/org/gnome/shell/extensions/dash-to-dock/dock-position"
+        value: "'BOTTOM'"
+        state: present
+      become: false
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Configure Ubuntu Dock - extend to full width
+      community.general.dconf:
+        key: "/org/gnome/shell/extensions/dash-to-dock/extend-height"
+        value: "true"
+        state: present
+      become: false
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Configure Ubuntu Dock - always visible (no auto-hide)
+      community.general.dconf:
+        key: "/org/gnome/shell/extensions/dash-to-dock/dock-fixed"
+        value: "true"
+        state: present
+      become: false
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Configure Ubuntu Dock - disable autohide
+      community.general.dconf:
+        key: "/org/gnome/shell/extensions/dash-to-dock/autohide"
+        value: "false"
+        state: present
+      become: false
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Configure Ubuntu Dock - disable intellihide
+      community.general.dconf:
+        key: "/org/gnome/shell/extensions/dash-to-dock/intellihide"
+        value: "false"
+        state: present
+      become: false
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Configure Ubuntu Dock - click to minimize
+      community.general.dconf:
+        key: "/org/gnome/shell/extensions/dash-to-dock/click-action"
+        value: "'minimize'"
+        state: present
+      become: false
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Configure Ubuntu Dock - running indicator style
+      community.general.dconf:
+        key: "/org/gnome/shell/extensions/dash-to-dock/running-indicator-style"
+        value: "'DOTS'"
+        state: present
+      become: false
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Configure Ubuntu Dock - icon size
+      community.general.dconf:
+        key: "/org/gnome/shell/extensions/dash-to-dock/dash-max-icon-size"
+        value: "48"
+        state: present
+      become: false
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Configure Ubuntu Dock - transparency
+      community.general.dconf:
+        key: "/org/gnome/shell/extensions/dash-to-dock/transparency-mode"
+        value: "'FIXED'"
+        state: present
+      become: false
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Configure Ubuntu Dock - background opacity
+      community.general.dconf:
+        key: "/org/gnome/shell/extensions/dash-to-dock/background-opacity"
+        value: "0.8"
+        state: present
+      become: false
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Configure Ubuntu Dock - hide trash
+      community.general.dconf:
+        key: "/org/gnome/shell/extensions/dash-to-dock/show-trash"
+        value: "false"
+        state: present
+      become: false
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Configure Ubuntu Dock - hide mounts
+      community.general.dconf:
+        key: "/org/gnome/shell/extensions/dash-to-dock/show-mounts"
+        value: "false"
+        state: present
+      become: false
+      when: ansible_distribution == 'Ubuntu'
+
     - name: Enable window title bar buttons (minimize, maximize, close)
       community.general.dconf:
         key: "/org/gnome/desktop/wm/preferences/button-layout"
         value: "':minimize,maximize,close'"
-        state: present
-      become: false
-
-    - name: Configure Dash to Panel - transparency custom opacity
-      community.general.dconf:
-        key: "/org/gnome/shell/extensions/dash-to-panel/trans-use-custom-opacity"
-        value: "true"
-        state: present
-      become: false
-
-    - name: Configure Dash to Panel - panel opacity
-      community.general.dconf:
-        key: "/org/gnome/shell/extensions/dash-to-panel/trans-panel-opacity"
-        value: "0.4"
         state: present
       become: false
 
