@@ -15,8 +15,11 @@
   when: ansible_distribution == 'Fedora'
 
 # ============================================================================
-# UBUNTU - Latest Git from PPA (modern signed-by method)
+# UBUNTU - Latest Git from PPA
 # ============================================================================
+# Note: The PPA uses a weak RSA-1024 signing key which causes apt warnings.
+# This is a Launchpad infrastructure issue - the PPA maintainer hasn't updated
+# their signing key yet. We keep the PPA for latest git (2.52 vs 2.43 in repos).
 
 # Clean up old PPA configuration if exists (migration from legacy method)
 - name: Remove old git-core PPA configuration
@@ -28,12 +31,6 @@
     - git-core-ubuntu-ppa-jammy.list
     - ppa_git_core_ppa.list
   when: ansible_distribution == 'Ubuntu'
-
-- name: Update APT cache after cleanup
-  ansible.builtin.apt:
-    update_cache: true
-  when: ansible_distribution == 'Ubuntu'
-  failed_when: false
 
 - name: Install latest Git (Ubuntu)
   block:

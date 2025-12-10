@@ -37,6 +37,8 @@
 - name: Install Git and version control tools
   ansible.builtin.include_tasks:
     file: git.yml
+    apply:
+      tags: ['git']
   tags: ['git']
 
 - name: Install cloud tools
