@@ -171,6 +171,32 @@
     - dfe_has_gnome | default(false)
 
 # ============================================================================
+# DISABLE UBUNTU PRO/ESM ADVERTISING (Ubuntu only)
+# ============================================================================
+# Removes promotional messages from apt output and MOTD
+
+- name: Disable Ubuntu Pro advertising
+  block:
+    - name: Disable apt ESM hook (removes apt upgrade messages)
+      ansible.builtin.file:
+        path: /etc/apt/apt.conf.d/20apt-esm-hook.conf
+        state: absent
+
+    - name: Disable ESM MOTD message
+      ansible.builtin.file:
+        path: /etc/update-motd.d/91-contract-ua-esm-status
+        state: absent
+
+    - name: Disable Ubuntu Pro apt news
+      ansible.builtin.command:
+        cmd: pro config set apt_news=false
+      register: pro_apt_news
+      changed_when: "'Successfully' in pro_apt_news.stdout"
+      failed_when: false
+
+  when: ansible_distribution == 'Ubuntu'
+
+# ============================================================================
 # DFE ADMIN TOOLS
 # ============================================================================
 
