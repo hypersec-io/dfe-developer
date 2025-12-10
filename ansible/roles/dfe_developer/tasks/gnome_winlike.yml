@@ -154,6 +154,20 @@
     state: present
   become: false
 
+- name: Configure Dash to Panel - enable custom opacity
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/dash-to-panel/trans-use-custom-opacity"
+    value: "true"
+    state: present
+  become: false
+
+- name: Configure Dash to Panel - panel transparency (60% opacity)
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/dash-to-panel/trans-panel-opacity"
+    value: "0.6"
+    state: present
+  become: false
+
 # ============================================================================
 # WALLPAPER DEPLOYMENT (system-wide, safe from apt/dnf updates)
 # ============================================================================
