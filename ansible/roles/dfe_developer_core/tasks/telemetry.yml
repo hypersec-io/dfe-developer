@@ -1,0 +1,112 @@
+---
+# Disable telemetry and advertising for corporate deployments
+# Removes promotional messages, crash reporting, and telemetry for privacy
+# and to prevent data leakage in corporate environments.
+
+# -----------------------------------------------------------------------------
+# UBUNTU: Disable Ubuntu Pro/ESM advertising and telemetry
+# -----------------------------------------------------------------------------
+- name: Disable Ubuntu advertising and telemetry
+  block:
+    # --- Ubuntu Pro/ESM Advertising ---
+    - name: Disable apt ESM hook (removes apt upgrade messages)
+      ansible.builtin.file:
+        path: /etc/apt/apt.conf.d/20apt-esm-hook.conf
+        state: absent
+
+    - name: Disable ESM MOTD message
+      ansible.builtin.file:
+        path: /etc/update-motd.d/91-contract-ua-esm-status
+        state: absent
+
+    - name: Disable Ubuntu Pro apt news
+      ansible.builtin.command:
+        cmd: pro config set apt_news=false
+      register: pro_apt_news
+      changed_when: "'Successfully' in pro_apt_news.stdout"
+      failed_when: false
+
+    # --- MOTD Advertising (Canonical news/ads) ---
+    - name: Disable MOTD news fetching
+      ansible.builtin.lineinfile:
+        path: /etc/default/motd-news
+        regexp: '^ENABLED='
+        line: 'ENABLED=0'
+        create: true
+        mode: '0644'
+
+    # --- Apport (crash reporting to Canonical) ---
+    - name: Disable Apport crash reporting
+      ansible.builtin.lineinfile:
+        path: /etc/default/apport
+        regexp: '^enabled='
+        line: 'enabled=0'
+
+    - name: Stop and disable Apport service
+      ansible.builtin.systemd:
+        name: apport
+        state: stopped
+        enabled: false
+      failed_when: false
+
+    # --- Whoopsie (error reporting daemon) ---
+    - name: Stop and disable Whoopsie error reporting
+      ansible.builtin.systemd:
+        name: whoopsie
+        state: stopped
+        enabled: false
+      failed_when: false
+
+    # --- Ubuntu Report (first-run telemetry) ---
+    - name: Opt out of Ubuntu Report telemetry
+      ansible.builtin.command:
+        cmd: ubuntu-report send no
+      register: ubuntu_report
+      changed_when: ubuntu_report.rc == 0
+      failed_when: false
+
+  when: ansible_distribution == 'Ubuntu'
+
+# -----------------------------------------------------------------------------
+# FEDORA: Disable ABRT and telemetry
+# -----------------------------------------------------------------------------
+- name: Disable Fedora telemetry
+  block:
+    # --- ABRT (crash reporting to Red Hat) ---
+    - name: Disable ABRT crash reporting services
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        state: stopped
+        enabled: false
+      loop:
+        - abrt-journal-core
+        - abrt-oops
+        - abrt-xorg
+        - abrt-vmcore
+        - abrt-pstoreoops
+      failed_when: false
+
+  when: ansible_distribution == 'Fedora'
+
+# -----------------------------------------------------------------------------
+# GNOME: Disable desktop telemetry (both distros)
+# -----------------------------------------------------------------------------
+- name: Disable GNOME telemetry
+  block:
+    - name: Disable GNOME problem reporting
+      community.general.dconf:
+        key: "/org/gnome/desktop/privacy/report-technical-problems"
+        value: "false"
+        state: present
+      become: false
+
+    - name: Disable GNOME software usage stats
+      community.general.dconf:
+        key: "/org/gnome/desktop/privacy/send-software-usage-stats"
+        value: "false"
+        state: present
+      become: false
+
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - dfe_has_gnome | default(false)

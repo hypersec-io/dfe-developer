@@ -67,3 +67,10 @@
   ansible.builtin.include_tasks:
     file: wallpaper.yml
   tags: ['wallpaper']
+
+- name: Disable telemetry and advertising
+  ansible.builtin.include_tasks:
+    file: telemetry.yml
+    apply:
+      tags: ['telemetry']
+  tags: ['telemetry']
