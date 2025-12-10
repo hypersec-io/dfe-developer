@@ -92,7 +92,9 @@
     apply:
       tags: ['winlike']
   tags: ['winlike', 'never']
-  when: dfe_has_gnome | default(false)
+  when:
+    - dfe_has_gnome | default(false)
+    - "'winlike' in ansible_run_tags"
 
 - name: Apply macOS-like GNOME configuration
   ansible.builtin.include_tasks:
@@ -100,7 +102,9 @@
     apply:
       tags: ['maclike']
   tags: ['maclike', 'never']
-  when: dfe_has_gnome | default(false)
+  when:
+    - dfe_has_gnome | default(false)
+    - "'maclike' in ansible_run_tags"
 
 - name: Configure system-wide GNOME defaults (winlike)
   block:
@@ -138,6 +142,7 @@
   when:
     - dfe_has_gnome | default(false)
     - ansible_distribution in ['Ubuntu', 'Fedora']
+    - "'winlike' in ansible_run_tags"
 
 - name: Configure system-wide GNOME defaults (maclike)
   block:
@@ -175,6 +180,7 @@
   when:
     - dfe_has_gnome | default(false)
     - ansible_distribution in ['Ubuntu', 'Fedora']
+    - "'maclike' in ansible_run_tags"
 
 - name: Install Ghostty terminal
   ansible.builtin.include_tasks:
