@@ -15,13 +15,13 @@
 # Check certificates exist
 - name: Verify RDP TLS certificate exists
   ansible.builtin.stat:
-    path: /var/lib/gnome-remote-desktop/.local/share/gnome-remote-desktop/certificates/rdp-tls.crt
+    path: /var/lib/gnome-remote-desktop/rdp-tls.crt
   register: verify_rdp_cert
   failed_when: not verify_rdp_cert.stat.exists
 
 - name: Verify RDP TLS key exists
   ansible.builtin.stat:
-    path: /var/lib/gnome-remote-desktop/.local/share/gnome-remote-desktop/certificates/rdp-tls.key
+    path: /var/lib/gnome-remote-desktop/rdp-tls.key
   register: verify_rdp_key
   failed_when: not verify_rdp_key.stat.exists
 

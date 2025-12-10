@@ -11,13 +11,13 @@
 #   ./install.sh [OPTIONS]
 #
 # OPTIONS:
-#   --check         Run in check mode (dry-run, no changes)
-#   --tags TAGS     Run specific Ansible tags (e.g., docker,python)
-#   --no-ghostty    Skip Ghostty terminal installation
-#   --core          Install core developer tools (JFrog, Azure, Node.js, etc.)
-#   --vm            Install VM optimizer tools
-#   --rdp           Install RDP optimizer (GNOME Remote Desktop auto-resize)
-#   --all           Install everything (base + core + VM + RDP)
+#   --check              Run in check mode (dry-run, no changes)
+#   --tags TAGS          Include specific tags (alias for --tags-include)
+#   --tags-include TAGS  Include specific tags to run (comma-separated)
+#   --tags-exclude TAGS  Exclude specific tags from running (comma-separated)
+#   --core               Install core developer tools (JFrog, Azure, Node.js, etc.)
+#   --all                Install everything (base + core + VM + RDP + winlike)
+#   --help               Show this help message
 #
 # SUPPORTED PLATFORMS:
 #   - Ubuntu 24.04 LTS and later
@@ -35,6 +35,7 @@ set -euo pipefail
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Output functions
@@ -43,11 +44,85 @@ print_success() { echo -e "${GREEN}[OK]${NC} $1"; }
 print_info() { echo -e "[INFO] $1"; }
 print_warning() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 
+show_help() {
+    cat << 'EOF'
+Usage: ./install.sh [OPTIONS]
+
+OPTIONS:
+  --check              Run in check mode (dry-run, no changes)
+  --tags TAGS          Include specific tags (alias for --tags-include)
+  --tags-include TAGS  Include specific tags to run (comma-separated)
+  --tags-exclude TAGS  Exclude specific tags from running (comma-separated)
+  --branch BRANCH      Git branch to use (default: main)
+  --core               Shortcut for: --tags developer,base,core,advanced
+  --all                Shortcut for: --tags developer,base,core,advanced,vm,optimizer,rdp,winlike
+  --help               Show this help message
+
+AVAILABLE TAGS:
+
+  Base Tags (included by default):
+    developer       Base DFE developer role
+    base            Base tools (Docker, Git, K8s, Python, VS Code, Chrome)
+
+  Feature Tags (opt-in, require explicit --tags or --all):
+    winlike         Windows-style GNOME taskbar (Dash to Panel, bottom panel)
+    maclike         macOS-style GNOME dock (Dash to Dock, Logo Menu, Magic Lamp)
+    core            Core developer tools (JFrog, Azure CLI, Node.js, Linear CLI)
+    advanced        Advanced tools (included with --core)
+    vm              VM guest optimizations (QEMU guest agent, SPICE agent)
+    optimizer       VM optimizer role (included with --vm)
+    rdp             GNOME Remote Desktop configuration (RDP server on port 3389)
+
+  Optional Tags (included by default, can be excluded):
+    ghostty         Ghostty terminal emulator (included by default)
+    fastestmirror   DNF/APT performance optimizations (included by default)
+    wallpaper       Custom DFE wallpaper (included by default)
+
+EXAMPLES:
+
+  Default installation (base tools only):
+    ./install.sh
+
+  Include Windows-style GNOME desktop:
+    ./install.sh --tags developer,base,winlike
+
+  Include macOS-style GNOME desktop:
+    ./install.sh --tags developer,base,maclike
+
+  Install core tools + winlike desktop:
+    ./install.sh --tags developer,base,core,advanced,winlike
+
+  Exclude Ghostty terminal (use system terminal):
+    ./install.sh --tags-exclude ghostty
+
+  Exclude fastestmirror (use default OS mirrors):
+    ./install.sh --tags-exclude fastestmirror
+
+  Install everything except wallpaper:
+    ./install.sh --all --tags-exclude wallpaper
+
+  Install everything with macOS-style (note: winlike takes precedence in --all):
+    ./install.sh --tags developer,base,core,advanced,vm,optimizer,rdp,maclike
+
+  Install RDP support for remote desktop access:
+    ./install.sh --tags developer,base,rdp
+
+  Dry-run to see what would change:
+    ./install.sh --check
+
+NOTES:
+  - If both winlike and maclike are included, winlike takes precedence
+  - RDP configures GNOME Remote Desktop with default credentials (dfe/dfe)
+  - ghostty, fastestmirror, and wallpaper are included by default
+  - Use --tags-exclude to disable default features without specifying all tags
+EOF
+    exit 0
+}
+
 # Parse arguments
 ANSIBLE_CHECK=""
 ANSIBLE_TAGS=""
 ANSIBLE_SKIP_TAGS=""
-ANSIBLE_EXTRA_VARS=""
 GIT_BRANCH="main"
 
 while [[ $# -gt 0 ]]; do
@@ -56,60 +131,38 @@ while [[ $# -gt 0 ]]; do
             ANSIBLE_CHECK="--check"
             shift
             ;;
-        --tags)
-            ANSIBLE_TAGS="--tags $2"
+        --tags|--tags-include)
+            if [[ -n "$ANSIBLE_TAGS" ]]; then
+                # Append to existing tags
+                CURRENT_TAGS="${ANSIBLE_TAGS#--tags }"
+                ANSIBLE_TAGS="--tags ${CURRENT_TAGS},$2"
+            else
+                ANSIBLE_TAGS="--tags $2"
+            fi
+            shift 2
+            ;;
+        --tags-exclude)
+            if [[ -n "$ANSIBLE_SKIP_TAGS" ]]; then
+                ANSIBLE_SKIP_TAGS="$ANSIBLE_SKIP_TAGS,$2"
+            else
+                ANSIBLE_SKIP_TAGS="$2"
+            fi
             shift 2
             ;;
         --branch)
             GIT_BRANCH="$2"
             shift 2
             ;;
-        --no-wallpaper)
-            ANSIBLE_SKIP_TAGS="--skip-tags wallpaper"
-            shift
-            ;;
-        --no-ghostty)
-            ANSIBLE_EXTRA_VARS="$ANSIBLE_EXTRA_VARS -e dfe_install_ghostty=false"
-            shift
-            ;;
-        --no-fastestmirror)
-            ANSIBLE_EXTRA_VARS="$ANSIBLE_EXTRA_VARS -e dfe_use_fastestmirror=false"
-            shift
-            ;;
         --core)
             ANSIBLE_TAGS="--tags developer,base,core,advanced"
             shift
             ;;
-        --vm)
-            ANSIBLE_TAGS="--tags developer,base,vm,optimizer"
-            shift
-            ;;
-        --rdp)
-            ANSIBLE_TAGS="--tags developer,base,rdp,optimizer"
-            shift
-            ;;
         --all)
-            ANSIBLE_TAGS="--tags developer,base,core,advanced,vm,optimizer,rdp"
+            ANSIBLE_TAGS="--tags developer,base,core,advanced,vm,optimizer,rdp,winlike"
             shift
             ;;
-        --help)
-            echo "Usage: $0 [OPTIONS]"
-            echo ""
-            echo "Options:"
-            echo "  --check              Run in check mode (dry-run, no changes)"
-            echo "  --tags TAGS          Run specific Ansible tags (comma-separated)"
-            echo "  --branch BRANCH      Git branch to use (default: main)"
-            echo "  --no-wallpaper       Skip custom wallpaper installation"
-            echo "  --no-ghostty         Skip Ghostty terminal installation"
-            echo "  --no-fastestmirror   Disable automatic mirror selection (use OS defaults)"
-            echo "  --core               Install core developer tools (JFrog, Azure, Node.js, etc.)"
-            echo "  --vm                 Install VM optimizer tools"
-            echo "  --rdp                Install RDP optimizer (GNOME Remote Desktop auto-resize)"
-            echo "  --all                Install everything (base + core + VM + RDP)"
-            echo "  --help               Show this help message"
-            echo ""
-            echo "Default: Base developer environment only (Docker, K8s, Python, Git, VS Code, Chrome, Ghostty)"
-            exit 0
+        --help|-h)
+            show_help
             ;;
         *)
             print_error "Unknown option: $1"
@@ -124,8 +177,6 @@ print_info "Detecting operating system..."
 
 if [[ -f /etc/os-release ]]; then
     . /etc/os-release
-    OS_NAME="$ID"
-    OS_VERSION="$VERSION_ID"
     OS_FAMILY=""
 
     case "$ID" in
@@ -144,10 +195,8 @@ if [[ -f /etc/os-release ]]; then
             ;;
     esac
 elif [[ "$(uname)" == "Darwin" ]]; then
-    OS_NAME="macos"
-    OS_VERSION=$(sw_vers -productVersion)
     OS_FAMILY="macos"
-    print_info "Detected: macOS $OS_VERSION"
+    print_info "Detected: macOS $(sw_vers -productVersion)"
 else
     print_error "Unable to detect operating system"
     exit 1
@@ -264,18 +313,25 @@ if [[ ! -d "ansible" ]]; then
     print_success "Ansible directory downloaded successfully"
 fi
 
+# Build skip-tags argument if any
+ANSIBLE_SKIP_TAGS_ARG=""
+if [[ -n "$ANSIBLE_SKIP_TAGS" ]]; then
+    ANSIBLE_SKIP_TAGS_ARG="--skip-tags $ANSIBLE_SKIP_TAGS"
+fi
+
 # Run Ansible playbook using temp venv Ansible
 print_info "Running Ansible playbook (using isolated venv Ansible)..."
-print_info "Command: $ANSIBLE_BIN ansible/playbooks/main.yml -i ansible/inventories/localhost/inventory.yml $ANSIBLE_CHECK $ANSIBLE_CHECK $ANSIBLE_TAGS $ANSIBLE_SKIP_TAGS $ANSIBLE_EXTRA_VARS"
+print_info "Command: $ANSIBLE_BIN playbooks/main.yml -i inventories/localhost/inventory.yml $ANSIBLE_CHECK $ANSIBLE_TAGS $ANSIBLE_SKIP_TAGS_ARG"
 
 cd ansible || exit 1
 
+# shellcheck disable=SC2086
 "$ANSIBLE_BIN" \
     playbooks/main.yml \
     -i inventories/localhost/inventory.yml \
     $ANSIBLE_CHECK \
     $ANSIBLE_TAGS \
-    $ANSIBLE_EXTRA_VARS || {
+    $ANSIBLE_SKIP_TAGS_ARG || {
     print_error "Ansible playbook failed"
     exit 1
 }

@@ -1,0 +1,183 @@
+---
+# Windows-like GNOME Shell configuration
+# Installs Dash to Panel for a Windows-style taskbar
+#
+# Extensions (all installed from extensions.gnome.org via gext):
+# - Dash to Panel: Windows-style taskbar at bottom with Show Applications button
+# - System Monitor: CPU/Memory in panel (from gnome_common.yml)
+
+# ============================================================================
+# COMMON PREREQUISITES (gext, system monitor, dark theme, etc.)
+# ============================================================================
+
+- name: Install common GNOME prerequisites
+  ansible.builtin.include_tasks: gnome_common.yml
+
+# ============================================================================
+# DISABLE UBUNTU DOCK (conflicts with Dash to Panel)
+# ============================================================================
+
+- name: Disable Ubuntu Dock extension
+  ansible.builtin.command:
+    cmd: gnome-extensions disable ubuntu-dock@ubuntu.com
+  become: false
+  failed_when: false
+  changed_when: false
+  when: ansible_distribution == 'Ubuntu'
+
+# ============================================================================
+# INSTALL DASH TO PANEL (from extensions.gnome.org)
+# ============================================================================
+
+- name: Install Dash to Panel extension
+  ansible.builtin.command:
+    cmd: "{{ dfe_user_home }}/.local/bin/gext -F install dash-to-panel@jderose9.github.com"
+  become: true
+  become_user: "{{ dfe_actual_user }}"
+  register: dash_to_panel_install
+  changed_when: "'already installed' not in dash_to_panel_install.stdout"
+  failed_when:
+    - dash_to_panel_install.rc != 0
+    - "'already installed' not in dash_to_panel_install.stdout"
+  when: ansible_distribution == 'Ubuntu'
+
+# ============================================================================
+# ENABLE EXTENSIONS VIA DCONF
+# ============================================================================
+
+- name: Enable Windows-like extensions
+  community.general.dconf:
+    key: "/org/gnome/shell/enabled-extensions"
+    value: "['system-monitor@gnome-shell-extensions.gcampax.github.com', 'dash-to-panel@jderose9.github.com']"
+    state: present
+  become: false
+
+- name: Disable conflicting extensions
+  community.general.dconf:
+    key: "/org/gnome/shell/disabled-extensions"
+    value: "['ubuntu-dock@ubuntu.com', 'workspace-indicator@gnome-shell-extensions.gcampax.github.com', 'apps-menu@gnome-shell-extensions.gcampax.github.com']"
+    state: present
+  become: false
+
+# ============================================================================
+# CONFIGURE DASH TO PANEL (Windows-style taskbar)
+# ============================================================================
+
+- name: Configure Dash to Panel - panel position bottom
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/dash-to-panel/panel-positions"
+    value: "'{\"0\":\"BOTTOM\"}'"
+    state: present
+  become: false
+
+- name: Configure Dash to Panel - panel size
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/dash-to-panel/panel-sizes"
+    value: "'{\"0\":48}'"
+    state: present
+  become: false
+
+- name: Configure Dash to Panel - disable intellihide
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/dash-to-panel/intellihide"
+    value: "false"
+    state: present
+  become: false
+
+- name: Configure Dash to Panel - group apps
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/dash-to-panel/group-apps"
+    value: "true"
+    state: present
+  become: false
+
+- name: Configure Dash to Panel - click action cycle-minimize
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/dash-to-panel/click-action"
+    value: "'CYCLE-MIN'"
+    state: present
+  become: false
+
+- name: Configure Dash to Panel - show activities button (for app launcher)
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/dash-to-panel/show-activities-button"
+    value: "true"
+    state: present
+  become: false
+
+- name: Configure Dash to Panel - hide app menu
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/dash-to-panel/show-appmenu"
+    value: "false"
+    state: present
+  become: false
+
+- name: Configure Dash to Panel - show favorites
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/dash-to-panel/show-favorites"
+    value: "true"
+    state: present
+  become: false
+
+- name: Configure Dash to Panel - show running apps
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/dash-to-panel/show-running-apps"
+    value: "true"
+    state: present
+  become: false
+
+- name: Configure Dash to Panel - show Show Apps button
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/dash-to-panel/show-showdesktop-button"
+    value: "true"
+    state: present
+  become: false
+
+# ============================================================================
+# WALLPAPER DEPLOYMENT (system-wide, safe from apt/dnf updates)
+# ============================================================================
+
+- name: Create local backgrounds directory (safe from package updates)
+  ansible.builtin.file:
+    path: /usr/local/share/backgrounds
+    state: directory
+    mode: '0755'
+
+- name: Deploy DFE background image
+  ansible.builtin.copy:
+    src: dfe-background.svg
+    dest: /usr/local/share/backgrounds/dfe-background.svg
+    mode: '0644'
+
+- name: Set DFE background as default (light mode)
+  community.general.dconf:
+    key: "/org/gnome/desktop/background/picture-uri"
+    value: "'file:///usr/local/share/backgrounds/dfe-background.svg'"
+    state: present
+  become: false
+
+- name: Set DFE background as default (dark mode)
+  community.general.dconf:
+    key: "/org/gnome/desktop/background/picture-uri-dark"
+    value: "'file:///usr/local/share/backgrounds/dfe-background.svg'"
+    state: present
+  become: false
+
+- name: Set background scaling mode
+  community.general.dconf:
+    key: "/org/gnome/desktop/background/picture-options"
+    value: "'zoom'"
+    state: present
+  become: false
+
+# ============================================================================
+# UPDATE ALL EXTENSIONS TO LATEST
+# ============================================================================
+
+- name: Update all installed extensions to latest versions
+  ansible.builtin.command:
+    cmd: "{{ dfe_user_home }}/.local/bin/gext -F update"
+  become: true
+  become_user: "{{ dfe_actual_user }}"
+  changed_when: false
+  failed_when: false

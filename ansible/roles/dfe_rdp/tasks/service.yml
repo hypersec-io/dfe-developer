@@ -24,21 +24,15 @@
   changed_when: false
 
 # ============================================================================
-# DISABLE DESKTOP SHARING (conflicting service)
+# ENABLE GNOME REMOTE DESKTOP SERVICE
 # ============================================================================
 
-- name: Disable Desktop Sharing via grdctl (conflicts with Remote Login)
-  ansible.builtin.command:
-    cmd: grdctl --system rdp disable
+- name: Reload systemd daemon
+  ansible.builtin.systemd:
+    daemon_reload: true
   when:
     - ansible_distribution in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
-  failed_when: false
-  changed_when: false
-
-# ============================================================================
-# ENABLE REMOTE LOGIN (RDP)
-# ============================================================================
 
 - name: Enable gnome-remote-desktop system service
   ansible.builtin.systemd:
@@ -49,7 +43,11 @@
     - ansible_distribution in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
 
-- name: Enable Remote Login (RDP) via grdctl
+# ============================================================================
+# CONFIGURE RDP VIA GRDCTL
+# ============================================================================
+
+- name: Enable RDP via grdctl
   ansible.builtin.command:
     cmd: grdctl --system rdp enable
   when:
@@ -81,7 +79,11 @@
   changed_when: false
   no_log: true  # Hide password from logs
 
-- name: Restart RDP service to apply credentials
+# ============================================================================
+# RESTART SERVICE TO APPLY CONFIGURATION
+# ============================================================================
+
+- name: Restart RDP service to apply configuration
   ansible.builtin.systemd:
     name: gnome-remote-desktop.service
     state: restarted
@@ -97,7 +99,6 @@
   ansible.builtin.debug:
     msg: |
       GNOME Remote Desktop configured:
-      - Desktop Sharing: DISABLED (conflicts with Remote Login)
       - Remote Login (RDP): ENABLED on port 3389
       - Default credentials: username={{ dfe_rdp_username }}
 

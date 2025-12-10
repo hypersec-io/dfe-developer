@@ -1,0 +1,72 @@
+# Ghostty Configuration - Cross-Platform Base
+# This is the main config that loads platform-specific files
+# Documentation: https://ghostty.org/docs/config
+
+# ============================================================
+# Platform-Specific Includes (optional, no error if missing)
+# ============================================================
+config-file = ?platform-linux.conf
+config-file = ?platform-macos.conf
+
+# User overrides (create this file for personal customizations)
+config-file = ?local.conf
+
+# ============================================================
+# Font Configuration
+# ============================================================
+# Font size (font-family set in platform configs with fallbacks)
+font-size = 11
+# Font features: +prefix required in Ghostty 1.2.0+
+font-feature = +calt
+font-feature = +liga
+font-feature = +dlig
+
+# ============================================================
+# Theme - Auto-switches with system light/dark mode
+# ============================================================
+# Solarized: Classic developer theme with warm/cool variants
+theme = light:Solarized Light,dark:Solarized Dark
+
+# ============================================================
+# Terminal Compatibility
+# ============================================================
+# Use xterm-256color for SSH compatibility (remote systems don't have ghostty terminfo)
+term = xterm-256color
+
+# ============================================================
+# Window Configuration
+# ============================================================
+window-height = 35
+window-width = 140
+window-padding-x = 8
+window-padding-y = 8
+window-save-state = always
+
+# ============================================================
+# Scrollback
+# ============================================================
+# Infrastructure work needs extensive history
+scrollback-limit = 100000
+
+# ============================================================
+# Cursor
+# ============================================================
+cursor-style = block
+cursor-style-blink = false
+
+# ============================================================
+# Shell Integration
+# ============================================================
+shell-integration = detect
+shell-integration-features = cursor,sudo,title
+
+# ============================================================
+# Mouse Behavior
+# ============================================================
+mouse-hide-while-typing = true
+
+# ============================================================
+# Split Visual Feedback
+# ============================================================
+# Dimmed unfocused splits help identify active pane
+unfocused-split-opacity = 0.85

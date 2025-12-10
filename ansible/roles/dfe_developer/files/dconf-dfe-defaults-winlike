@@ -1,0 +1,67 @@
+# DFE Developer GNOME defaults - Windows-like style
+# Deployed to /etc/dconf/db/local.d/00-dfe-defaults
+# Run 'dconf update' after modifying
+
+[org/gnome/shell]
+# Enable user extensions globally
+disable-user-extensions=false
+
+# Extensions to enable by default
+# Dash to Panel provides Windows-style taskbar
+enabled-extensions=['system-monitor@gnome-shell-extensions.gcampax.github.com', 'dash-to-panel@jderose9.github.com']
+
+# Extensions to disable by default
+# Ubuntu Dock conflicts with Dash to Panel
+disabled-extensions=['ubuntu-dock@ubuntu.com', 'workspace-indicator@gnome-shell-extensions.gcampax.github.com', 'apps-menu@gnome-shell-extensions.gcampax.github.com']
+
+[org/gnome/shell/extensions/system-monitor]
+# System monitor configuration
+show-cpu=true
+show-memory=true
+show-download=false
+show-upload=false
+show-swap=false
+
+[org/gnome/shell/extensions/dash-to-panel]
+# Dash to Panel - Windows-style taskbar configuration
+# Panel position (all monitors)
+panel-positions='{"0":"BOTTOM"}'
+panel-sizes='{"0":48}'
+# Panel element positions - Show Apps button on left like Windows Start
+panel-element-positions='{"0":[{"element":"showAppsButton","visible":true,"position":"stackedTL"},{"element":"activitiesButton","visible":false,"position":"stackedTL"},{"element":"leftBox","visible":true,"position":"stackedTL"},{"element":"taskbar","visible":true,"position":"stackedTL"},{"element":"centerBox","visible":true,"position":"stackedBR"},{"element":"rightBox","visible":true,"position":"stackedBR"},{"element":"dateMenu","visible":true,"position":"stackedBR"},{"element":"systemMenu","visible":true,"position":"stackedBR"},{"element":"desktopButton","visible":true,"position":"stackedBR"}]}'
+# Panel behavior
+intellihide=false
+# Taskbar settings
+group-apps=true
+isolate-workspaces=false
+# Show window previews on hover
+show-window-previews=true
+# Click behavior
+click-action='CYCLE-MIN'
+# Running indicator style
+dot-style-focused='DOTS'
+dot-style-unfocused='DOTS'
+# Clock position (center like Windows)
+location-clock='STATUSRIGHT'
+# Show Activities button (serves as app launcher)
+show-activities-button=true
+show-appmenu=false
+# App icons (favorites shown)
+show-favorites=true
+show-running-apps=true
+# Show desktop button on right
+show-showdesktop-button=true
+
+[org/gnome/desktop/wm/preferences]
+# Window buttons: minimize, maximize, close on right side
+button-layout=':minimize,maximize,close'
+
+[org/gnome/desktop/interface]
+# Prefer dark theme
+color-scheme='prefer-dark'
+
+[org/gnome/desktop/background]
+# DFE background image (stored in /usr/local, safe from apt/dnf updates)
+picture-uri='file:///usr/local/share/backgrounds/dfe-background.svg'
+picture-uri-dark='file:///usr/local/share/backgrounds/dfe-background.svg'
+picture-options='zoom'

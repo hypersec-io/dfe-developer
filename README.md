@@ -11,8 +11,7 @@ Standardised complete developer environment setup for HyperSec DFE developers ac
 
 ## Platform Support
 
-- **[Multi-Platform (Recommended)](#multi-platform-quick-start)** - Ansible-based setup for Fedora, Ubuntu, and macOS
-- **[Fedora Linux (Legacy)](#fedora-linux-legacy)** - Shell script-based setup (bug fixes only)
+- **[Multi-Platform (Recommended)](#multi-platform-quick-start)** - Ansible-based setup for Ubuntu, Fedora, and macOS
 - **[Windows 11](#windows-11-soe)** - Productivity and VM host setup with Hyper-V
 
 ## Multi-Platform Quick Start
@@ -32,54 +31,64 @@ cd dfe-developer
 # Install with core developer tools
 ./install.sh --core
 
-# Install everything (base + core + VM + RDP optimizers)
+# Install everything (base + core + VM + RDP + winlike desktop)
 ./install.sh --all
 
-# Other options:
-./install.sh --no-ghostty      # Skip Ghostty terminal
-./install.sh --vm              # Add VM optimizations (Linux only)
-./install.sh --rdp             # Add RDP optimizations (Linux only)
-./install.sh --check           # Dry-run (no changes)
+# Include Windows-style GNOME desktop (bottom taskbar)
+./install.sh --tags developer,base,winlike
+
+# Include macOS-style GNOME desktop (dock, logo menu, magic lamp)
+./install.sh --tags developer,base,maclike
+
+# Exclude specific features (ghostty, fastestmirror, wallpaper)
+./install.sh --tags-exclude ghostty,wallpaper
+
+# Dry-run to see what would change
+./install.sh --check
 ```
 
 The Ansible-based installer automatically detects your OS and installs the appropriate packages.
 
-### Selective Installation (Advanced)
+### Tag-Based Installation
 
-You can install specific components using Ansible tags. **Dependencies (init tasks) always run automatically.**
+All options use Ansible tags. Use `--tags` to include features, `--tags-exclude` to exclude them.
 
-#### Using install.sh with tags:
 ```bash
-# Install only Docker on macOS
-./install.sh --tags docker
+# Include specific tags
+./install.sh --tags developer,base,winlike
 
-# Install only Git and GitHub CLI
-./install.sh --tags git
+# Exclude specific tags (from default or --all)
+./install.sh --tags-exclude ghostty,wallpaper
 
-# Install Kubernetes tools only
-./install.sh --tags k8s
-
-# Install multiple specific tools
-./install.sh --tags "docker,git,k8s"
-```
-
-#### Using Ansible directly:
-```bash
-cd ansible
-
-# Install only Docker (dependencies run automatically)
-ansible-playbook -i inventories/localhost/inventory.yml playbooks/main.yml --tags docker
-
-# Install Git + Cloud tools
-ansible-playbook -i inventories/localhost/inventory.yml playbooks/main.yml --tags "git,cloud"
-
-# Install everything EXCEPT Ghostty terminal
-ansible-playbook -i inventories/localhost/inventory.yml playbooks/main.yml --skip-tags ghostty
+# Combine: install everything except specific features
+./install.sh --all --tags-exclude wallpaper
 ```
 
 #### Available Tags
 
-**Base Developer Tools:**
+**Base Tags (included by default):**
+
+- `developer` - Base DFE developer role
+- `base` - Base tools (Docker, Git, K8s, Python, VS Code, Chrome)
+
+**Feature Tags (opt-in, require explicit --tags or --all):**
+
+- `winlike` - Windows-style GNOME taskbar (Dash to Panel, bottom panel)
+- `maclike` - macOS-style GNOME dock (Dash to Dock, Logo Menu, Magic Lamp)
+- `core` - Core developer tools (JFrog, Azure CLI, Node.js, Linear CLI)
+- `advanced` - Advanced tools (included with --core)
+- `vm` - VM guest optimizations (QEMU guest agent, SPICE agent)
+- `optimizer` - VM optimizer role (included with --vm)
+- `rdp` - GNOME Remote Desktop configuration (RDP server on port 3389)
+
+**Optional Tags (included by default, can be excluded):**
+
+- `ghostty` - Ghostty terminal emulator
+- `fastestmirror` - DNF/APT performance optimizations
+- `wallpaper` - Custom DFE wallpaper
+
+**Component Tags:**
+
 - `docker` - Docker Desktop (macOS) or Docker CE (Linux)
 - `git` - Latest Git + GitHub CLI + Git LFS
 - `cloud` - AWS CLI, Helm, Terraform, Vault
@@ -88,9 +97,9 @@ ansible-playbook -i inventories/localhost/inventory.yml playbooks/main.yml --ski
 - `utilities` - Development utilities (jq, bat, fzf, ripgrep, etc.)
 - `vscode` - Visual Studio Code
 - `chrome` - Google Chrome
-- `ghostty` - Ghostty terminal emulator
 
-**Core Developer Tools:**
+**Core Component Tags (require --core or explicit --tags):**
+
 - `jfrog` - JFrog CLI
 - `azure` - Azure CLI
 - `nodejs` - Node.js + semantic-release
@@ -99,58 +108,20 @@ ansible-playbook -i inventories/localhost/inventory.yml playbooks/main.yml --ski
 - `claude` - Claude Code CLI
 - `slack` - Slack (GUI)
 
-**System:**
-- `repository` - Configure package repositories (Linux only)
-- `security` - Automatic security updates
-- `wallpaper` - Custom wallpaper (if provided)
-- `verify` - Verify all installations
-
-#### How It Works
-
-**Dependencies always run:**
-- Init tasks (tagged `always`) run before any other tasks
-- Variables, user detection, platform detection
-- Ensures all prerequisites met
-
-**Example: Install only Docker on macOS**
-```bash
-./install.sh --tags docker
-```
-
-This will:
-1. ✅ Run init tasks (detect user, set variables)
-2. ✅ Install Docker Desktop via Homebrew
-3. ✅ Configure Docker
-4. ⏭️  Skip all other tools (Git, K8s, etc.)
-
-**Example: Install multiple specific tools**
-```bash
-./install.sh --tags "git,docker,vscode"
-```
-
-This installs only Git, Docker, and VS Code (plus their dependencies).
-
-
-## Fedora Linux (Legacy)
-
-**Fedora-only shell scripts - bug fixes only, no new features.**
+#### Using Ansible directly
 
 ```bash
-# Clone the repository
-git clone https://github.com/hypersec-io/dfe-developer
-cd dfe-developer/fedora
+cd ansible
 
-# Complete installation
-./install-all.sh 2>&1 | tee install.log
+# Install only Docker (dependencies run automatically)
+ansible-playbook -i inventories/localhost/inventory.yml playbooks/main.yml --tags docker
 
-# OR install components individually:
-./install-dfe-developer.sh      # Base developer tools
-./install-dfe-developer-core.sh # Core DFE tools
-./install-vm-optimizer.sh       # VM optimizations
-./install-rdp-optimizer.sh      # RDP optimizations
+# Install with winlike desktop
+ansible-playbook -i inventories/localhost/inventory.yml playbooks/main.yml --tags developer,base,winlike
+
+# Install everything EXCEPT Ghostty terminal
+ansible-playbook -i inventories/localhost/inventory.yml playbooks/main.yml --skip-tags ghostty
 ```
-
-**Note:** The `/fedora` scripts are maintained for bug fixes only. All new features and enhancements go into the Ansible playbooks. Use `./install.sh` (Ansible) for new installations.
 
 ## What Gets Installed
 
@@ -173,31 +144,12 @@ cd dfe-developer/fedora
 
 ## System Requirements
 
-### Multi-Platform (Ansible)
 - **Ubuntu:** 24.04 LTS or later (primary)
-- **Fedora:** 42 or later (secondary)
-- **macOS:** Sequoia 15.3.1 or later (secondary)
+- **Fedora:** 42 or later
+- **macOS:** Sequoia 15.3.1 or later
 - 4GB RAM minimum (8GB recommended)
 - 20GB available disk space
 - Internet connection
-
-### Legacy Fedora (Shell Scripts)
-- Fedora 42 or later
-- 4GB RAM minimum (8GB recommended)
-- 20GB available disk space
-- Internet connection
-
-## Testing
-
-The project includes comprehensive testing:
-
-```bash
-cd fedora/tests
-
-# Run all tests
-bash 01-shellcheck.sh      # Static analysis
-bats *.bats                # Unit and integration tests
-```
 
 ## Project Structure
 

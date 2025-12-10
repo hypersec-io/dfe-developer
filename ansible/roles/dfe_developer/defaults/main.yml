@@ -1,10 +1,7 @@
 ---
 # DFE Developer Environment - Defaults
-
-# Mirror/repository optimization configuration
-dfe_use_fastestmirror: true  # Enable fastest mirror selection (automatic mirror selection)
-# Note: Fedora uses fastestmirror, Ubuntu uses mirror selection in sources.list
-# Set to false with --no-fastestmirror flag to use default repos only
+# All options are now controlled via tags, not variables.
+# Use --skip-tags to disable features, --tags to enable optional ones.
 
 # Supported platforms (used for validation in init.yml)
 dfe_supported_distros:
@@ -13,13 +10,6 @@ dfe_supported_distros:
   - MacOSX
 dfe_min_fedora_version: 42
 dfe_min_ubuntu_version: "24.04"
-
-# Ghostty installation
-dfe_install_ghostty: true
-
-# GNOME Shell customizations (Dash to Panel, system monitor, dark theme, etc.)
-# Set to false to keep vanilla Ubuntu/Fedora GNOME experience
-dfe_customize_gnome_shell: true
 
 # Docker configuration
 dfe_docker_users:

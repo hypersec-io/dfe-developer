@@ -1,42 +1,41 @@
 ---
 # Configure TLS certificates for GNOME Remote Desktop system service
+# Certificates are stored in /var/lib/gnome-remote-desktop/ (not subdirs)
 
-- name: Create gnome-remote-desktop certificates directory
+- name: Create gnome-remote-desktop directory
   ansible.builtin.file:
-    path: /var/lib/gnome-remote-desktop/.local/share/gnome-remote-desktop/certificates
+    path: /var/lib/gnome-remote-desktop
     state: directory
-    mode: '0700'
-    owner: gnome-remote-desktop
-    group: gnome-remote-desktop
+    mode: '0755'
   when:
     - ansible_distribution in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
 
 - name: Generate self-signed certificate for RDP
   ansible.builtin.command:
-    cmd: openssl req -new -newkey rsa:4096 -days 730 -nodes -x509 -subj "/C=AU/ST=NSW/L=Sydney/O=HyperSec/CN={{ ansible_hostname }}" -keyout /var/lib/gnome-remote-desktop/.local/share/gnome-remote-desktop/certificates/rdp-tls.key -out /var/lib/gnome-remote-desktop/.local/share/gnome-remote-desktop/certificates/rdp-tls.crt
+    cmd: openssl req -new -newkey rsa:4096 -days 730 -nodes -x509 -subj "/C=AU/ST=NSW/L=Sydney/O=HyperSec/CN={{ ansible_hostname }}" -keyout /var/lib/gnome-remote-desktop/rdp-tls.key -out /var/lib/gnome-remote-desktop/rdp-tls.crt
   args:
-    creates: /var/lib/gnome-remote-desktop/.local/share/gnome-remote-desktop/certificates/rdp-tls.crt
+    creates: /var/lib/gnome-remote-desktop/rdp-tls.crt
   when:
     - ansible_distribution in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
 
-- name: Set certificate file permissions
+- name: Set certificate file permissions and ownership
   ansible.builtin.file:
-    path: "{{ item }}"
+    path: "{{ item.path }}"
+    mode: "{{ item.mode }}"
     owner: gnome-remote-desktop
     group: gnome-remote-desktop
-    mode: '0600'
   loop:
-    - /var/lib/gnome-remote-desktop/.local/share/gnome-remote-desktop/certificates/rdp-tls.key
-    - /var/lib/gnome-remote-desktop/.local/share/gnome-remote-desktop/certificates/rdp-tls.crt
+    - { path: '/var/lib/gnome-remote-desktop/rdp-tls.key', mode: '0600' }
+    - { path: '/var/lib/gnome-remote-desktop/rdp-tls.crt', mode: '0644' }
   when:
     - ansible_distribution in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
 
 - name: Configure grdctl to use TLS certificate
   ansible.builtin.command:
-    cmd: grdctl --system rdp set-tls-cert /var/lib/gnome-remote-desktop/.local/share/gnome-remote-desktop/certificates/rdp-tls.crt
+    cmd: grdctl --system rdp set-tls-cert /var/lib/gnome-remote-desktop/rdp-tls.crt
   when:
     - ansible_distribution in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
@@ -45,7 +44,7 @@
 
 - name: Configure grdctl to use TLS key
   ansible.builtin.command:
-    cmd: grdctl --system rdp set-tls-key /var/lib/gnome-remote-desktop/.local/share/gnome-remote-desktop/certificates/rdp-tls.key
+    cmd: grdctl --system rdp set-tls-key /var/lib/gnome-remote-desktop/rdp-tls.key
   when:
     - ansible_distribution in ['Fedora', 'Ubuntu']
     - dfe_has_gnome

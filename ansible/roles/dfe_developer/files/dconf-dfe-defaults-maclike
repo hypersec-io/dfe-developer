@@ -1,0 +1,65 @@
+# DFE Developer GNOME defaults - macOS-like style
+# Deployed to /etc/dconf/db/local.d/00-dfe-defaults
+# Run 'dconf update' after modifying
+
+[org/gnome/shell]
+# Enable user extensions globally
+disable-user-extensions=false
+
+# Extensions to enable by default
+# Dash to Dock + Logo Menu + Magic Lamp provide macOS-style experience
+enabled-extensions=['system-monitor@gnome-shell-extensions.gcampax.github.com', 'dash-to-dock@micxgx.gmail.com', 'logomenu@aryan_k', 'compiz-alike-magic-lamp-effect@hermes83.github.com']
+
+# Extensions to disable by default
+# Ubuntu Dock conflicts with Dash to Dock
+disabled-extensions=['ubuntu-dock@ubuntu.com', 'workspace-indicator@gnome-shell-extensions.gcampax.github.com', 'apps-menu@gnome-shell-extensions.gcampax.github.com']
+
+[org/gnome/shell/extensions/system-monitor]
+# System monitor configuration
+show-cpu=true
+show-memory=true
+show-download=false
+show-upload=false
+show-swap=false
+
+[org/gnome/shell/extensions/dash-to-dock]
+# Dash to Dock - macOS-style dock configuration
+# Position at bottom like macOS
+dock-position='BOTTOM'
+# Intelligent auto-hide (like macOS)
+intellihide=true
+autohide=true
+# Click to minimize
+click-action='minimize'
+# Show running app indicators
+running-indicator-style='DOTS'
+# Show window previews on hover
+show-windows-preview=true
+# Icon size
+dash-max-icon-size=48
+# Hide trash and mounts from dock
+show-trash=false
+show-mounts=false
+
+[org/gnome/shell/extensions/logo-menu]
+# Logo Menu - macOS-style Apple menu
+# Hide activities button (Logo Menu replaces it)
+show-activities-button=false
+
+[org/gnome/shell/extensions/com.github.hermes83.compiz-alike-magic-lamp-effect]
+# Magic Lamp minimize effect - like macOS Genie
+duration=200
+
+[org/gnome/desktop/wm/preferences]
+# Window buttons: minimize, maximize, close on right side
+button-layout=':minimize,maximize,close'
+
+[org/gnome/desktop/interface]
+# Prefer dark theme
+color-scheme='prefer-dark'
+
+[org/gnome/desktop/background]
+# DFE background image (stored in /usr/local, safe from apt/dnf updates)
+picture-uri='file:///usr/local/share/backgrounds/dfe-background.svg'
+picture-uri-dark='file:///usr/local/share/backgrounds/dfe-background.svg'
+picture-options='zoom'

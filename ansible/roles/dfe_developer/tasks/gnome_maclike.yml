@@ -1,0 +1,226 @@
+---
+# macOS-like GNOME Shell configuration
+# Installs Dash to Dock, Logo Menu, and Magic Lamp effect for a macOS-style experience
+#
+# Extensions:
+# - Dash to Dock: macOS-style dock
+# - Logo Menu: macOS-style Apple menu replacement
+# - Compiz Magic Lamp Effect: macOS-style minimize animation
+# - System Monitor: CPU/Memory in panel (from gnome_common.yml)
+
+# ============================================================================
+# COMMON PREREQUISITES
+# ============================================================================
+
+- name: Install common GNOME prerequisites
+  ansible.builtin.include_tasks: gnome_common.yml
+
+# ============================================================================
+# INSTALL MACOS-LIKE EXTENSIONS
+# ============================================================================
+
+- name: Install Dash to Dock extension
+  ansible.builtin.command:
+    cmd: "{{ dfe_user_home }}/.local/bin/gext -F install dash-to-dock@micxgx.gmail.com"
+  become: true
+  become_user: "{{ dfe_actual_user }}"
+  register: dash_to_dock_install
+  changed_when: "'already installed' not in dash_to_dock_install.stdout"
+  failed_when:
+    - dash_to_dock_install.rc != 0
+    - "'already installed' not in dash_to_dock_install.stdout"
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install Logo Menu extension
+  ansible.builtin.command:
+    cmd: "{{ dfe_user_home }}/.local/bin/gext -F install logomenu@aryan_k"
+  become: true
+  become_user: "{{ dfe_actual_user }}"
+  register: logo_menu_install
+  changed_when: "'already installed' not in logo_menu_install.stdout"
+  failed_when:
+    - logo_menu_install.rc != 0
+    - "'already installed' not in logo_menu_install.stdout"
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install Compiz Magic Lamp effect extension
+  ansible.builtin.command:
+    cmd: "{{ dfe_user_home }}/.local/bin/gext -F install compiz-alike-magic-lamp-effect@hermes83.github.com"
+  become: true
+  become_user: "{{ dfe_actual_user }}"
+  register: magic_lamp_install
+  changed_when: "'already installed' not in magic_lamp_install.stdout"
+  failed_when:
+    - magic_lamp_install.rc != 0
+    - "'already installed' not in magic_lamp_install.stdout"
+  when: ansible_distribution == 'Ubuntu'
+
+# ============================================================================
+# ENABLE EXTENSIONS VIA DCONF
+# ============================================================================
+
+- name: Enable macOS-like extensions
+  community.general.dconf:
+    key: "/org/gnome/shell/enabled-extensions"
+    value: "['system-monitor@gnome-shell-extensions.gcampax.github.com', 'dash-to-dock@micxgx.gmail.com', 'logomenu@aryan_k', 'compiz-alike-magic-lamp-effect@hermes83.github.com']"
+    state: present
+  become: false
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Disable conflicting extensions
+  community.general.dconf:
+    key: "/org/gnome/shell/disabled-extensions"
+    value: "['ubuntu-dock@ubuntu.com', 'workspace-indicator@gnome-shell-extensions.gcampax.github.com', 'apps-menu@gnome-shell-extensions.gcampax.github.com']"
+    state: present
+  become: false
+  when: ansible_distribution == 'Ubuntu'
+
+# ============================================================================
+# CONFIGURE DASH TO DOCK (macOS-style)
+# ============================================================================
+
+- name: Configure Dash to Dock - position at bottom
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/dash-to-dock/dock-position"
+    value: "'BOTTOM'"
+    state: present
+  become: false
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Configure Dash to Dock - intelligent auto-hide
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/dash-to-dock/intellihide"
+    value: "true"
+    state: present
+  become: false
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Configure Dash to Dock - enable auto-hide
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/dash-to-dock/autohide"
+    value: "true"
+    state: present
+  become: false
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Configure Dash to Dock - click to minimize
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/dash-to-dock/click-action"
+    value: "'minimize'"
+    state: present
+  become: false
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Configure Dash to Dock - icon size
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/dash-to-dock/dash-max-icon-size"
+    value: "48"
+    state: present
+  become: false
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Configure Dash to Dock - running indicator style
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/dash-to-dock/running-indicator-style"
+    value: "'DOTS'"
+    state: present
+  become: false
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Configure Dash to Dock - show window previews
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/dash-to-dock/show-windows-preview"
+    value: "true"
+    state: present
+  become: false
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Configure Dash to Dock - hide trash
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/dash-to-dock/show-trash"
+    value: "false"
+    state: present
+  become: false
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Configure Dash to Dock - hide mounts
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/dash-to-dock/show-mounts"
+    value: "false"
+    state: present
+  become: false
+  when: ansible_distribution == 'Ubuntu'
+
+# ============================================================================
+# CONFIGURE LOGO MENU (macOS-style Apple menu)
+# ============================================================================
+
+- name: Configure Logo Menu - show activities button
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/logo-menu/show-activities-button"
+    value: "false"
+    state: present
+  become: false
+  when: ansible_distribution == 'Ubuntu'
+
+# ============================================================================
+# CONFIGURE MAGIC LAMP EFFECT
+# ============================================================================
+
+- name: Configure Magic Lamp - effect duration
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/com.github.hermes83.compiz-alike-magic-lamp-effect/duration"
+    value: "200"
+    state: present
+  become: false
+  when: ansible_distribution == 'Ubuntu'
+
+# ============================================================================
+# WALLPAPER DEPLOYMENT (system-wide, safe from apt/dnf updates)
+# ============================================================================
+
+- name: Create local backgrounds directory (safe from package updates)
+  ansible.builtin.file:
+    path: /usr/local/share/backgrounds
+    state: directory
+    mode: '0755'
+
+- name: Deploy DFE background image
+  ansible.builtin.copy:
+    src: dfe-background.svg
+    dest: /usr/local/share/backgrounds/dfe-background.svg
+    mode: '0644'
+
+- name: Set DFE background as default (light mode)
+  community.general.dconf:
+    key: "/org/gnome/desktop/background/picture-uri"
+    value: "'file:///usr/local/share/backgrounds/dfe-background.svg'"
+    state: present
+  become: false
+
+- name: Set DFE background as default (dark mode)
+  community.general.dconf:
+    key: "/org/gnome/desktop/background/picture-uri-dark"
+    value: "'file:///usr/local/share/backgrounds/dfe-background.svg'"
+    state: present
+  become: false
+
+- name: Set background scaling mode
+  community.general.dconf:
+    key: "/org/gnome/desktop/background/picture-options"
+    value: "'zoom'"
+    state: present
+  become: false
+
+# ============================================================================
+# UPDATE ALL EXTENSIONS
+# ============================================================================
+
+- name: Update all installed extensions to latest versions
+  ansible.builtin.command:
+    cmd: "{{ dfe_user_home }}/.local/bin/gext -F update"
+  become: true
+  become_user: "{{ dfe_actual_user }}"
+  changed_when: false
+  failed_when: false
+  when: ansible_distribution == 'Ubuntu'
