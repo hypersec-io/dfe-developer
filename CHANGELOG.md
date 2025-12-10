@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.6](https://github.com/hypersec-io/dfe-developer/compare/v2.8.5...v2.8.6) (2025-12-10)
+
+
+### Bug Fixes
+
+* Linear CLI installation uses user npm-global directory ([28d72a6](https://github.com/hypersec-io/dfe-developer/commit/28d72a6c7ba6622e967e73ed898947cd7ad4a417))
+
 ## [2.8.5](https://github.com/hypersec-io/dfe-developer/compare/v2.8.4...v2.8.5) (2025-12-10)
 
 
