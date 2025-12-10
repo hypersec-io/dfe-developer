@@ -35,11 +35,16 @@
         dest: /etc/apt/keyrings/google-chrome.asc
         mode: '0644'
 
-    - name: Add Google Chrome repository
-      ansible.builtin.apt_repository:
-        repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/google-chrome.asc] https://dl.google.com/linux/chrome/deb/ stable main"
-        filename: google-chrome
-        state: present
+    # Chrome's post-install script adds its own repo line without signed-by
+    # We need to ensure only our modern signed-by format is used
+    - name: Write clean Chrome repository file (avoid duplicates)
+      ansible.builtin.copy:
+        content: |
+          # Managed by DFE Developer Ansible - DO NOT EDIT
+          # Chrome's post-install script may add duplicates, this file is cleaned on each run
+          deb [arch=amd64 signed-by=/etc/apt/keyrings/google-chrome.asc] https://dl.google.com/linux/chrome/deb/ stable main
+        dest: /etc/apt/sources.list.d/google-chrome.list
+        mode: '0644'
 
     - name: Install Google Chrome
       ansible.builtin.apt:

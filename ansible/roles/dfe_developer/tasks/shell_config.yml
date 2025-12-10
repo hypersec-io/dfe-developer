@@ -1,5 +1,34 @@
 ---
-# Shell configuration (bash history auto-commit, etc.)
+# Shell configuration (PATH, bash history auto-commit, etc.)
+
+# ============================================================================
+# PATH CONFIGURATION (SYSTEM-WIDE)
+# Add common tool directories to PATH for all users
+# ============================================================================
+
+- name: Configure DFE PATH additions system-wide (Linux)
+  ansible.builtin.copy:
+    dest: /etc/profile.d/dfe-path.sh
+    content: |
+      # DFE Developer Environment PATH additions
+      # System-wide configuration for all users
+
+      # Add ~/.cargo/bin for UV, Rust tools
+      if [ -d "$HOME/.cargo/bin" ]; then
+          export PATH="$HOME/.cargo/bin:$PATH"
+      fi
+
+      # Add ~/.local/bin for user-installed tools (pipx, gext, etc.)
+      if [ -d "$HOME/.local/bin" ]; then
+          export PATH="$HOME/.local/bin:$PATH"
+      fi
+
+      # Add ~/.npm-global/bin for npm global tools (claude, semantic-release, etc.)
+      if [ -d "$HOME/.npm-global/bin" ]; then
+          export PATH="$HOME/.npm-global/bin:$PATH"
+      fi
+    mode: '0644'
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
 
 # ============================================================================
 # BASH HISTORY AUTO-COMMIT (SYSTEM-WIDE)
