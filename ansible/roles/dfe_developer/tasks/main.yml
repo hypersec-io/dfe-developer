@@ -25,6 +25,8 @@
 - name: Install development utilities
   ansible.builtin.include_tasks:
     file: utilities.yml
+    apply:
+      tags: ['utilities']
   tags: ['utilities']
 
 - name: Install Python development tools
