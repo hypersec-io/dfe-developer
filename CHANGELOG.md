@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.1](https://github.com/hypersec-io/dfe-developer/compare/v2.8.0...v2.8.1) (2025-12-10)
+
+
+### Bug Fixes
+
+* Keep git-core PPA, add apply:tags to git include ([b093445](https://github.com/hypersec-io/dfe-developer/commit/b09344547176e7b2a10bb9a6bd1a5de87511de68))
+
 # [2.8.0](https://github.com/hypersec-io/dfe-developer/compare/v2.7.0...v2.8.0) (2025-12-10)
 
 
