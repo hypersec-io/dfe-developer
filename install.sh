@@ -101,8 +101,8 @@ EXAMPLES:
   Install everything except wallpaper:
     ./install.sh --all --tags-exclude wallpaper
 
-  Install everything with macOS-style (note: winlike takes precedence in --all):
-    ./install.sh --tags developer,base,core,advanced,vm,optimizer,rdp,maclike
+  Install everything with macOS-style (maclike overrides winlike):
+    ./install.sh --all --tags maclike
 
   Install RDP support for remote desktop access:
     ./install.sh --tags developer,base,rdp
@@ -111,7 +111,7 @@ EXAMPLES:
     ./install.sh --check
 
 NOTES:
-  - If both winlike and maclike are included, winlike takes precedence
+  - If both winlike and maclike are included, maclike takes precedence
   - RDP configures GNOME Remote Desktop with default credentials (dfe/dfe)
   - ghostty, fastestmirror, and wallpaper are included by default
   - Use --tags-exclude to disable default features without specifying all tags
@@ -171,6 +171,15 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+# Handle maclike/winlike priority: maclike overrides winlike
+# If both are specified, remove winlike from tags
+if [[ "$ANSIBLE_TAGS" == *"maclike"* ]] && [[ "$ANSIBLE_TAGS" == *"winlike"* ]]; then
+    print_info "Both maclike and winlike specified - using maclike (maclike takes precedence)"
+    ANSIBLE_TAGS="${ANSIBLE_TAGS//,winlike/}"
+    ANSIBLE_TAGS="${ANSIBLE_TAGS//winlike,/}"
+    ANSIBLE_TAGS="${ANSIBLE_TAGS//winlike/}"
+fi
 
 # Detect operating system
 print_info "Detecting operating system..."

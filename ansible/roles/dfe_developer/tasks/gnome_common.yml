@@ -31,12 +31,21 @@
     state: present
   when: ansible_distribution == 'Ubuntu'
 
+- name: Install GNOME extension prerequisites (Fedora)
+  ansible.builtin.dnf:
+    name:
+      - gnome-shell-extension-common  # Base extension infrastructure
+      - gnome-extensions-app          # GUI for managing extensions
+      - pipx                          # Isolated Python apps
+    state: present
+  when: ansible_distribution == 'Fedora'
+
 - name: Ensure pipx path is configured
   ansible.builtin.command:
     cmd: pipx ensurepath
   become: false
   changed_when: false
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_distribution in ['Ubuntu', 'Fedora']
 
 - name: Install gnome-extensions-cli via pipx
   community.general.pipx:
@@ -48,10 +57,10 @@
   environment:
     PIPX_HOME: "{{ dfe_user_home }}/.local/pipx"
     PIPX_BIN_DIR: "{{ dfe_user_home }}/.local/bin"
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_distribution in ['Ubuntu', 'Fedora']
 
 # ============================================================================
-# INSTALL SYSTEM MONITOR EXTENSION (common to both styles)
+# INSTALL SYSTEM MONITOR EXTENSION (from extensions.gnome.org via gext)
 # ============================================================================
 
 - name: Install System Monitor extension via gext
@@ -64,7 +73,14 @@
   failed_when:
     - system_monitor_install.rc != 0
     - "'already installed' not in system_monitor_install.stdout"
-  when: ansible_distribution == 'Ubuntu'
+
+- name: Compile System Monitor schemas
+  ansible.builtin.command:
+    cmd: glib-compile-schemas {{ dfe_user_home }}/.local/share/gnome-shell/extensions/system-monitor@gnome-shell-extensions.gcampax.github.com/schemas/
+  become: true
+  become_user: "{{ dfe_actual_user }}"
+  changed_when: false
+  failed_when: false
 
 # ============================================================================
 # COMMON DCONF SETTINGS

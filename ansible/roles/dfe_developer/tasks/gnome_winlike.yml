@@ -26,10 +26,10 @@
   when: ansible_distribution == 'Ubuntu'
 
 # ============================================================================
-# INSTALL DASH TO PANEL (from extensions.gnome.org)
+# INSTALL DASH TO PANEL (from extensions.gnome.org via gext)
 # ============================================================================
 
-- name: Install Dash to Panel extension
+- name: Install Dash to Panel extension via gext
   ansible.builtin.command:
     cmd: "{{ dfe_user_home }}/.local/bin/gext -F install dash-to-panel@jderose9.github.com"
   become: true
@@ -39,7 +39,14 @@
   failed_when:
     - dash_to_panel_install.rc != 0
     - "'already installed' not in dash_to_panel_install.stdout"
-  when: ansible_distribution == 'Ubuntu'
+
+- name: Compile Dash to Panel schemas
+  ansible.builtin.command:
+    cmd: glib-compile-schemas {{ dfe_user_home }}/.local/share/gnome-shell/extensions/dash-to-panel@jderose9.github.com/schemas/
+  become: true
+  become_user: "{{ dfe_actual_user }}"
+  changed_when: false
+  failed_when: false
 
 # ============================================================================
 # ENABLE EXTENSIONS VIA DCONF
@@ -74,6 +81,20 @@
   community.general.dconf:
     key: "/org/gnome/shell/extensions/dash-to-panel/panel-sizes"
     value: "'{\"0\":48}'"
+    state: present
+  become: false
+
+- name: Configure Dash to Panel - full width panel (100%)
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/dash-to-panel/panel-lengths"
+    value: "'{\"0\":100}'"
+    state: present
+  become: false
+
+- name: Configure Dash to Panel - panel anchor middle
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/dash-to-panel/panel-anchors"
+    value: "'{\"0\":\"MIDDLE\"}'"
     state: present
   become: false
 
