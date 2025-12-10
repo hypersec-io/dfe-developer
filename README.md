@@ -7,148 +7,94 @@
 [![Last Commit](https://img.shields.io/github/last-commit/hypersec-io/dfe-developer)](https://github.com/hypersec-io/dfe-developer/commits/main)
 [![Stars](https://img.shields.io/github/stars/hypersec-io/dfe-developer?style=social)](https://github.com/hypersec-io/dfe-developer/stargazers)
 
-Standardised complete developer environment setup for HyperSec DFE developers across multiple platforms.
+Standardised developer environment for HyperSec DFE teams. One command gets you Docker, Kubernetes tools, cloud CLIs, and a properly configured desktop.
 
 ## Platform Support
 
-- **[Multi-Platform (Recommended)](#multi-platform-quick-start)** - Ansible-based setup for Ubuntu, Fedora, and macOS
-- **[Windows 11](#windows-11-soe)** - Productivity and VM host setup with Hyper-V
+| Platform | Status | Notes |
+|----------|--------|-------|
+| **Ubuntu 24.04** | Fully tested | Primary platform |
+| **Fedora 42** | Fully tested | GNOME 48 compatible |
+| **macOS Sequoia** | Fully tested | Homebrew-based |
+| **Windows 11** | Productivity host | Hyper-V for Linux VMs |
 
-## Multi-Platform Quick Start
-
-**Recommended for all new installations.** Supports Ubuntu 24.04+ (primary), Fedora 42+, and macOS.
-
-**v2.4+**: Ubuntu is now the primary supported platform, with Fedora and macOS as secondary platforms.
+## Quick Start
 
 ```bash
-# Clone the repository
 git clone https://github.com/hypersec-io/dfe-developer
 cd dfe-developer
 
-# Install base developer environment (default)
+# Base install (Docker, Git, K8s tools, VS Code, Chrome)
 ./install.sh
 
-# Install with core developer tools
-./install.sh --core
-
-# Install everything (base + core + VM + RDP + winlike desktop)
+# Full install with everything
 ./install.sh --all
 
-# Include Windows-style GNOME desktop (bottom taskbar)
-./install.sh --tags developer,base,winlike
-
-# Include macOS-style GNOME desktop (dock, logo menu, magic lamp)
-./install.sh --tags developer,base,maclike
-
-# Exclude specific features (ghostty, fastestmirror, wallpaper)
-./install.sh --tags-exclude ghostty,wallpaper
-
-# Dry-run to see what would change
+# Check what would change first
 ./install.sh --check
 ```
 
-The Ansible-based installer automatically detects your OS and installs the appropriate packages.
+The installer detects your OS and installs the right packages. Run `./install.sh --help` for all options.
 
-### Tag-Based Installation
-
-All options use Ansible tags. Use `--tags` to include features, `--tags-exclude` to exclude them.
+### Installation Options
 
 ```bash
-# Include specific tags
+# Windows-style taskbar (Dash to Panel)
 ./install.sh --tags developer,base,winlike
 
-# Exclude specific tags (from default or --all)
-./install.sh --tags-exclude ghostty,wallpaper
+# macOS-style dock
+./install.sh --tags developer,base,maclike
 
-# Combine: install everything except specific features
+# Core tools (JFrog, Azure CLI, Node.js, Linear CLI)
+./install.sh --core
+
+# Full install without wallpaper
 ./install.sh --all --tags-exclude wallpaper
 ```
 
-#### Available Tags
+### Available Tags
 
-**Base Tags (included by default):**
-
-- `developer` - Base DFE developer role
-- `base` - Base tools (Docker, Git, K8s, Python, VS Code, Chrome)
-
-**Feature Tags (opt-in, require explicit --tags or --all):**
-
-- `winlike` - Windows-style GNOME taskbar (Dash to Panel, bottom panel)
-- `maclike` - macOS-style GNOME dock (Dash to Dock, Logo Menu, Magic Lamp)
-- `core` - Core developer tools (JFrog, Azure CLI, Node.js, Linear CLI)
-- `advanced` - Advanced tools (included with --core)
-- `vm` - VM guest optimizations (QEMU guest agent, SPICE agent)
-- `optimizer` - VM optimizer role (included with --vm)
-- `rdp` - GNOME Remote Desktop configuration (RDP server on port 3389)
-
-**Optional Tags (included by default, can be excluded):**
-
-- `ghostty` - Ghostty terminal emulator
-- `fastestmirror` - DNF/APT performance optimizations
-- `wallpaper` - Custom DFE wallpaper
-
-**Component Tags:**
-
-- `docker` - Docker Desktop (macOS) or Docker CE (Linux)
-- `git` - Latest Git + GitHub CLI + Git LFS
-- `cloud` - AWS CLI, Helm, Terraform, Vault
-- `k8s` - kubectl, k9s, kubectx, minikube, argocd, dive
-- `python` - UV Python manager
-- `utilities` - Development utilities (jq, bat, fzf, ripgrep, etc.)
-- `vscode` - Visual Studio Code
-- `chrome` - Google Chrome
-
-**Core Component Tags (require --core or explicit --tags):**
-
-- `jfrog` - JFrog CLI
-- `azure` - Azure CLI
-- `nodejs` - Node.js + semantic-release
-- `linear` - Linear CLI
-- `openvpn` - OpenVPN 3 client
-- `claude` - Claude Code CLI
-- `slack` - Slack (GUI)
-
-#### Using Ansible directly
-
-```bash
-cd ansible
-
-# Install only Docker (dependencies run automatically)
-ansible-playbook -i inventories/localhost/inventory.yml playbooks/main.yml --tags docker
-
-# Install with winlike desktop
-ansible-playbook -i inventories/localhost/inventory.yml playbooks/main.yml --tags developer,base,winlike
-
-# Install everything EXCEPT Ghostty terminal
-ansible-playbook -i inventories/localhost/inventory.yml playbooks/main.yml --skip-tags ghostty
-```
+| Tag | Description |
+|-----|-------------|
+| `winlike` | Windows-style taskbar with transparent panel |
+| `maclike` | macOS-style dock (overrides winlike if both specified) |
+| `core` | JFrog CLI, Azure CLI, Node.js, Linear CLI, OpenVPN |
+| `rdp` | GNOME Remote Desktop on port 3389 |
+| `vm` | VM guest optimizations (QEMU/SPICE agents) |
+| `ghostty` | Ghostty terminal (included by default) |
+| `wallpaper` | Custom wallpaper (included by default) |
 
 ## What Gets Installed
 
-### Standard Developer Tools
-- Docker CE and Docker Compose
-- Python development (UV, pyenv)
-- Cloud tools (AWS CLI, kubectl, Helm + Dashboard, Terraform)
-- Kubernetes tools (K9s, Freelens, Minikube, ArgoCD)
-- Git extensions and GitHub CLI
-- Development utilities (jq, yq, bat, fzf, ripgrep)
-- VS Code configuration
+**Base install** (`./install.sh`):
 
-### DFE Core Developer Tools
-- JFrog CLI
-- Azure CLI
-- Node.js and semantic-release
-- AI coding assistants (Claude Code CLI)
-- Advanced Python tools (Nox, UV)
-- Slack (Flatpak)
+- Docker CE + Docker Desktop
+- Git, GitHub CLI, Git LFS
+- kubectl, k9s, kubectx, minikube, ArgoCD, dive, Freelens
+- AWS CLI, Helm, Terraform, Vault
+- UV (Python manager)
+- VS Code, Chrome
+- Ghostty terminal (Solarized theme)
+- Development utilities (jq, yq, bat, fzf, ripgrep, htop)
 
-## System Requirements
+**Core tools** (`./install.sh --core`):
 
-- **Ubuntu:** 24.04 LTS or later (primary)
-- **Fedora:** 42 or later
-- **macOS:** Sequoia 15.3.1 or later
-- 4GB RAM minimum (8GB recommended)
-- 20GB available disk space
+- JFrog CLI, Azure CLI
+- Node.js, semantic-release, Linear CLI
+- OpenVPN 3, Claude Code CLI
+- Slack, Gitleaks, act (GitHub Actions runner)
+
+**Desktop** (`winlike` or `maclike` tag):
+
+- GNOME extensions from extensions.gnome.org
+- Transparent taskbar (winlike) or dock (maclike)
+- Custom wallpaper
+
+## Requirements
+
+- **Ubuntu 24.04+**, **Fedora 42+**, or **macOS Sequoia**
+- 8GB RAM recommended
+- 20GB disk space
 - Internet connection
 
 ## Project Structure
@@ -298,7 +244,7 @@ cd windows
 - **Core Isolation** - Memory integrity protection
 - **Defender ATP** - Optional automated onboarding (drop package in directory)
 
-### Requirements
+### Windows Requirements
 
 - **Windows 11 Pro** (24H2 or later recommended, Build 26100+)
 - **Administrator privileges**

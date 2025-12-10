@@ -7,10 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.8.7](https://github.com/hypersec-io/dfe-developer/compare/v2.8.6...v2.8.7) (2025-12-10)
 
+### Fully Tested Release
+
+All platforms tested on fresh VMs with zero failures:
+
+| Platform | Tasks | Result |
+|----------|-------|--------|
+| Fedora 42 | 319 ok, 0 failed | PASS |
+| Ubuntu 24.04 | 346 ok, 0 failed | PASS |
+| macOS Sequoia | 120 ok, 0 failed | PASS |
 
 ### Bug Fixes
 
-* Ghostty theme names, deprecated options, and panel transparency ([c974634](https://github.com/hypersec-io/dfe-developer/commit/c97463446229debd9d930a7d3d84f9e60205874f))
+* Ghostty theme names updated to Ghostty 1.2.x format (`Builtin Solarized Light/Dark`)
+* Ghostty deprecated `gtk-single-instance` option removed (was causing startup hangs)
+* Ghostty global keybind disabled (causes issues on GNOME/RDP)
+* Linear CLI now installs to user npm-global directory (not system-wide)
+* Dash to Panel transparency enabled by default (60% opacity)
+
+### Features
+
+* GNOME extensions installed via gext (extensions.gnome.org) for GNOME 48 compatibility
+* winlike/maclike tag exclusivity enforced (maclike overrides if both specified)
+* Added `ansible/test.sh` for easier testing
+
+---
 
 ## [2.8.6](https://github.com/hypersec-io/dfe-developer/compare/v2.8.5...v2.8.6) (2025-12-10)
 
