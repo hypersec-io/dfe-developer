@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.3](https://github.com/hypersec-io/dfe-developer/compare/v2.8.2...v2.8.3) (2025-12-10)
+
+
+### Bug Fixes
+
+* GNOME extensions use gext for all platforms, maclike overrides winlike ([4dbca44](https://github.com/hypersec-io/dfe-developer/commit/4dbca44bde1864dcf2e0fc5e6d398b42bcc37765))
+
 ## [2.8.2](https://github.com/hypersec-io/dfe-developer/compare/v2.8.1...v2.8.2) (2025-12-10)
 
 
