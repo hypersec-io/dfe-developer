@@ -1,5 +1,11 @@
 ---
-# Claude Code CLI installation (user-specific via npm)
+# Claude Code CLI installation and managed settings
+#
+# Installs Claude Code CLI and configures system-wide managed settings
+# that apply to all users and cannot be overridden.
+#
+# Settings location: /etc/claude-code/managed-settings.json (Linux)
+#                   /Library/Application Support/ClaudeCode/managed-settings.json (macOS)
 
 - name: Install Claude Code CLI globally for user (Linux)
   community.general.npm:
@@ -38,4 +44,94 @@
   become: false
   failed_when: false
   changed_when: false
+  when: ansible_distribution == 'MacOSX'
+
+# ============================================================================
+# System-wide Managed Settings
+# ============================================================================
+# These settings apply to all users and cannot be overridden.
+# - Disables telemetry and error reporting
+# - Disables Co-Authored-By commit attribution
+# - Denies access to sensitive files (.env, secrets, keys, credentials)
+
+- name: Create Claude Code managed settings directory (Linux)
+  ansible.builtin.file:
+    path: /etc/claude-code
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+- name: Create Claude Code managed settings directory (macOS)
+  ansible.builtin.file:
+    path: /Library/Application Support/ClaudeCode
+    state: directory
+    mode: '0755'
+    owner: root
+    group: wheel
+  when: ansible_distribution == 'MacOSX'
+
+- name: Install Claude Code managed settings (Linux)
+  ansible.builtin.copy:
+    dest: /etc/claude-code/managed-settings.json
+    mode: '0644'
+    owner: root
+    group: root
+    content: |
+      {
+        "env": {
+          "DISABLE_TELEMETRY": "1",
+          "DISABLE_ERROR_REPORTING": "1",
+          "DISABLE_BUG_COMMAND": "1",
+          "DISABLE_NON_ESSENTIAL_MODEL_CALLS": "1"
+        },
+        "includeCoAuthoredBy": false,
+        "permissions": {
+          "deny": [
+            "Read(./.env)",
+            "Read(./.env.*)",
+            "Read(./secrets/**)",
+            "Read(./**/*.pem)",
+            "Read(./**/*.key)",
+            "Read(./**/credentials*)",
+            "Read(./**/*secret*)",
+            "Read(~/.ssh/**)",
+            "Read(~/.aws/**)",
+            "Read(~/.gnupg/**)"
+          ]
+        }
+      }
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+- name: Install Claude Code managed settings (macOS)
+  ansible.builtin.copy:
+    dest: /Library/Application Support/ClaudeCode/managed-settings.json
+    mode: '0644'
+    owner: root
+    group: wheel
+    content: |
+      {
+        "env": {
+          "DISABLE_TELEMETRY": "1",
+          "DISABLE_ERROR_REPORTING": "1",
+          "DISABLE_BUG_COMMAND": "1",
+          "DISABLE_NON_ESSENTIAL_MODEL_CALLS": "1"
+        },
+        "includeCoAuthoredBy": false,
+        "permissions": {
+          "deny": [
+            "Read(./.env)",
+            "Read(./.env.*)",
+            "Read(./secrets/**)",
+            "Read(./**/*.pem)",
+            "Read(./**/*.key)",
+            "Read(./**/credentials*)",
+            "Read(./**/*secret*)",
+            "Read(~/.ssh/**)",
+            "Read(~/.aws/**)",
+            "Read(~/.gnupg/**)"
+          ]
+        }
+      }
   when: ansible_distribution == 'MacOSX'
