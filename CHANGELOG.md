@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [2.9.0](https://github.com/hypersec-io/dfe-developer/compare/v2.8.7...v2.9.0) (2025-12-11)
+
+
+### Features
+
+* Add Claude Code managed settings for enterprise deployments ([bafd83a](https://github.com/hypersec-io/dfe-developer/commit/bafd83ab806134b56c2a485faef1d9c4716ded57))
+
 ## [2.8.7](https://github.com/hypersec-io/dfe-developer/compare/v2.8.6...v2.8.7) (2025-12-10)
 
 ### Fully Tested Release
