@@ -141,3 +141,110 @@
     value: "'prefer-dark'"
     state: present
   become: false
+
+# ============================================================================
+# FONT INSTALLATION (system-wide fonts for consistency across distros)
+# ============================================================================
+
+# Install Martel Sans font (used for various UI elements)
+- name: Create Martel Sans fonts directory
+  ansible.builtin.file:
+    path: /usr/local/share/fonts/martel-sans
+    state: directory
+    mode: '0755'
+  when: ansible_distribution in ['Ubuntu', 'Fedora']
+
+- name: Install Martel Sans fonts
+  ansible.builtin.copy:
+    src: "fonts/martel-sans/{{ item }}"
+    dest: "/usr/local/share/fonts/martel-sans/{{ item }}"
+    mode: '0644'
+  loop:
+    - MartelSans-Regular.ttf
+    - MartelSans-Light.ttf
+    - MartelSans-ExtraLight.ttf
+    - MartelSans-SemiBold.ttf
+    - MartelSans-Bold.ttf
+    - MartelSans-ExtraBold.ttf
+    - MartelSans-Black.ttf
+  when: ansible_distribution in ['Ubuntu', 'Fedora']
+  register: martel_fonts_installed
+
+# ============================================================================
+# FONT CONFIGURATION (Adwaita Sans for GNOME 47+ consistency across distros)
+# ============================================================================
+
+# Check if Adwaita Sans is installed (GNOME 47+ font, not available in Ubuntu 24.04)
+- name: Check if Adwaita Sans font is installed
+  ansible.builtin.stat:
+    path: /usr/share/fonts/adwaita-sans/AdwaitaSans-Regular.ttf
+  register: adwaita_sans_check
+  when: ansible_distribution == 'Ubuntu'
+
+# Install Adwaita Sans and Mono fonts on Ubuntu (to match Fedora GNOME 47+)
+- name: Create Adwaita fonts directory (Ubuntu)
+  ansible.builtin.file:
+    path: /usr/share/fonts/adwaita-sans
+    state: directory
+    mode: '0755'
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - not adwaita_sans_check.stat.exists | default(true)
+
+- name: Install Adwaita Sans fonts (Ubuntu)
+  ansible.builtin.copy:
+    src: "fonts/adwaita/{{ item }}"
+    dest: "/usr/share/fonts/adwaita-sans/{{ item }}"
+    mode: '0644'
+  loop:
+    - AdwaitaSans-Regular.ttf
+    - AdwaitaSans-Italic.ttf
+    - AdwaitaMono-Regular.ttf
+    - AdwaitaMono-Bold.ttf
+    - AdwaitaMono-Italic.ttf
+    - AdwaitaMono-BoldItalic.ttf
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - not adwaita_sans_check.stat.exists | default(true)
+  register: adwaita_fonts_installed
+
+- name: Rebuild font cache
+  ansible.builtin.command:
+    cmd: fc-cache -f
+  changed_when: true
+  when:
+    - ansible_distribution in ['Ubuntu', 'Fedora']
+    - (adwaita_fonts_installed.changed | default(false)) or (martel_fonts_installed.changed | default(false))
+
+# Set Adwaita Sans as default fonts (GNOME 47+ style for all Linux distros)
+- name: Set interface font (Adwaita Sans 11)
+  community.general.dconf:
+    key: "/org/gnome/desktop/interface/font-name"
+    value: "'Adwaita Sans 11'"
+    state: present
+  become: false
+  when: ansible_distribution in ['Ubuntu', 'Fedora']
+
+- name: Set document font (Adwaita Sans 11)
+  community.general.dconf:
+    key: "/org/gnome/desktop/interface/document-font-name"
+    value: "'Adwaita Sans 11'"
+    state: present
+  become: false
+  when: ansible_distribution in ['Ubuntu', 'Fedora']
+
+- name: Set monospace font (Adwaita Mono 11)
+  community.general.dconf:
+    key: "/org/gnome/desktop/interface/monospace-font-name"
+    value: "'Adwaita Mono 11'"
+    state: present
+  become: false
+  when: ansible_distribution in ['Ubuntu', 'Fedora']
+
+- name: Set window title font (Adwaita Sans Bold 11)
+  community.general.dconf:
+    key: "/org/gnome/desktop/wm/preferences/titlebar-font"
+    value: "'Adwaita Sans Bold 11'"
+    state: present
+  become: false
+  when: ansible_distribution in ['Ubuntu', 'Fedora']
