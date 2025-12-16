@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.11.1](https://github.com/hypersec-io/dfe-developer/compare/v2.11.0...v2.11.1) (2025-12-16)
+
+
+### Bug Fixes
+
+* Use ask instead of deny for sensitive file permissions in Claude Code ([5768dc8](https://github.com/hypersec-io/dfe-developer/commit/5768dc80eee71aa2945be51914cfca339645007d))
+
 # [2.11.0](https://github.com/hypersec-io/dfe-developer/compare/v2.10.0...v2.11.0) (2025-12-16)
 
 
