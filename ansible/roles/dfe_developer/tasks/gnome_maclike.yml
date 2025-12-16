@@ -6,6 +6,7 @@
 # - Dash to Dock: macOS-style dock
 # - Logo Menu: macOS-style Apple menu replacement
 # - Compiz Magic Lamp Effect: macOS-style minimize animation
+# - Window State Manager: Remember/restore window positions across sessions
 # - System Monitor: CPU/Memory in panel (from gnome_common.yml)
 
 # ============================================================================
@@ -60,6 +61,17 @@
     - magic_lamp_install.rc != 0
     - "'already installed' not in magic_lamp_install.stdout"
 
+- name: Install Window State Manager extension via gext
+  ansible.builtin.command:
+    cmd: "{{ dfe_user_home }}/.local/bin/gext -F install window-state-manager@kishorv06.github.io"
+  become: true
+  become_user: "{{ dfe_actual_user }}"
+  register: window_state_install
+  changed_when: "'already installed' not in window_state_install.stdout"
+  failed_when:
+    - window_state_install.rc != 0
+    - "'already installed' not in window_state_install.stdout"
+
 # ============================================================================
 # ENABLE EXTENSIONS VIA DCONF
 # ============================================================================
@@ -67,7 +79,7 @@
 - name: Enable macOS-like extensions
   community.general.dconf:
     key: "/org/gnome/shell/enabled-extensions"
-    value: "['system-monitor@gnome-shell-extensions.gcampax.github.com', 'dash-to-dock@micxgx.gmail.com', 'logomenu@aryan_k', 'compiz-alike-magic-lamp-effect@hermes83.github.com']"
+    value: "['system-monitor@gnome-shell-extensions.gcampax.github.com', 'dash-to-dock@micxgx.gmail.com', 'logomenu@aryan_k', 'compiz-alike-magic-lamp-effect@hermes83.github.com', 'window-state-manager@kishorv06.github.io']"
     state: present
   become: false
 

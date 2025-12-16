@@ -61,6 +61,7 @@
       - postgresql
       - ansible
       - parallel
+      - nemo                  # file manager (better than Nautilus)
     state: present
   when: ansible_distribution == 'Fedora'
 
@@ -92,8 +93,19 @@
       - postgresql-client
       - ansible
       - parallel
+      - nemo                  # file manager (better than Nautilus)
     state: present
   when: ansible_distribution == 'Ubuntu'
+
+# Set Nemo as default file manager (replaces Nautilus)
+- name: Set Nemo as default file manager
+  ansible.builtin.command:
+    cmd: xdg-mime default nemo.desktop inode/directory
+  become: false
+  changed_when: false
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - dfe_has_gnome | default(false)
 
 # yq - Binary download
 - name: Download yq
