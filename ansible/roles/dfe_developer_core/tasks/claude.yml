@@ -52,7 +52,7 @@
 # These settings apply to all users and cannot be overridden.
 # - Disables telemetry and error reporting
 # - Disables Co-Authored-By commit attribution
-# - Denies access to sensitive files (.env, secrets, keys, credentials)
+# - Prompts before accessing sensitive files (.env, secrets, keys, credentials)
 
 - name: Create Claude Code managed settings directory (Linux)
   ansible.builtin.file:
@@ -74,64 +74,18 @@
 
 - name: Install Claude Code managed settings (Linux)
   ansible.builtin.copy:
+    src: managed-settings.json
     dest: /etc/claude-code/managed-settings.json
     mode: '0644'
     owner: root
     group: root
-    content: |
-      {
-        "env": {
-          "DISABLE_TELEMETRY": "1",
-          "DISABLE_ERROR_REPORTING": "1",
-          "DISABLE_BUG_COMMAND": "1",
-          "DISABLE_NON_ESSENTIAL_MODEL_CALLS": "1"
-        },
-        "includeCoAuthoredBy": false,
-        "permissions": {
-          "deny": [
-            "Read(./.env)",
-            "Read(./.env.*)",
-            "Read(./secrets/**)",
-            "Read(./**/*.pem)",
-            "Read(./**/*.key)",
-            "Read(./**/credentials*)",
-            "Read(./**/*secret*)",
-            "Read(~/.ssh/**)",
-            "Read(~/.aws/**)",
-            "Read(~/.gnupg/**)"
-          ]
-        }
-      }
   when: ansible_distribution in ['Fedora', 'Ubuntu']
 
 - name: Install Claude Code managed settings (macOS)
   ansible.builtin.copy:
+    src: managed-settings.json
     dest: /Library/Application Support/ClaudeCode/managed-settings.json
     mode: '0644'
     owner: root
     group: wheel
-    content: |
-      {
-        "env": {
-          "DISABLE_TELEMETRY": "1",
-          "DISABLE_ERROR_REPORTING": "1",
-          "DISABLE_BUG_COMMAND": "1",
-          "DISABLE_NON_ESSENTIAL_MODEL_CALLS": "1"
-        },
-        "includeCoAuthoredBy": false,
-        "permissions": {
-          "deny": [
-            "Read(./.env)",
-            "Read(./.env.*)",
-            "Read(./secrets/**)",
-            "Read(./**/*.pem)",
-            "Read(./**/*.key)",
-            "Read(./**/credentials*)",
-            "Read(./**/*secret*)",
-            "Read(~/.ssh/**)",
-            "Read(~/.aws/**)",
-            "Read(~/.gnupg/**)"
-          ]
-        }
-      }
   when: ansible_distribution == 'MacOSX'
