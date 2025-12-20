@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.11.2](https://github.com/hypersec-io/dfe-developer/compare/v2.11.1...v2.11.2) (2025-12-20)
+
+
+### Bug Fixes
+
+* Add python3 and pytest as explicit system packages ([d959a1c](https://github.com/hypersec-io/dfe-developer/commit/d959a1c1010a81b2db76b12dc699c320c5442161))
+
 ## [2.11.1](https://github.com/hypersec-io/dfe-developer/compare/v2.11.0...v2.11.1) (2025-12-16)
 
 
