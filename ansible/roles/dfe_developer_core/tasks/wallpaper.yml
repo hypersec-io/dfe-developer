@@ -2,6 +2,19 @@
 # Default wallpaper installation
 # Uses default-background.svg from role's files directory
 
+# Install psutil for dconf module (required for GNOME settings)
+- name: Install psutil for dconf module (Ubuntu)
+  ansible.builtin.apt:
+    name: python3-psutil
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install psutil for dconf module (Fedora)
+  ansible.builtin.dnf:
+    name: python3-psutil
+    state: present
+  when: ansible_distribution == 'Fedora'
+
 - name: Set wallpaper filename
   ansible.builtin.set_fact:
     dfe_wallpaper_name: "default-background.svg"

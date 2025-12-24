@@ -1,0 +1,719 @@
+#!/bin/bash
+# ui-mode - Configure GNOME desktop UI mode (Windows-like or macOS-like)
+# Licensed under Apache License 2.0
+#
+# Manages GNOME shell extensions and settings to provide either a Windows-style
+# taskbar experience (winlike) or a macOS-style dock experience (maclike).
+#
+# Usage:
+#   ui-mode winlike    # Windows-style taskbar at bottom
+#   ui-mode maclike    # macOS-style dock with auto-hide
+#   ui-mode system     # Reset to system defaults
+#   ui-mode status     # Show current mode
+#   ui-mode --install  # Install required extensions (run once)
+
+set -euo pipefail
+
+# ============================================================================
+# CONSTANTS
+# ============================================================================
+
+readonly SCRIPT_NAME="ui-mode"
+readonly SCRIPT_VERSION="1.0.0"
+
+# Supported distributions and minimum versions
+# Format: "DISTRO_ID:MIN_VERSION"
+readonly SUPPORTED_DISTROS=(
+    "fedora:41"
+    "ubuntu:24.04"
+)
+
+# Global flag for forcing operation on unsupported systems
+FORCE_MODE=false
+
+# Extension IDs
+readonly EXT_SYSTEM_MONITOR="system-monitor@gnome-shell-extensions.gcampax.github.com"
+readonly EXT_DASH_TO_PANEL="dash-to-panel@jderose9.github.com"
+readonly EXT_DASH_TO_DOCK="dash-to-dock@micxgx.gmail.com"
+readonly EXT_LOGO_MENU="logomenu@aryan_k"
+readonly EXT_MAGIC_LAMP="compiz-alike-magic-lamp-effect@hermes83.github.com"
+readonly EXT_WINDOW_STATE="window-state-manager@kishorv06.github.io"
+readonly EXT_UBUNTU_DOCK="ubuntu-dock@ubuntu.com"
+
+# All extensions we manage
+readonly ALL_EXTENSIONS=(
+    "$EXT_SYSTEM_MONITOR"
+    "$EXT_DASH_TO_PANEL"
+    "$EXT_DASH_TO_DOCK"
+    "$EXT_LOGO_MENU"
+    "$EXT_MAGIC_LAMP"
+    "$EXT_WINDOW_STATE"
+)
+
+# Extensions for each mode
+readonly WINLIKE_EXTENSIONS=(
+    "$EXT_SYSTEM_MONITOR"
+    "$EXT_DASH_TO_PANEL"
+    "$EXT_WINDOW_STATE"
+)
+
+readonly MACLIKE_EXTENSIONS=(
+    "$EXT_SYSTEM_MONITOR"
+    "$EXT_DASH_TO_DOCK"
+    "$EXT_LOGO_MENU"
+    "$EXT_MAGIC_LAMP"
+    "$EXT_WINDOW_STATE"
+)
+
+# State file location
+readonly STATE_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/dfe"
+readonly STATE_FILE="$STATE_DIR/ui-mode"
+
+# ============================================================================
+# OUTPUT FUNCTIONS
+# ============================================================================
+
+print_info()    { printf "[INFO] %s\n" "$1"; }
+print_ok()      { printf "[OK] %s\n" "$1"; }
+print_warn()    { printf "[WARN] %s\n" "$1" >&2; }
+print_error()   { printf "[ERROR] %s\n" "$1" >&2; }
+
+# ============================================================================
+# HELP
+# ============================================================================
+
+show_help() {
+    cat << EOF
+$SCRIPT_NAME v$SCRIPT_VERSION - Configure GNOME desktop UI mode
+
+USAGE:
+    $SCRIPT_NAME <mode>
+    $SCRIPT_NAME [options]
+
+MODES:
+    winlike     Windows-style taskbar at bottom (Dash to Panel)
+                - Full-width taskbar always visible
+                - Click to cycle/minimize windows
+                - Show Applications button
+
+    maclike     macOS-style dock with auto-hide (Dash to Dock)
+                - Centered dock at bottom with auto-hide
+                - Logo menu replacing Activities
+                - Magic lamp minimize animation
+
+    system      Reset to GNOME system defaults
+                - Disables all managed extensions
+                - Restores default window button layout
+
+    status      Show current UI mode and extension states
+
+OPTIONS:
+    --install   Install all required GNOME extensions
+                (requires gext/gnome-extensions-cli)
+
+    --apply     Force re-apply current mode settings
+
+    --force     Skip distribution/version checks (use at your own risk)
+
+    -h, --help  Show this help message
+
+SUPPORTED SYSTEMS:
+    Fedora 41+, Ubuntu 24.04+
+    Use --force to override on other systems (may not work correctly)
+
+EXAMPLES:
+    # First-time setup
+    $SCRIPT_NAME --install
+    $SCRIPT_NAME winlike
+
+    # Switch modes
+    $SCRIPT_NAME maclike
+
+    # Check current state
+    $SCRIPT_NAME status
+
+    # Reset to defaults
+    $SCRIPT_NAME system
+
+NOTES:
+    - Requires GNOME Shell to be running
+    - Changes take effect immediately (no logout required)
+    - Current mode is saved to ~/.config/dfe/ui-mode
+
+EOF
+}
+
+# ============================================================================
+# DISTRIBUTION DETECTION AND VALIDATION
+# ============================================================================
+
+get_distro_info() {
+    # Returns "distro_id:version" from /etc/os-release
+    local distro_id=""
+    local version_id=""
+
+    if [[ -f /etc/os-release ]]; then
+        # shellcheck source=/dev/null
+        source /etc/os-release
+        distro_id="${ID:-unknown}"
+        version_id="${VERSION_ID:-0}"
+    else
+        distro_id="unknown"
+        version_id="0"
+    fi
+
+    echo "${distro_id}:${version_id}"
+}
+
+version_ge() {
+    # Returns 0 if version1 >= version2
+    local v1="$1"
+    local v2="$2"
+
+    # Use sort -V for version comparison
+    local lowest
+    lowest=$(printf '%s\n%s\n' "$v1" "$v2" | sort -V | head -n1)
+    [[ "$lowest" == "$v2" ]]
+}
+
+check_supported_distro() {
+    if [[ "$FORCE_MODE" == "true" ]]; then
+        return 0
+    fi
+
+    local current_info
+    current_info=$(get_distro_info)
+    local current_distro="${current_info%%:*}"
+    local current_version="${current_info##*:}"
+
+    for supported in "${SUPPORTED_DISTROS[@]}"; do
+        local supported_distro="${supported%%:*}"
+        local min_version="${supported##*:}"
+
+        if [[ "$current_distro" == "$supported_distro" ]]; then
+            if version_ge "$current_version" "$min_version"; then
+                return 0
+            else
+                print_error "Unsupported $current_distro version: $current_version"
+                print_error "Minimum required: $min_version"
+                print_error ""
+                print_error "Use --force to override (may not work correctly)"
+                exit 1
+            fi
+        fi
+    done
+
+    # Not a supported distro at all
+    print_error "Unsupported distribution: $current_distro $current_version"
+    print_error ""
+    print_error "Supported distributions:"
+    for supported in "${SUPPORTED_DISTROS[@]}"; do
+        local supported_distro="${supported%%:*}"
+        local min_version="${supported##*:}"
+        print_error "  - $supported_distro $min_version+"
+    done
+    print_error ""
+    print_error "Use --force to override (may not work correctly)"
+    exit 1
+}
+
+# ============================================================================
+# SYSTEM CHECKS
+# ============================================================================
+
+check_gnome_running() {
+    if ! pgrep -x gnome-shell >/dev/null 2>&1; then
+        print_error "GNOME Shell is not running"
+        print_error "This tool requires GNOME desktop environment"
+        exit 1
+    fi
+}
+
+check_not_root() {
+    if [[ $EUID -eq 0 ]]; then
+        print_error "Do not run this script as root"
+        print_error "Run as your normal user account"
+        exit 1
+    fi
+}
+
+find_gext() {
+    # Check common locations for gext
+    local gext_paths=(
+        "$HOME/.local/bin/gext"
+        "/usr/local/bin/gext"
+        "/usr/bin/gext"
+    )
+
+    for path in "${gext_paths[@]}"; do
+        if [[ -x "$path" ]]; then
+            echo "$path"
+            return 0
+        fi
+    done
+
+    # Try PATH as last resort
+    if command -v gext >/dev/null 2>&1; then
+        command -v gext
+        return 0
+    fi
+
+    return 1
+}
+
+check_gext_installed() {
+    if ! find_gext >/dev/null 2>&1; then
+        print_error "gnome-extensions-cli (gext) is not installed"
+        print_error ""
+        print_error "Install it with:"
+        print_error "  pipx install gnome-extensions-cli"
+        print_error ""
+        print_error "Or run the full DFE developer setup which includes it."
+        exit 1
+    fi
+}
+
+# ============================================================================
+# EXTENSION MANAGEMENT
+# ============================================================================
+
+extension_installed() {
+    local ext_id="$1"
+    local ext_dir="$HOME/.local/share/gnome-shell/extensions/$ext_id"
+    [[ -d "$ext_dir" ]]
+}
+
+extension_enabled() {
+    local ext_id="$1"
+    local enabled
+    enabled=$(dconf read /org/gnome/shell/enabled-extensions 2>/dev/null || echo "[]")
+    [[ "$enabled" == *"$ext_id"* ]]
+}
+
+install_extension() {
+    local ext_id="$1"
+    local gext_cmd
+    gext_cmd=$(find_gext)
+
+    print_info "Installing extension: $ext_id"
+
+    if "$gext_cmd" -F install "$ext_id" 2>&1; then
+        # Compile schemas if they exist
+        local schema_dir="$HOME/.local/share/gnome-shell/extensions/$ext_id/schemas"
+        if [[ -d "$schema_dir" ]]; then
+            glib-compile-schemas "$schema_dir" 2>/dev/null || true
+        fi
+        print_ok "Installed: $ext_id"
+        return 0
+    else
+        print_warn "Failed to install: $ext_id"
+        return 1
+    fi
+}
+
+enable_extension() {
+    local ext_id="$1"
+
+    if ! extension_installed "$ext_id"; then
+        print_warn "Extension not installed: $ext_id"
+        return 1
+    fi
+
+    gnome-extensions enable "$ext_id" 2>/dev/null || true
+}
+
+disable_extension() {
+    local ext_id="$1"
+    gnome-extensions disable "$ext_id" 2>/dev/null || true
+}
+
+# ============================================================================
+# STATE MANAGEMENT
+# ============================================================================
+
+save_mode() {
+    local mode="$1"
+    mkdir -p "$STATE_DIR"
+    echo "$mode" > "$STATE_FILE"
+}
+
+get_saved_mode() {
+    if [[ -f "$STATE_FILE" ]]; then
+        cat "$STATE_FILE"
+    else
+        echo "none"
+    fi
+}
+
+# ============================================================================
+# DCONF HELPERS
+# ============================================================================
+
+dconf_set() {
+    local key="$1"
+    local value="$2"
+    dconf write "$key" "$value"
+}
+
+dconf_reset() {
+    local key="$1"
+    dconf reset "$key" 2>/dev/null || true
+}
+
+# ============================================================================
+# MODE: INSTALL EXTENSIONS
+# ============================================================================
+
+do_install() {
+    print_info "Installing required GNOME extensions..."
+    print_info ""
+
+    check_gext_installed
+
+    local failed=0
+
+    for ext_id in "${ALL_EXTENSIONS[@]}"; do
+        if extension_installed "$ext_id"; then
+            print_ok "Already installed: $ext_id"
+        else
+            if ! install_extension "$ext_id"; then
+                ((failed++)) || true
+            fi
+        fi
+    done
+
+    print_info ""
+
+    if [[ $failed -gt 0 ]]; then
+        print_warn "$failed extension(s) failed to install"
+        print_warn "You may need to install them manually from extensions.gnome.org"
+        return 1
+    else
+        print_ok "All extensions installed successfully"
+        print_info ""
+        print_info "Now run: $SCRIPT_NAME winlike  (or maclike)"
+    fi
+}
+
+# ============================================================================
+# MODE: WINLIKE (Windows-style)
+# ============================================================================
+
+configure_winlike() {
+    print_info "Configuring Windows-like UI mode..."
+
+    # Disable conflicting extensions first
+    disable_extension "$EXT_UBUNTU_DOCK"
+    disable_extension "$EXT_DASH_TO_DOCK"
+    disable_extension "$EXT_LOGO_MENU"
+    disable_extension "$EXT_MAGIC_LAMP"
+
+    # Enable winlike extensions
+    for ext_id in "${WINLIKE_EXTENSIONS[@]}"; do
+        if extension_installed "$ext_id"; then
+            enable_extension "$ext_id"
+            print_ok "Enabled: $ext_id"
+        else
+            print_warn "Not installed: $ext_id (run --install first)"
+        fi
+    done
+
+    # Configure Dash to Panel
+    print_info "Applying Dash to Panel settings..."
+
+    # Panel position: bottom
+    dconf_set "/org/gnome/shell/extensions/dash-to-panel/panel-positions" "'{\"0\":\"BOTTOM\"}'"
+
+    # Panel size: 48px
+    dconf_set "/org/gnome/shell/extensions/dash-to-panel/panel-sizes" "'{\"0\":48}'"
+
+    # Full width (100%)
+    dconf_set "/org/gnome/shell/extensions/dash-to-panel/panel-lengths" "'{\"0\":100}'"
+
+    # Anchor: middle
+    dconf_set "/org/gnome/shell/extensions/dash-to-panel/panel-anchors" "'{\"0\":\"MIDDLE\"}'"
+
+    # Always visible (no auto-hide)
+    dconf_set "/org/gnome/shell/extensions/dash-to-panel/intellihide" "false"
+
+    # Group apps
+    dconf_set "/org/gnome/shell/extensions/dash-to-panel/group-apps" "true"
+
+    # Click action: cycle-minimize
+    dconf_set "/org/gnome/shell/extensions/dash-to-panel/click-action" "'CYCLE-MIN'"
+
+    # Show activities button
+    dconf_set "/org/gnome/shell/extensions/dash-to-panel/show-activities-button" "true"
+
+    # Hide app menu
+    dconf_set "/org/gnome/shell/extensions/dash-to-panel/show-appmenu" "false"
+
+    # Show favorites and running apps
+    dconf_set "/org/gnome/shell/extensions/dash-to-panel/show-favorites" "true"
+    dconf_set "/org/gnome/shell/extensions/dash-to-panel/show-running-apps" "true"
+
+    # Show desktop button
+    dconf_set "/org/gnome/shell/extensions/dash-to-panel/show-showdesktop-button" "true"
+
+    # Panel transparency (60%)
+    dconf_set "/org/gnome/shell/extensions/dash-to-panel/trans-use-custom-opacity" "true"
+    dconf_set "/org/gnome/shell/extensions/dash-to-panel/trans-panel-opacity" "0.6"
+
+    # Window buttons on right (Windows-style)
+    dconf_set "/org/gnome/desktop/wm/preferences/button-layout" "':minimize,maximize,close'"
+
+    # Apply common settings
+    configure_common_settings
+
+    save_mode "winlike"
+    print_ok "Windows-like UI mode configured"
+}
+
+# ============================================================================
+# MODE: MACLIKE (macOS-style)
+# ============================================================================
+
+configure_maclike() {
+    print_info "Configuring macOS-like UI mode..."
+
+    # Disable conflicting extensions first
+    disable_extension "$EXT_UBUNTU_DOCK"
+    disable_extension "$EXT_DASH_TO_PANEL"
+
+    # Enable maclike extensions
+    for ext_id in "${MACLIKE_EXTENSIONS[@]}"; do
+        if extension_installed "$ext_id"; then
+            enable_extension "$ext_id"
+            print_ok "Enabled: $ext_id"
+        else
+            print_warn "Not installed: $ext_id (run --install first)"
+        fi
+    done
+
+    # Configure Dash to Dock
+    print_info "Applying Dash to Dock settings..."
+
+    # Position: bottom
+    dconf_set "/org/gnome/shell/extensions/dash-to-dock/dock-position" "'BOTTOM'"
+
+    # Auto-hide (macOS-style)
+    dconf_set "/org/gnome/shell/extensions/dash-to-dock/intellihide" "true"
+    dconf_set "/org/gnome/shell/extensions/dash-to-dock/autohide" "true"
+
+    # Click to minimize
+    dconf_set "/org/gnome/shell/extensions/dash-to-dock/click-action" "'minimize'"
+
+    # Icon size: 48
+    dconf_set "/org/gnome/shell/extensions/dash-to-dock/dash-max-icon-size" "48"
+
+    # Running indicator: dots
+    dconf_set "/org/gnome/shell/extensions/dash-to-dock/running-indicator-style" "'DOTS'"
+
+    # Show window previews
+    dconf_set "/org/gnome/shell/extensions/dash-to-dock/show-windows-preview" "true"
+
+    # Hide trash and mounts
+    dconf_set "/org/gnome/shell/extensions/dash-to-dock/show-trash" "false"
+    dconf_set "/org/gnome/shell/extensions/dash-to-dock/show-mounts" "false"
+
+    # Configure Logo Menu
+    dconf_set "/org/gnome/shell/extensions/logo-menu/show-activities-button" "false"
+
+    # Configure Magic Lamp effect
+    dconf_set "/org/gnome/shell/extensions/com.github.hermes83.compiz-alike-magic-lamp-effect/duration" "200"
+
+    # Window buttons on left (macOS-style)
+    dconf_set "/org/gnome/desktop/wm/preferences/button-layout" "'close,minimize,maximize:'"
+
+    # Apply common settings
+    configure_common_settings
+
+    save_mode "maclike"
+    print_ok "macOS-like UI mode configured"
+}
+
+# ============================================================================
+# MODE: SYSTEM (reset to defaults)
+# ============================================================================
+
+configure_system() {
+    print_info "Resetting to system defaults..."
+
+    # Disable all managed extensions
+    for ext_id in "${ALL_EXTENSIONS[@]}"; do
+        disable_extension "$ext_id"
+    done
+
+    # Reset window button layout to GNOME default
+    dconf_reset "/org/gnome/desktop/wm/preferences/button-layout"
+
+    # Reset enabled/disabled extension lists
+    dconf_reset "/org/gnome/shell/enabled-extensions"
+    dconf_reset "/org/gnome/shell/disabled-extensions"
+
+    save_mode "system"
+    print_ok "Reset to system defaults"
+    print_info "You may need to log out and back in for full effect"
+}
+
+# ============================================================================
+# COMMON SETTINGS (applied to both winlike and maclike)
+# ============================================================================
+
+configure_common_settings() {
+    # Enable extensions globally
+    dconf_set "/org/gnome/shell/disable-user-extensions" "false"
+
+    # Configure System Monitor
+    dconf_set "/org/gnome/shell/extensions/system-monitor/show-cpu" "true"
+    dconf_set "/org/gnome/shell/extensions/system-monitor/show-memory" "true"
+    dconf_set "/org/gnome/shell/extensions/system-monitor/show-download" "false"
+    dconf_set "/org/gnome/shell/extensions/system-monitor/show-upload" "false"
+    dconf_set "/org/gnome/shell/extensions/system-monitor/show-swap" "false"
+
+    # Dark theme preference
+    dconf_set "/org/gnome/desktop/interface/color-scheme" "'prefer-dark'"
+}
+
+# ============================================================================
+# STATUS
+# ============================================================================
+
+show_status() {
+    local saved_mode
+    saved_mode=$(get_saved_mode)
+
+    local distro_info
+    distro_info=$(get_distro_info)
+    local distro_id="${distro_info%%:*}"
+    local distro_version="${distro_info##*:}"
+
+    printf "\n"
+    printf "UI Mode Status\n"
+    printf "==============\n\n"
+    printf "System:     %s %s\n" "$distro_id" "$distro_version"
+    printf "Saved mode: %s\n\n" "$saved_mode"
+    printf "Extension status:\n"
+
+    for ext_id in "${ALL_EXTENSIONS[@]}"; do
+        local status=""
+        if extension_installed "$ext_id"; then
+            if extension_enabled "$ext_id"; then
+                status="[ENABLED]"
+            else
+                status="[disabled]"
+            fi
+        else
+            status="[not installed]"
+        fi
+        printf "  %-60s %s\n" "$ext_id" "$status"
+    done
+
+    printf "\n"
+}
+
+# ============================================================================
+# APPLY (re-apply current mode)
+# ============================================================================
+
+do_apply() {
+    local saved_mode
+    saved_mode=$(get_saved_mode)
+
+    case "$saved_mode" in
+        winlike)
+            configure_winlike
+            ;;
+        maclike)
+            configure_maclike
+            ;;
+        system)
+            configure_system
+            ;;
+        *)
+            print_error "No mode configured yet"
+            print_error "Run: $SCRIPT_NAME winlike  (or maclike)"
+            exit 1
+            ;;
+    esac
+}
+
+# ============================================================================
+# MAIN
+# ============================================================================
+
+main() {
+    local args=()
+
+    # Parse global options first
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --force|-f)
+                FORCE_MODE=true
+                shift
+                ;;
+            *)
+                args+=("$1")
+                shift
+                ;;
+        esac
+    done
+
+    # Restore positional parameters
+    set -- "${args[@]:-}"
+
+    # Handle help first (doesn't require GNOME or distro check)
+    case "${1:-}" in
+        -h|--help|help)
+            show_help
+            exit 0
+            ;;
+    esac
+
+    # Basic checks
+    check_not_root
+
+    # Handle commands
+    case "${1:-}" in
+        --install|install)
+            check_supported_distro
+            check_gnome_running
+            do_install
+            ;;
+        --apply|apply)
+            check_supported_distro
+            check_gnome_running
+            do_apply
+            ;;
+        winlike)
+            check_supported_distro
+            check_gnome_running
+            configure_winlike
+            ;;
+        maclike)
+            check_supported_distro
+            check_gnome_running
+            configure_maclike
+            ;;
+        system|reset|default)
+            check_supported_distro
+            check_gnome_running
+            configure_system
+            ;;
+        status)
+            # Status doesn't require distro check - informational only
+            show_status
+            ;;
+        "")
+            show_help
+            exit 1
+            ;;
+        *)
+            print_error "Unknown command: $1"
+            print_error "Run '$SCRIPT_NAME --help' for usage"
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"

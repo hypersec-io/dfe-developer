@@ -1,8 +1,9 @@
 ---
 # Common GNOME Shell extension prerequisites and utilities
-# Installs gnome-extensions-cli (gext) for managing extensions from extensions.gnome.org
+# Installs gnome-extensions-cli (gext) and ALL UI mode extensions
 #
 # This file is included by gnome_winlike.yml and gnome_maclike.yml
+# All extensions are installed here; mode-specific tasks only enable/configure them
 
 # ============================================================================
 # PREREQUISITES
@@ -60,9 +61,24 @@
   when: ansible_distribution in ['Ubuntu', 'Fedora']
 
 # ============================================================================
-# INSTALL SYSTEM MONITOR EXTENSION (from extensions.gnome.org via gext)
+# DEPLOY UI-MODE UTILITY
 # ============================================================================
 
+- name: Deploy ui-mode utility to /usr/local/sbin
+  ansible.builtin.copy:
+    src: ui-mode
+    dest: /usr/local/sbin/ui-mode
+    mode: '0755'
+    owner: root
+    group: root
+  when: ansible_distribution in ['Ubuntu', 'Fedora']
+
+# ============================================================================
+# INSTALL ALL EXTENSIONS (for both winlike and maclike modes)
+# Extensions are installed here; mode-specific tasks enable/configure them
+# ============================================================================
+
+# Common extension: System Monitor
 - name: Install System Monitor extension via gext
   ansible.builtin.command:
     cmd: "{{ dfe_user_home }}/.local/bin/gext -F install system-monitor@gnome-shell-extensions.gcampax.github.com"
@@ -81,6 +97,82 @@
   become_user: "{{ dfe_actual_user }}"
   changed_when: false
   failed_when: false
+
+# Common extension: Window State Manager (used by both modes)
+- name: Install Window State Manager extension via gext
+  ansible.builtin.command:
+    cmd: "{{ dfe_user_home }}/.local/bin/gext -F install window-state-manager@kishorv06.github.io"
+  become: true
+  become_user: "{{ dfe_actual_user }}"
+  register: window_state_install
+  changed_when: "'already installed' not in window_state_install.stdout"
+  failed_when:
+    - window_state_install.rc != 0
+    - "'already installed' not in window_state_install.stdout"
+
+# Winlike extension: Dash to Panel
+- name: Install Dash to Panel extension via gext
+  ansible.builtin.command:
+    cmd: "{{ dfe_user_home }}/.local/bin/gext -F install dash-to-panel@jderose9.github.com"
+  become: true
+  become_user: "{{ dfe_actual_user }}"
+  register: dash_to_panel_install
+  changed_when: "'already installed' not in dash_to_panel_install.stdout"
+  failed_when:
+    - dash_to_panel_install.rc != 0
+    - "'already installed' not in dash_to_panel_install.stdout"
+
+- name: Compile Dash to Panel schemas
+  ansible.builtin.command:
+    cmd: glib-compile-schemas {{ dfe_user_home }}/.local/share/gnome-shell/extensions/dash-to-panel@jderose9.github.com/schemas/
+  become: true
+  become_user: "{{ dfe_actual_user }}"
+  changed_when: false
+  failed_when: false
+
+# Maclike extension: Dash to Dock
+- name: Install Dash to Dock extension via gext
+  ansible.builtin.command:
+    cmd: "{{ dfe_user_home }}/.local/bin/gext -F install dash-to-dock@micxgx.gmail.com"
+  become: true
+  become_user: "{{ dfe_actual_user }}"
+  register: dash_to_dock_install
+  changed_when: "'already installed' not in dash_to_dock_install.stdout"
+  failed_when:
+    - dash_to_dock_install.rc != 0
+    - "'already installed' not in dash_to_dock_install.stdout"
+
+- name: Compile Dash to Dock schemas
+  ansible.builtin.command:
+    cmd: glib-compile-schemas {{ dfe_user_home }}/.local/share/gnome-shell/extensions/dash-to-dock@micxgx.gmail.com/schemas/
+  become: true
+  become_user: "{{ dfe_actual_user }}"
+  changed_when: false
+  failed_when: false
+
+# Maclike extension: Logo Menu
+- name: Install Logo Menu extension via gext
+  ansible.builtin.command:
+    cmd: "{{ dfe_user_home }}/.local/bin/gext -F install logomenu@aryan_k"
+  become: true
+  become_user: "{{ dfe_actual_user }}"
+  register: logo_menu_install
+  changed_when: "'already installed' not in logo_menu_install.stdout"
+  failed_when:
+    - logo_menu_install.rc != 0
+    - "'already installed' not in logo_menu_install.stdout"
+
+# Maclike extension: Magic Lamp effect
+- name: Install Compiz Magic Lamp effect extension via gext
+  ansible.builtin.command:
+    cmd: "{{ dfe_user_home }}/.local/bin/gext -F install compiz-alike-magic-lamp-effect@hermes83.github.com"
+  become: true
+  become_user: "{{ dfe_actual_user }}"
+  register: magic_lamp_install
+  changed_when: "'already installed' not in magic_lamp_install.stdout"
+  failed_when:
+    - magic_lamp_install.rc != 0
+    - "'already installed' not in magic_lamp_install.stdout"
 
 # ============================================================================
 # COMMON DCONF SETTINGS

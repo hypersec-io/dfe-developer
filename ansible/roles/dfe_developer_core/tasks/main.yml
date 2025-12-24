@@ -38,6 +38,12 @@
   tags: ['slack']
   when: ansible_env.DISPLAY is defined or ansible_env.WAYLAND_DISPLAY is defined
 
+- name: Install Betterbird
+  ansible.builtin.include_tasks:
+    file: betterbird.yml
+  tags: ['betterbird', 'email']
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
 - name: Install OpenVPN 3
   ansible.builtin.include_tasks:
     file: openvpn.yml

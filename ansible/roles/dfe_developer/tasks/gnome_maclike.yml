@@ -1,183 +1,31 @@
 ---
 # macOS-like GNOME Shell configuration
-# Installs Dash to Dock, Logo Menu, and Magic Lamp effect for a macOS-style experience
+# Uses ui-mode utility to configure Dash to Dock for a macOS-style experience
 #
-# Extensions:
-# - Dash to Dock: macOS-style dock
+# Extensions enabled:
+# - Dash to Dock: macOS-style dock with auto-hide
 # - Logo Menu: macOS-style Apple menu replacement
 # - Compiz Magic Lamp Effect: macOS-style minimize animation
 # - Window State Manager: Remember/restore window positions across sessions
-# - System Monitor: CPU/Memory in panel (from gnome_common.yml)
+# - System Monitor: CPU/Memory in panel
 
 # ============================================================================
-# COMMON PREREQUISITES
+# COMMON PREREQUISITES (gext, all extensions, ui-mode utility)
 # ============================================================================
 
-- name: Install common GNOME prerequisites
+- name: Install common GNOME prerequisites and all extensions
   ansible.builtin.include_tasks: gnome_common.yml
 
 # ============================================================================
-# INSTALL MACOS-LIKE EXTENSIONS (from extensions.gnome.org via gext)
+# APPLY MACLIKE MODE VIA UI-MODE UTILITY
 # ============================================================================
 
-- name: Install Dash to Dock extension via gext
+- name: Apply macOS-like UI mode
   ansible.builtin.command:
-    cmd: "{{ dfe_user_home }}/.local/bin/gext -F install dash-to-dock@micxgx.gmail.com"
+    cmd: /usr/local/sbin/ui-mode maclike
   become: true
   become_user: "{{ dfe_actual_user }}"
-  register: dash_to_dock_install
-  changed_when: "'already installed' not in dash_to_dock_install.stdout"
-  failed_when:
-    - dash_to_dock_install.rc != 0
-    - "'already installed' not in dash_to_dock_install.stdout"
-
-- name: Compile Dash to Dock schemas
-  ansible.builtin.command:
-    cmd: glib-compile-schemas {{ dfe_user_home }}/.local/share/gnome-shell/extensions/dash-to-dock@micxgx.gmail.com/schemas/
-  become: true
-  become_user: "{{ dfe_actual_user }}"
-  changed_when: false
-  failed_when: false
-
-- name: Install Logo Menu extension via gext
-  ansible.builtin.command:
-    cmd: "{{ dfe_user_home }}/.local/bin/gext -F install logomenu@aryan_k"
-  become: true
-  become_user: "{{ dfe_actual_user }}"
-  register: logo_menu_install
-  changed_when: "'already installed' not in logo_menu_install.stdout"
-  failed_when:
-    - logo_menu_install.rc != 0
-    - "'already installed' not in logo_menu_install.stdout"
-
-- name: Install Compiz Magic Lamp effect extension via gext
-  ansible.builtin.command:
-    cmd: "{{ dfe_user_home }}/.local/bin/gext -F install compiz-alike-magic-lamp-effect@hermes83.github.com"
-  become: true
-  become_user: "{{ dfe_actual_user }}"
-  register: magic_lamp_install
-  changed_when: "'already installed' not in magic_lamp_install.stdout"
-  failed_when:
-    - magic_lamp_install.rc != 0
-    - "'already installed' not in magic_lamp_install.stdout"
-
-- name: Install Window State Manager extension via gext
-  ansible.builtin.command:
-    cmd: "{{ dfe_user_home }}/.local/bin/gext -F install window-state-manager@kishorv06.github.io"
-  become: true
-  become_user: "{{ dfe_actual_user }}"
-  register: window_state_install
-  changed_when: "'already installed' not in window_state_install.stdout"
-  failed_when:
-    - window_state_install.rc != 0
-    - "'already installed' not in window_state_install.stdout"
-
-# ============================================================================
-# ENABLE EXTENSIONS VIA DCONF
-# ============================================================================
-
-- name: Enable macOS-like extensions
-  community.general.dconf:
-    key: "/org/gnome/shell/enabled-extensions"
-    value: "['system-monitor@gnome-shell-extensions.gcampax.github.com', 'dash-to-dock@micxgx.gmail.com', 'logomenu@aryan_k', 'compiz-alike-magic-lamp-effect@hermes83.github.com', 'window-state-manager@kishorv06.github.io']"
-    state: present
-  become: false
-
-- name: Disable conflicting extensions
-  community.general.dconf:
-    key: "/org/gnome/shell/disabled-extensions"
-    value: "['ubuntu-dock@ubuntu.com', 'workspace-indicator@gnome-shell-extensions.gcampax.github.com', 'apps-menu@gnome-shell-extensions.gcampax.github.com']"
-    state: present
-  become: false
-
-# ============================================================================
-# CONFIGURE DASH TO DOCK (macOS-style)
-# ============================================================================
-
-- name: Configure Dash to Dock - position at bottom
-  community.general.dconf:
-    key: "/org/gnome/shell/extensions/dash-to-dock/dock-position"
-    value: "'BOTTOM'"
-    state: present
-  become: false
-
-- name: Configure Dash to Dock - intelligent auto-hide
-  community.general.dconf:
-    key: "/org/gnome/shell/extensions/dash-to-dock/intellihide"
-    value: "true"
-    state: present
-  become: false
-
-- name: Configure Dash to Dock - enable auto-hide
-  community.general.dconf:
-    key: "/org/gnome/shell/extensions/dash-to-dock/autohide"
-    value: "true"
-    state: present
-  become: false
-
-- name: Configure Dash to Dock - click to minimize
-  community.general.dconf:
-    key: "/org/gnome/shell/extensions/dash-to-dock/click-action"
-    value: "'minimize'"
-    state: present
-  become: false
-
-- name: Configure Dash to Dock - icon size
-  community.general.dconf:
-    key: "/org/gnome/shell/extensions/dash-to-dock/dash-max-icon-size"
-    value: "48"
-    state: present
-  become: false
-
-- name: Configure Dash to Dock - running indicator style
-  community.general.dconf:
-    key: "/org/gnome/shell/extensions/dash-to-dock/running-indicator-style"
-    value: "'DOTS'"
-    state: present
-  become: false
-
-- name: Configure Dash to Dock - show window previews
-  community.general.dconf:
-    key: "/org/gnome/shell/extensions/dash-to-dock/show-windows-preview"
-    value: "true"
-    state: present
-  become: false
-
-- name: Configure Dash to Dock - hide trash
-  community.general.dconf:
-    key: "/org/gnome/shell/extensions/dash-to-dock/show-trash"
-    value: "false"
-    state: present
-  become: false
-
-- name: Configure Dash to Dock - hide mounts
-  community.general.dconf:
-    key: "/org/gnome/shell/extensions/dash-to-dock/show-mounts"
-    value: "false"
-    state: present
-  become: false
-
-# ============================================================================
-# CONFIGURE LOGO MENU (macOS-style Apple menu)
-# ============================================================================
-
-- name: Configure Logo Menu - show activities button
-  community.general.dconf:
-    key: "/org/gnome/shell/extensions/logo-menu/show-activities-button"
-    value: "false"
-    state: present
-  become: false
-
-# ============================================================================
-# CONFIGURE MAGIC LAMP EFFECT
-# ============================================================================
-
-- name: Configure Magic Lamp - effect duration
-  community.general.dconf:
-    key: "/org/gnome/shell/extensions/com.github.hermes83.compiz-alike-magic-lamp-effect/duration"
-    value: "200"
-    state: present
-  become: false
+  changed_when: true
 
 # ============================================================================
 # WALLPAPER DEPLOYMENT (system-wide, safe from apt/dnf updates)

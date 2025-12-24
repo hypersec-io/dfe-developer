@@ -7,6 +7,14 @@
     file: init.yml
   tags: ['always']
 
+- name: Ensure desktop environment is installed
+  ansible.builtin.include_tasks:
+    file: desktop.yml
+    apply:
+      tags: ['desktop']
+  tags: ['desktop']
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
 - name: Configure OS repositories (mirrors, performance)
   ansible.builtin.include_tasks:
     file: repository.yml
@@ -84,6 +92,14 @@
     apply:
       tags: ['chrome']
   tags: ['chrome']
+  when: dfe_has_gnome | default(false)
+
+- name: Install Brave Browser
+  ansible.builtin.include_tasks:
+    file: brave.yml
+    apply:
+      tags: ['brave']
+  tags: ['brave']
   when: dfe_has_gnome | default(false)
 
 - name: Apply Windows-like GNOME configuration

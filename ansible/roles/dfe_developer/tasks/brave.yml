@@ -1,0 +1,64 @@
+---
+# Brave Browser installation (via official repos for auto-updates)
+
+# ============================================================================
+# FEDORA - Add Brave repository and install
+# ============================================================================
+
+- name: Install Brave Browser (Fedora)
+  block:
+    - name: Add Brave Browser repository
+      ansible.builtin.yum_repository:
+        name: brave-browser
+        description: Brave Browser
+        baseurl: https://brave-browser-rpm-release.s3.brave.com/x86_64/
+        enabled: true
+        gpgcheck: true
+        gpgkey: https://brave-browser-rpm-release.s3.brave.com/brave-core.asc
+
+    - name: Install Brave Browser
+      ansible.builtin.dnf:
+        name: brave-browser
+        state: present
+
+  when: ansible_distribution == 'Fedora'
+
+# ============================================================================
+# UBUNTU - Add Brave repository and install
+# ============================================================================
+
+- name: Install Brave Browser (Ubuntu)
+  block:
+    - name: Add Brave Browser GPG key
+      ansible.builtin.get_url:
+        url: https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+        dest: /etc/apt/keyrings/brave-browser-archive-keyring.gpg
+        mode: '0644'
+
+    - name: Add Brave Browser repository
+      ansible.builtin.copy:
+        content: |
+          # Managed by DFE Developer Ansible - DO NOT EDIT
+          deb [arch=amd64 signed-by=/etc/apt/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main
+        dest: /etc/apt/sources.list.d/brave-browser-release.list
+        mode: '0644'
+
+    - name: Install Brave Browser
+      ansible.builtin.apt:
+        name: brave-browser
+        state: present
+        update_cache: true
+
+  when: ansible_distribution == 'Ubuntu'
+
+# ============================================================================
+# macOS - Install via Homebrew cask
+# ============================================================================
+
+- name: Install Brave Browser (macOS)
+  community.general.homebrew_cask:
+    name: brave-browser
+    state: present
+  become: false
+  environment: "{{ homebrew_cask_env }}"
+  when: ansible_distribution == 'MacOSX'

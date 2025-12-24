@@ -1,188 +1,29 @@
 ---
 # Windows-like GNOME Shell configuration
-# Installs Dash to Panel for a Windows-style taskbar
+# Uses ui-mode utility to configure Dash to Panel for a Windows-style taskbar
 #
-# Extensions (all installed from extensions.gnome.org via gext):
+# Extensions enabled:
 # - Dash to Panel: Windows-style taskbar at bottom with Show Applications button
 # - Window State Manager: Remember/restore window positions across sessions
-# - System Monitor: CPU/Memory in panel (from gnome_common.yml)
+# - System Monitor: CPU/Memory in panel
 
 # ============================================================================
-# COMMON PREREQUISITES (gext, system monitor, dark theme, etc.)
+# COMMON PREREQUISITES (gext, all extensions, ui-mode utility)
 # ============================================================================
 
-- name: Install common GNOME prerequisites
+- name: Install common GNOME prerequisites and all extensions
   ansible.builtin.include_tasks: gnome_common.yml
 
 # ============================================================================
-# DISABLE UBUNTU DOCK (conflicts with Dash to Panel)
+# APPLY WINLIKE MODE VIA UI-MODE UTILITY
 # ============================================================================
 
-- name: Disable Ubuntu Dock extension
+- name: Apply Windows-like UI mode
   ansible.builtin.command:
-    cmd: gnome-extensions disable ubuntu-dock@ubuntu.com
-  become: false
-  failed_when: false
-  changed_when: false
-  when: ansible_distribution == 'Ubuntu'
-
-# ============================================================================
-# INSTALL DASH TO PANEL (from extensions.gnome.org via gext)
-# ============================================================================
-
-- name: Install Dash to Panel extension via gext
-  ansible.builtin.command:
-    cmd: "{{ dfe_user_home }}/.local/bin/gext -F install dash-to-panel@jderose9.github.com"
+    cmd: /usr/local/sbin/ui-mode winlike
   become: true
   become_user: "{{ dfe_actual_user }}"
-  register: dash_to_panel_install
-  changed_when: "'already installed' not in dash_to_panel_install.stdout"
-  failed_when:
-    - dash_to_panel_install.rc != 0
-    - "'already installed' not in dash_to_panel_install.stdout"
-
-- name: Compile Dash to Panel schemas
-  ansible.builtin.command:
-    cmd: glib-compile-schemas {{ dfe_user_home }}/.local/share/gnome-shell/extensions/dash-to-panel@jderose9.github.com/schemas/
-  become: true
-  become_user: "{{ dfe_actual_user }}"
-  changed_when: false
-  failed_when: false
-
-# ============================================================================
-# INSTALL WINDOW STATE MANAGER (remember/restore window positions)
-# ============================================================================
-
-- name: Install Window State Manager extension via gext
-  ansible.builtin.command:
-    cmd: "{{ dfe_user_home }}/.local/bin/gext -F install window-state-manager@kishorv06.github.io"
-  become: true
-  become_user: "{{ dfe_actual_user }}"
-  register: window_state_install
-  changed_when: "'already installed' not in window_state_install.stdout"
-  failed_when:
-    - window_state_install.rc != 0
-    - "'already installed' not in window_state_install.stdout"
-
-# ============================================================================
-# ENABLE EXTENSIONS VIA DCONF
-# ============================================================================
-
-- name: Enable Windows-like extensions
-  community.general.dconf:
-    key: "/org/gnome/shell/enabled-extensions"
-    value: "['system-monitor@gnome-shell-extensions.gcampax.github.com', 'dash-to-panel@jderose9.github.com', 'window-state-manager@kishorv06.github.io']"
-    state: present
-  become: false
-
-- name: Disable conflicting extensions
-  community.general.dconf:
-    key: "/org/gnome/shell/disabled-extensions"
-    value: "['ubuntu-dock@ubuntu.com', 'workspace-indicator@gnome-shell-extensions.gcampax.github.com', 'apps-menu@gnome-shell-extensions.gcampax.github.com']"
-    state: present
-  become: false
-
-# ============================================================================
-# CONFIGURE DASH TO PANEL (Windows-style taskbar)
-# ============================================================================
-
-- name: Configure Dash to Panel - panel position bottom
-  community.general.dconf:
-    key: "/org/gnome/shell/extensions/dash-to-panel/panel-positions"
-    value: "'{\"0\":\"BOTTOM\"}'"
-    state: present
-  become: false
-
-- name: Configure Dash to Panel - panel size
-  community.general.dconf:
-    key: "/org/gnome/shell/extensions/dash-to-panel/panel-sizes"
-    value: "'{\"0\":48}'"
-    state: present
-  become: false
-
-- name: Configure Dash to Panel - full width panel (100%)
-  community.general.dconf:
-    key: "/org/gnome/shell/extensions/dash-to-panel/panel-lengths"
-    value: "'{\"0\":100}'"
-    state: present
-  become: false
-
-- name: Configure Dash to Panel - panel anchor middle
-  community.general.dconf:
-    key: "/org/gnome/shell/extensions/dash-to-panel/panel-anchors"
-    value: "'{\"0\":\"MIDDLE\"}'"
-    state: present
-  become: false
-
-- name: Configure Dash to Panel - disable intellihide
-  community.general.dconf:
-    key: "/org/gnome/shell/extensions/dash-to-panel/intellihide"
-    value: "false"
-    state: present
-  become: false
-
-- name: Configure Dash to Panel - group apps
-  community.general.dconf:
-    key: "/org/gnome/shell/extensions/dash-to-panel/group-apps"
-    value: "true"
-    state: present
-  become: false
-
-- name: Configure Dash to Panel - click action cycle-minimize
-  community.general.dconf:
-    key: "/org/gnome/shell/extensions/dash-to-panel/click-action"
-    value: "'CYCLE-MIN'"
-    state: present
-  become: false
-
-- name: Configure Dash to Panel - show activities button (for app launcher)
-  community.general.dconf:
-    key: "/org/gnome/shell/extensions/dash-to-panel/show-activities-button"
-    value: "true"
-    state: present
-  become: false
-
-- name: Configure Dash to Panel - hide app menu
-  community.general.dconf:
-    key: "/org/gnome/shell/extensions/dash-to-panel/show-appmenu"
-    value: "false"
-    state: present
-  become: false
-
-- name: Configure Dash to Panel - show favorites
-  community.general.dconf:
-    key: "/org/gnome/shell/extensions/dash-to-panel/show-favorites"
-    value: "true"
-    state: present
-  become: false
-
-- name: Configure Dash to Panel - show running apps
-  community.general.dconf:
-    key: "/org/gnome/shell/extensions/dash-to-panel/show-running-apps"
-    value: "true"
-    state: present
-  become: false
-
-- name: Configure Dash to Panel - show Show Apps button
-  community.general.dconf:
-    key: "/org/gnome/shell/extensions/dash-to-panel/show-showdesktop-button"
-    value: "true"
-    state: present
-  become: false
-
-- name: Configure Dash to Panel - enable custom opacity
-  community.general.dconf:
-    key: "/org/gnome/shell/extensions/dash-to-panel/trans-use-custom-opacity"
-    value: "true"
-    state: present
-  become: false
-
-- name: Configure Dash to Panel - panel transparency (60% opacity)
-  community.general.dconf:
-    key: "/org/gnome/shell/extensions/dash-to-panel/trans-panel-opacity"
-    value: "0.6"
-    state: present
-  become: false
+  changed_when: true
 
 # ============================================================================
 # WALLPAPER DEPLOYMENT (system-wide, safe from apt/dnf updates)
