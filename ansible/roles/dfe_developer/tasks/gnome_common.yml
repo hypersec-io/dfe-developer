@@ -78,21 +78,21 @@
 # Extensions are installed here; mode-specific tasks enable/configure them
 # ============================================================================
 
-# Common extension: System Monitor
-- name: Install System Monitor extension via gext
+# Common extension: Astra Monitor (replaces system-monitor)
+- name: Install Astra Monitor extension via gext
   ansible.builtin.command:
-    cmd: "{{ dfe_user_home }}/.local/bin/gext -F install system-monitor@gnome-shell-extensions.gcampax.github.com"
+    cmd: "{{ dfe_user_home }}/.local/bin/gext -F install monitor@astraext.github.io"
   become: true
   become_user: "{{ dfe_actual_user }}"
-  register: system_monitor_install
-  changed_when: "'already installed' not in system_monitor_install.stdout"
+  register: astra_monitor_install
+  changed_when: "'already installed' not in astra_monitor_install.stdout"
   failed_when:
-    - system_monitor_install.rc != 0
-    - "'already installed' not in system_monitor_install.stdout"
+    - astra_monitor_install.rc != 0
+    - "'already installed' not in astra_monitor_install.stdout"
 
-- name: Compile System Monitor schemas
+- name: Compile Astra Monitor schemas
   ansible.builtin.command:
-    cmd: glib-compile-schemas {{ dfe_user_home }}/.local/share/gnome-shell/extensions/system-monitor@gnome-shell-extensions.gcampax.github.com/schemas/
+    cmd: glib-compile-schemas {{ dfe_user_home }}/.local/share/gnome-shell/extensions/monitor@astraext.github.io/schemas/
   become: true
   become_user: "{{ dfe_actual_user }}"
   changed_when: false
@@ -185,37 +185,44 @@
     state: present
   become: false
 
-- name: Configure System Monitor - show CPU
+- name: Configure Astra Monitor - show CPU
   community.general.dconf:
-    key: "/org/gnome/shell/extensions/system-monitor/show-cpu"
+    key: "/org/gnome/shell/extensions/astra-monitor/processor-header-show"
     value: "true"
     state: present
   become: false
 
-- name: Configure System Monitor - show memory
+- name: Configure Astra Monitor - show memory
   community.general.dconf:
-    key: "/org/gnome/shell/extensions/system-monitor/show-memory"
+    key: "/org/gnome/shell/extensions/astra-monitor/memory-header-show"
     value: "true"
     state: present
   become: false
 
-- name: Configure System Monitor - hide network
+- name: Configure Astra Monitor - hide storage
   community.general.dconf:
-    key: "/org/gnome/shell/extensions/system-monitor/show-download"
+    key: "/org/gnome/shell/extensions/astra-monitor/storage-header-show"
     value: "false"
     state: present
   become: false
 
-- name: Configure System Monitor - hide upload
+- name: Configure Astra Monitor - hide network
   community.general.dconf:
-    key: "/org/gnome/shell/extensions/system-monitor/show-upload"
+    key: "/org/gnome/shell/extensions/astra-monitor/network-header-show"
     value: "false"
     state: present
   become: false
 
-- name: Configure System Monitor - hide swap
+- name: Configure Astra Monitor - hide GPU
   community.general.dconf:
-    key: "/org/gnome/shell/extensions/system-monitor/show-swap"
+    key: "/org/gnome/shell/extensions/astra-monitor/gpu-header-show"
+    value: "false"
+    state: present
+  become: false
+
+- name: Configure Astra Monitor - hide sensors
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/astra-monitor/sensors-header-show"
     value: "false"
     state: present
   become: false

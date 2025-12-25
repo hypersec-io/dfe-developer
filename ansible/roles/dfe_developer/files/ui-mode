@@ -32,7 +32,7 @@ readonly SUPPORTED_DISTROS=(
 FORCE_MODE=false
 
 # Extension IDs
-readonly EXT_SYSTEM_MONITOR="system-monitor@gnome-shell-extensions.gcampax.github.com"
+readonly EXT_ASTRA_MONITOR="monitor@astraext.github.io"
 readonly EXT_DASH_TO_PANEL="dash-to-panel@jderose9.github.com"
 readonly EXT_DASH_TO_DOCK="dash-to-dock@micxgx.gmail.com"
 readonly EXT_LOGO_MENU="logomenu@aryan_k"
@@ -42,7 +42,7 @@ readonly EXT_UBUNTU_DOCK="ubuntu-dock@ubuntu.com"
 
 # All extensions we manage
 readonly ALL_EXTENSIONS=(
-    "$EXT_SYSTEM_MONITOR"
+    "$EXT_ASTRA_MONITOR"
     "$EXT_DASH_TO_PANEL"
     "$EXT_DASH_TO_DOCK"
     "$EXT_LOGO_MENU"
@@ -52,13 +52,13 @@ readonly ALL_EXTENSIONS=(
 
 # Extensions for each mode
 readonly WINLIKE_EXTENSIONS=(
-    "$EXT_SYSTEM_MONITOR"
+    "$EXT_ASTRA_MONITOR"
     "$EXT_DASH_TO_PANEL"
     "$EXT_WINDOW_STATE"
 )
 
 readonly MACLIKE_EXTENSIONS=(
-    "$EXT_SYSTEM_MONITOR"
+    "$EXT_ASTRA_MONITOR"
     "$EXT_DASH_TO_DOCK"
     "$EXT_LOGO_MENU"
     "$EXT_MAGIC_LAMP"
@@ -564,12 +564,13 @@ configure_common_settings() {
     # Enable extensions globally
     dconf_set "/org/gnome/shell/disable-user-extensions" "false"
 
-    # Configure System Monitor
-    dconf_set "/org/gnome/shell/extensions/system-monitor/show-cpu" "true"
-    dconf_set "/org/gnome/shell/extensions/system-monitor/show-memory" "true"
-    dconf_set "/org/gnome/shell/extensions/system-monitor/show-download" "false"
-    dconf_set "/org/gnome/shell/extensions/system-monitor/show-upload" "false"
-    dconf_set "/org/gnome/shell/extensions/system-monitor/show-swap" "false"
+    # Configure Astra Monitor
+    dconf_set "/org/gnome/shell/extensions/astra-monitor/processor-header-show" "true"
+    dconf_set "/org/gnome/shell/extensions/astra-monitor/memory-header-show" "true"
+    dconf_set "/org/gnome/shell/extensions/astra-monitor/storage-header-show" "false"
+    dconf_set "/org/gnome/shell/extensions/astra-monitor/network-header-show" "false"
+    dconf_set "/org/gnome/shell/extensions/astra-monitor/gpu-header-show" "false"
+    dconf_set "/org/gnome/shell/extensions/astra-monitor/sensors-header-show" "false"
 
     # Dark theme preference
     dconf_set "/org/gnome/desktop/interface/color-scheme" "'prefer-dark'"

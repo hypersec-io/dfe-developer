@@ -138,7 +138,8 @@ print_info "Installing core system packages..."
 # Split packages into GUI and non-GUI
 GUI_PACKAGES=""
 if [ "$HAS_GNOME" = "true" ]; then
-    GUI_PACKAGES="firefox gnome-extensions-app gnome-shell-extension-system-monitor gnome-shell-extension-appindicator gnome-shell-extension-dash-to-panel"
+    # Note: GNOME extensions are now installed via gext, not DNF packages (for GNOME 48+ compatibility)
+    GUI_PACKAGES="firefox gnome-extensions-app gnome-shell-extension-appindicator"
 fi
 
 sudo dnf install -y --skip-unavailable \
@@ -253,6 +254,12 @@ python3 -m pipx ensurepath || true
 # Install UV (fast Python package installer - replaces pip and poetry)
 print_info "Installing UV..."
 pipx install uv || python3 -m pip install --user uv
+
+# Install gext (gnome-extensions-cli) for extension management
+if [ "$HAS_GNOME" = "true" ]; then
+    print_info "Installing gnome-extensions-cli (gext)..."
+    pipx install gnome-extensions-cli || true
+fi
 
 # Install Docker Desktop (GUI application)
 if [ "$HAS_GNOME" = "true" ]; then
@@ -488,16 +495,44 @@ sudo systemctl start dnf-automatic.timer
 
 # Enable GNOME extensions (only if GNOME is running)
 if [ "$HAS_GNOME" = "true" ]; then
-    print_info "Configuring GNOME extensions..."
-    gsettings set org.gnome.shell enabled-extensions "['system-monitor@gnome-shell-extensions.gcampax.github.com', 'appindicatorsupport@rgcjonas.gmail.com', 'dash-to-panel@jderose9.github.com']" || true
+    print_info "Installing GNOME extensions via gext..."
+    GEXT_CMD="$HOME/.local/bin/gext"
+    if [ -x "$GEXT_CMD" ]; then
+        # Install extensions via gext (GNOME 48+ compatible)
+        "$GEXT_CMD" -F install monitor@astraext.github.io || true
+        "$GEXT_CMD" -F install dash-to-panel@jderose9.github.com || true
 
-    # Configure system-monitor extension
-    print_info "Configuring system-monitor extension..."
-    gsettings set org.gnome.shell.extensions.system-monitor show-cpu true || true
-    gsettings set org.gnome.shell.extensions.system-monitor show-memory true || true
-    gsettings set org.gnome.shell.extensions.system-monitor show-download false || true
-    gsettings set org.gnome.shell.extensions.system-monitor show-upload false || true
-    gsettings set org.gnome.shell.extensions.system-monitor show-swap false || true
+        # Compile schemas for Astra Monitor
+        ASTRA_SCHEMA_DIR="$HOME/.local/share/gnome-shell/extensions/monitor@astraext.github.io/schemas"
+        if [ -d "$ASTRA_SCHEMA_DIR" ]; then
+            glib-compile-schemas "$ASTRA_SCHEMA_DIR" || true
+        fi
+
+        # Compile schemas for Dash to Panel
+        DTP_SCHEMA_DIR="$HOME/.local/share/gnome-shell/extensions/dash-to-panel@jderose9.github.com/schemas"
+        if [ -d "$DTP_SCHEMA_DIR" ]; then
+            glib-compile-schemas "$DTP_SCHEMA_DIR" || true
+        fi
+    else
+        print_warn "gext not found, skipping extension installation"
+    fi
+
+    print_info "Configuring GNOME extensions..."
+    gsettings set org.gnome.shell enabled-extensions "['monitor@astraext.github.io', 'appindicatorsupport@rgcjonas.gmail.com', 'dash-to-panel@jderose9.github.com']" || true
+
+    # Configure Astra Monitor extension
+    print_info "Configuring Astra Monitor extension..."
+    ASTRA_SCHEMA_DIR="$HOME/.local/share/gnome-shell/extensions/monitor@astraext.github.io/schemas"
+    if [ -d "$ASTRA_SCHEMA_DIR" ]; then
+        export GSETTINGS_SCHEMA_DIR="$ASTRA_SCHEMA_DIR"
+        gsettings set org.gnome.shell.extensions.astra-monitor processor-header-show true || true
+        gsettings set org.gnome.shell.extensions.astra-monitor memory-header-show true || true
+        gsettings set org.gnome.shell.extensions.astra-monitor storage-header-show false || true
+        gsettings set org.gnome.shell.extensions.astra-monitor network-header-show false || true
+        gsettings set org.gnome.shell.extensions.astra-monitor gpu-header-show false || true
+        gsettings set org.gnome.shell.extensions.astra-monitor sensors-header-show false || true
+        unset GSETTINGS_SCHEMA_DIR
+    fi
 
     # Enable minimize and maximize buttons on windows
     print_info "Configuring window title bar buttons..."
@@ -505,9 +540,14 @@ if [ "$HAS_GNOME" = "true" ]; then
 
     # Configure dash-to-panel monitor settings
     print_info "Configuring dash-to-panel monitor settings..."
-    gsettings set org.gnome.shell.extensions.dash-to-panel primary-monitor 'MetaVendor-0x000001' || true
-    gsettings set org.gnome.shell.extensions.dash-to-panel trans-use-custom-opacity true || true
-    gsettings set org.gnome.shell.extensions.dash-to-panel trans-panel-opacity 0.4 || true
+    DTP_SCHEMA_DIR="$HOME/.local/share/gnome-shell/extensions/dash-to-panel@jderose9.github.com/schemas"
+    if [ -d "$DTP_SCHEMA_DIR" ]; then
+        export GSETTINGS_SCHEMA_DIR="$DTP_SCHEMA_DIR"
+        gsettings set org.gnome.shell.extensions.dash-to-panel primary-monitor 'MetaVendor-0x000001' || true
+        gsettings set org.gnome.shell.extensions.dash-to-panel trans-use-custom-opacity true || true
+        gsettings set org.gnome.shell.extensions.dash-to-panel trans-panel-opacity 0.4 || true
+        unset GSETTINGS_SCHEMA_DIR
+    fi
 fi
 
 # Set wallpaper if it exists (only if GNOME is running)

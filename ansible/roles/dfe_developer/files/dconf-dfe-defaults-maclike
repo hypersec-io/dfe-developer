@@ -8,19 +8,20 @@ disable-user-extensions=false
 
 # Extensions to enable by default
 # Dash to Dock + Logo Menu + Magic Lamp provide macOS-style experience
-enabled-extensions=['system-monitor@gnome-shell-extensions.gcampax.github.com', 'dash-to-dock@micxgx.gmail.com', 'logomenu@aryan_k', 'compiz-alike-magic-lamp-effect@hermes83.github.com']
+enabled-extensions=['monitor@astraext.github.io', 'dash-to-dock@micxgx.gmail.com', 'logomenu@aryan_k', 'compiz-alike-magic-lamp-effect@hermes83.github.com']
 
 # Extensions to disable by default
 # Ubuntu Dock conflicts with Dash to Dock
 disabled-extensions=['ubuntu-dock@ubuntu.com', 'workspace-indicator@gnome-shell-extensions.gcampax.github.com', 'apps-menu@gnome-shell-extensions.gcampax.github.com']
 
-[org/gnome/shell/extensions/system-monitor]
-# System monitor configuration
-show-cpu=true
-show-memory=true
-show-download=false
-show-upload=false
-show-swap=false
+[org/gnome/shell/extensions/astra-monitor]
+# Astra Monitor configuration
+processor-header-show=true
+memory-header-show=true
+storage-header-show=false
+network-header-show=false
+gpu-header-show=false
+sensors-header-show=false
 
 [org/gnome/shell/extensions/dash-to-dock]
 # Dash to Dock - macOS-style dock configuration
