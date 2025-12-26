@@ -1,12 +1,38 @@
 ---
-# GNOME dconf settings for RDP (optional - grdctl handles most settings)
+# GNOME dconf settings for RDP optimization
 
 # Note: Most RDP settings are configured via grdctl in service.yml
-# This file is for any additional GNOME desktop settings if needed
+# This file handles GNOME desktop optimizations for RDP performance
+
+- name: Install psutil for dconf module (Fedora)
+  ansible.builtin.dnf:
+    name: python3-psutil
+    state: present
+  when:
+    - ansible_distribution == 'Fedora'
+    - dfe_has_gnome
+
+- name: Install psutil for dconf module (Ubuntu)
+  ansible.builtin.apt:
+    name: python3-psutil
+    state: present
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - dfe_has_gnome
+
+- name: Disable GNOME animations for RDP performance
+  community.general.dconf:
+    key: "/org/gnome/desktop/interface/enable-animations"
+    value: "false"
+    state: present
+  become: false
+  when:
+    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - dfe_has_gnome
 
 - name: Display dconf status
   ansible.builtin.debug:
-    msg: "GNOME Remote Desktop configured via grdctl (system service mode)"
+    msg: "GNOME Remote Desktop configured via grdctl (system service mode) - animations disabled for RDP performance"
   when:
     - ansible_distribution in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
