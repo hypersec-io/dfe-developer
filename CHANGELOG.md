@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.11.6](https://github.com/hypersec-io/dfe-developer/compare/v2.11.5...v2.11.6) (2025-12-28)
+
+
+### Bug Fixes
+
+* Replace Linear CLI with schpet/linear-cli ([dbf83e0](https://github.com/hypersec-io/dfe-developer/commit/dbf83e022b97406025ee1470bb125f0764f08a3b))
+
 ## [2.11.5](https://github.com/hypersec-io/dfe-developer/compare/v2.11.4...v2.11.5) (2025-12-26)
 
 
