@@ -53,12 +53,20 @@
   failed_when: verify_semrel.rc != 0
   become: false
 
-- name: Verify Linear CLI
-  ansible.builtin.command: "{{ dfe_user_home }}/.npm-global/bin/linear --version"
+- name: Verify Linear CLI (Linux)
+  ansible.builtin.command: linear --version
   register: verify_linear
   changed_when: false
   failed_when: verify_linear.rc != 0
-  become: false
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+- name: Verify Linear CLI (macOS)
+  ansible.builtin.command: linear --version
+  environment: "{{ homebrew_env }}"
+  register: verify_linear
+  changed_when: false
+  failed_when: verify_linear.rc != 0
+  when: ansible_distribution == 'MacOSX'
 
 - name: Verify OpenVPN 3 (Linux)
   ansible.builtin.command: openvpn3 version
