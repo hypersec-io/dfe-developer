@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.11.9](https://github.com/hypersec-io/dfe-developer/compare/v2.11.8...v2.11.9) (2025-12-31)
+
+
+### Bug Fixes
+
+* Add NetBird CLI to core developer role ([445d3da](https://github.com/hypersec-io/dfe-developer/commit/445d3dae507bd9b0eb2cbcabc6b2573d4975c28d))
+
 ## [2.11.8](https://github.com/hypersec-io/dfe-developer/compare/v2.11.7...v2.11.8) (2025-12-31)
 
 
