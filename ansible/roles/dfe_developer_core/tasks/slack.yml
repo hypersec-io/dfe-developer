@@ -3,13 +3,11 @@
 
 # Linux (Fedora/Ubuntu) - via Flatpak
 
-- name: Install Slack via Flatpak (user-specific)
+- name: Install Slack via Flatpak (system-wide)
   community.general.flatpak:
     name: com.slack.Slack
     state: present
-    method: user
-  become: false
-  become_user: "{{ dfe_actual_user }}"
+    method: system
   when:
     - ansible_distribution in ['Fedora', 'Ubuntu']
     - dfe_has_gnome

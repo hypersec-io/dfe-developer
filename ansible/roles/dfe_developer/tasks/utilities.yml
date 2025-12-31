@@ -23,17 +23,6 @@
     method: system
   when: ansible_distribution in ['Fedora', 'Ubuntu']
 
-# Configure Flathub for user-level installations (for apps like Freelens, Slack)
-- name: Add Flathub repository (user-level)
-  community.general.flatpak_remote:
-    name: flathub
-    state: present
-    flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
-    method: user
-  become: false
-  when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
-    - dfe_has_gnome | default(false)
 
 # Common development utilities
 - name: Install development utilities (Fedora)
@@ -176,14 +165,11 @@
 # Remmina - Remote Desktop Client (Linux GUI only)
 # Using Flatpak for latest version (PPA discontinued as of 2025)
 # Flatpak provides better updates and cross-distro compatibility
-- name: Install Remmina via Flatpak (user-specific)
+- name: Install Remmina via Flatpak (system-wide)
   community.general.flatpak:
     name: org.remmina.Remmina
     state: present
-    method: user
-  become: false
-  environment:
-    FLATPAK_TTY_PROGRESS: "0"
+    method: system
   when:
     - ansible_distribution in ['Fedora', 'Ubuntu']
     - dfe_has_gnome | default(false)

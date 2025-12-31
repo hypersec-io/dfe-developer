@@ -152,14 +152,11 @@
 
 # Freelens - Flatpak (GUI only)
 
-- name: Install Freelens
+- name: Install Freelens (system-wide)
   community.general.flatpak:
     name: app.freelens.Freelens
     state: present
-    method: user
-  become: false
-  environment:
-    FLATPAK_TTY_PROGRESS: "0"
+    method: system
   when:
     - ansible_distribution in ['Fedora', 'Ubuntu']
     - dfe_has_gnome | default(false)

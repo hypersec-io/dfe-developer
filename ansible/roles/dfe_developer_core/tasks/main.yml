@@ -44,6 +44,11 @@
   tags: ['betterbird', 'email']
   when: ansible_distribution in ['Fedora', 'Ubuntu']
 
+- name: Install Bitwarden
+  ansible.builtin.include_tasks:
+    file: bitwarden.yml
+  tags: ['bitwarden', 'security']
+
 - name: Install OpenVPN 3
   ansible.builtin.include_tasks:
     file: openvpn.yml
