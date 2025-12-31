@@ -80,6 +80,46 @@
   when: ansible_distribution in ['Fedora', 'Ubuntu']
 
 # ============================================================================
+# AWS SESSION MANAGER PLUGIN (for aws ssm start-session)
+# ============================================================================
+
+- name: Install Session Manager Plugin (Fedora)
+  ansible.builtin.dnf:
+    name: https://s3.amazonaws.com/session-manager-downloads/plugin/latest/linux_64bit/session-manager-plugin.rpm
+    state: present
+    disable_gpg_check: true
+  when: ansible_distribution == 'Fedora'
+
+- name: Install Session Manager Plugin (Ubuntu)
+  ansible.builtin.apt:
+    deb: https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb
+  when: ansible_distribution == 'Ubuntu'
+
+# ============================================================================
+# AWS-VAULT (secure credential storage in OS keychain)
+# ============================================================================
+
+- name: Install aws-vault (Linux)
+  block:
+    - name: Get latest aws-vault version from GitHub API
+      ansible.builtin.uri:
+        url: https://api.github.com/repos/99designs/aws-vault/releases/latest
+        return_content: true
+      register: aws_vault_release
+
+    - name: Set aws-vault version fact
+      ansible.builtin.set_fact:
+        aws_vault_version: "{{ aws_vault_release.json.tag_name }}"
+
+    - name: Download aws-vault binary
+      ansible.builtin.get_url:
+        url: "https://github.com/99designs/aws-vault/releases/download/{{ aws_vault_version }}/aws-vault-linux-amd64"
+        dest: /usr/local/bin/aws-vault
+        mode: '0755'
+
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
+# ============================================================================
 # HELM (Linux binary install)
 # ============================================================================
 
@@ -197,6 +237,16 @@
       ansible.builtin.command: helm plugin install https://github.com/komodorio/helm-dashboard.git
       failed_when: false
       changed_when: false
+
+    - name: Install Session Manager Plugin
+      community.general.homebrew_cask:
+        name: session-manager-plugin
+        state: present
+
+    - name: Install aws-vault
+      community.general.homebrew_cask:
+        name: aws-vault
+        state: present
 
   become: false
   environment: "{{ homebrew_env }}"
