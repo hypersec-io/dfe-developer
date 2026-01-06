@@ -42,6 +42,11 @@
     file: service.yml
   tags: ['service']
 
+- name: Configure VA-API hardware encoding
+  ansible.builtin.include_tasks:
+    file: vaapi.yml
+  tags: ['vaapi']
+
 - name: Verify RDP optimizations
   ansible.builtin.include_tasks:
     file: verify.yml
