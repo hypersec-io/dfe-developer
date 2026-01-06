@@ -64,6 +64,15 @@
 # DEPLOY UI-MODE UTILITY
 # ============================================================================
 
+- name: Ensure /usr/local/sbin exists
+  ansible.builtin.file:
+    path: /usr/local/sbin
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+  when: ansible_distribution in ['Ubuntu', 'Fedora']
+
 - name: Deploy ui-mode utility to /usr/local/sbin
   ansible.builtin.copy:
     src: ui-mode

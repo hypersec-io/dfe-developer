@@ -178,6 +178,15 @@
 # DFE ADMIN TOOLS
 # ============================================================================
 
+- name: Ensure /usr/local/sbin exists
+  ansible.builtin.file:
+    path: /usr/local/sbin
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+  when: ansible_distribution in ['Fedora', 'Ubuntu']
+
 # add-dev-user - Script to add new developer users with full environment access
 - name: Install add-dev-user script
   ansible.builtin.copy:
