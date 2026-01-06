@@ -369,35 +369,9 @@ configure_vm_gui_optimizations() {
         echo '{"disable-hardware-acceleration": true}' | tee "$vscode_config_dir/argv.json" >/dev/null 2>/dev/null || true
     fi
     
-    # Disable Google Chrome hardware acceleration in VMs
-    if command -v google-chrome &>/dev/null || command -v google-chrome-stable &>/dev/null; then
-        local chrome_config_dir="$HOME/.config/google-chrome"
-        print_info "Disabling Google Chrome hardware acceleration for VM"
-        mkdir -p "$chrome_config_dir/Default" 2>/dev/null || true
-        # Create or update Chrome preferences
-        local chrome_prefs="$chrome_config_dir/Default/Preferences"
-        if [ -f "$chrome_prefs" ]; then
-            # Backup existing preferences
-            cp "$chrome_prefs" "$chrome_prefs.vm-backup" 2>/dev/null || true
-        fi
-        # Add hardware acceleration disable flag to Chrome launch options
-        local chrome_flags_file="$chrome_config_dir/chrome-flags.conf"
-        echo "--disable-gpu" | tee "$chrome_flags_file" >/dev/null 2>/dev/null || true
-        echo "--disable-software-rasterizer" | tee -a "$chrome_flags_file" >/dev/null 2>/dev/null || true
-    fi
-    
-    # Disable Slack hardware acceleration in VMs (Flatpak version)
-    if flatpak list --app 2>/dev/null | grep -q com.slack.Slack; then
-        print_info "Disabling Slack hardware acceleration for VM"
-        # Slack uses Electron, so we can set electron flags
-        local slack_config_dir="$HOME/.var/app/com.slack.Slack/config/Slack"
-        mkdir -p "$slack_config_dir" 2>/dev/null || true
-        # Create settings to disable hardware acceleration
-        echo '{"disableHardwareAcceleration": true}' | tee "$slack_config_dir/storage.json" >/dev/null 2>/dev/null || true
-        # Also set via flatpak override for Electron apps
-        flatpak override --user --env=ELECTRON_OZONE_PLATFORM_HINT=x11 com.slack.Slack 2>/dev/null || true
-        flatpak override --user --env="SLACK_DISABLE_GPU=1" com.slack.Slack 2>/dev/null || true
-    fi
+    # NOTE: Chrome and Slack GPU acceleration no longer disabled
+    # These apps auto-detect GPU capability and handle llvmpipe fallback well
+    # See TODO.md "Remove Unnecessary GPU Optimizations" for details
     
     # Disable Firefox hardware acceleration in VMs
     if command -v firefox &>/dev/null; then
