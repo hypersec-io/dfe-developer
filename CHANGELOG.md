@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [2.12.0](https://github.com/hypersec-io/dfe-developer/compare/v2.11.9...v2.12.0) (2026-01-06)
+
+
+### Bug Fixes
+
+* Ensure /usr/local/sbin exists before deploying scripts ([73dd627](https://github.com/hypersec-io/dfe-developer/commit/73dd6278321244f47c919ddd7b699bdbebc970d8))
+* Remove unnecessary Chrome/Slack GPU disables ([b93321f](https://github.com/hypersec-io/dfe-developer/commit/b93321fe76ad54dc6470401d308292a0dea97261))
+
+
+### Features
+
+* Add VA-API auto-detection service for GNOME Remote Desktop ([fd3b636](https://github.com/hypersec-io/dfe-developer/commit/fd3b636115876deac1aa57f543c9a1574f7a34c5))
+
 ## [2.11.9](https://github.com/hypersec-io/dfe-developer/compare/v2.11.8...v2.11.9) (2025-12-31)
 
 
