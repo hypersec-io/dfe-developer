@@ -56,6 +56,7 @@ local-config/
 # AI assistant work files - never commit (local only, public repo)
 STATE.md
 CLAUDE.md
+TODO.md
 .claude/
 *claude*.tmp
 *claude*.draft
