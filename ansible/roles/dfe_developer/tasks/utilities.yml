@@ -177,10 +177,22 @@
   ignore_errors: true
   register: remmina_install
 
-- name: Warn if Remmina installation failed
+# Fallback: Install Remmina via apt on Ubuntu if Flatpak failed
+- name: Install Remmina via apt (Ubuntu fallback)
+  ansible.builtin.apt:
+    name: remmina
+    state: present
+  when:
+    - ansible_facts['distribution'] == 'Ubuntu'
+    - dfe_has_gnome | default(false)
+    - remmina_install is defined
+    - remmina_install is failed
+
+- name: Warn if Remmina installation failed (Fedora only)
   ansible.builtin.debug:
     msg: "WARNING: Remmina Flatpak install failed (Flathub timeout). Install manually: flatpak install flathub org.remmina.Remmina"
   when:
+    - ansible_facts['distribution'] == 'Fedora'
     - remmina_install is defined
     - remmina_install is failed
 
