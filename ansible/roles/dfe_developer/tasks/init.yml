@@ -81,12 +81,32 @@
   register: gnome_running_check
   failed_when: false
   changed_when: false
-  when: ansible_distribution != 'MacOSX'
+  when:
+    - ansible_distribution != 'MacOSX'
+    - not (dfe_force_gnome | default(false))
 
-- name: Set GNOME availability fact (Linux)
+- name: Check if GNOME Shell is installed (fallback for headless/template builds)
+  ansible.builtin.stat:
+    path: /usr/bin/gnome-shell
+  register: gnome_shell_installed
+  when:
+    - ansible_distribution != 'MacOSX'
+    - not (dfe_force_gnome | default(false))
+
+- name: Set GNOME availability fact (Linux - running session)
   ansible.builtin.set_fact:
     dfe_has_gnome: "{{ gnome_running_check.rc == 0 }}"
-  when: ansible_distribution != 'MacOSX'
+  when:
+    - ansible_distribution != 'MacOSX'
+    - not (dfe_force_gnome | default(false))
+    - gnome_running_check is defined
+
+- name: Set GNOME availability fact (Linux - forced for headless/template builds)
+  ansible.builtin.set_fact:
+    dfe_has_gnome: true
+  when:
+    - ansible_distribution != 'MacOSX'
+    - dfe_force_gnome | default(false)
 
 - name: Set GNOME availability fact (macOS - N/A)
   ansible.builtin.set_fact:

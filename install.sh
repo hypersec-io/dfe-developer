@@ -56,6 +56,8 @@ OPTIONS:
   --branch BRANCH      Git branch to use (default: main)
   --core               Shortcut for: --tags developer,base,core,advanced
   --all                Shortcut for: --tags developer,base,core,advanced,vm,optimizer,rdp,winlike
+  --force-gnome        Force GNOME configuration even if no GNOME session is running
+                       (for headless/template builds where GNOME is installed but inactive)
   --help               Show this help message
 
 AVAILABLE TAGS:
@@ -123,6 +125,7 @@ EOF
 ANSIBLE_CHECK=""
 ANSIBLE_TAGS=""
 ANSIBLE_SKIP_TAGS=""
+ANSIBLE_EXTRA_VARS=""
 GIT_BRANCH="main"
 
 while [[ $# -gt 0 ]]; do
@@ -159,6 +162,12 @@ while [[ $# -gt 0 ]]; do
             ;;
         --all)
             ANSIBLE_TAGS="--tags developer,base,core,advanced,vm,optimizer,rdp,winlike"
+            shift
+            ;;
+        --force-gnome)
+            # Force GNOME configuration even if gnome-shell isn't running
+            # Useful for headless/template builds where GNOME is installed but not active
+            ANSIBLE_EXTRA_VARS="-e dfe_force_gnome=true"
             shift
             ;;
         --help|-h)
@@ -330,7 +339,7 @@ fi
 
 # Run Ansible playbook using temp venv Ansible
 print_info "Running Ansible playbook (using isolated venv Ansible)..."
-print_info "Command: $ANSIBLE_BIN playbooks/main.yml -i inventories/localhost/inventory.yml $ANSIBLE_CHECK $ANSIBLE_TAGS $ANSIBLE_SKIP_TAGS_ARG"
+print_info "Command: $ANSIBLE_BIN playbooks/main.yml -i inventories/localhost/inventory.yml $ANSIBLE_CHECK $ANSIBLE_TAGS $ANSIBLE_SKIP_TAGS_ARG $ANSIBLE_EXTRA_VARS"
 
 cd ansible || exit 1
 
@@ -340,7 +349,8 @@ cd ansible || exit 1
     -i inventories/localhost/inventory.yml \
     $ANSIBLE_CHECK \
     $ANSIBLE_TAGS \
-    $ANSIBLE_SKIP_TAGS_ARG || {
+    $ANSIBLE_SKIP_TAGS_ARG \
+    $ANSIBLE_EXTRA_VARS || {
     print_error "Ansible playbook failed"
     exit 1
 }
