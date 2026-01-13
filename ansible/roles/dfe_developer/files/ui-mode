@@ -266,7 +266,7 @@ check_gext_installed() {
         print_error "gnome-extensions-cli (gext) is not installed"
         print_error ""
         print_error "Install it with:"
-        print_error "  pipx install gnome-extensions-cli"
+        print_error "  uv tool install gnome-extensions-cli"
         print_error ""
         print_error "Or run the full DFE developer setup which includes it."
         exit 1

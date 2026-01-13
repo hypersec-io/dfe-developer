@@ -27,8 +27,6 @@
       - gnome-shell-extensions       # Base extension infrastructure
       - gnome-shell-extension-manager  # GUI for managing extensions
       - gir1.2-gmenu-3.0             # Required by ArcMenu and Logo Menu
-      - python3-pip                   # For pipx
-      - pipx                          # Isolated Python apps
     state: present
   when: ansible_facts['distribution'] == 'Ubuntu'
 
@@ -37,61 +35,25 @@
     name:
       - gnome-shell-extension-common  # Base extension infrastructure
       - gnome-extensions-app          # GUI for managing extensions
-      - pipx                          # Isolated Python apps
     state: present
   when: ansible_facts['distribution'] == 'Fedora'
 
-- name: Ensure pipx path is configured
+# Install gnome-extensions-cli via UV tool (not pipx)
+# UV manages its own Python environment - no system packages modified
+# Tool venv: ~/.local/share/uv/tools/gnome-extensions-cli/
+# Binary symlink: ~/.local/bin/gext
+- name: Install gnome-extensions-cli via uv tool
   ansible.builtin.command:
-    cmd: pipx ensurepath
-  become: false
-  changed_when: false
-  when: ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
-
-# Distro-packaged pipx can be outdated (Ubuntu 24.04 has 1.4.3).
-# community.general.pipx requires >= 1.7.0 for application parameter.
-# Upgrade pip and pipx system-wide - installs alongside distro versions.
-# --break-system-packages required on Ubuntu 24.04+ (PEP 668 protection).
-# --ignore-installed avoids "Cannot uninstall pip, RECORD file not found" error.
-- name: Upgrade pip to latest (system-wide)
-  ansible.builtin.command:
-    cmd: python3 -m pip install --upgrade --break-system-packages --ignore-installed pip
+    cmd: uv tool install gnome-extensions-cli
   become: true
-  when: ansible_facts['distribution'] == 'Ubuntu'
-  changed_when: true
-
-- name: Upgrade pip to latest (Fedora)
-  ansible.builtin.pip:
-    name: pip
-    state: latest
-  become: true
-  when: ansible_facts['distribution'] == 'Fedora'
-
-- name: Upgrade pipx to latest (system-wide)
-  ansible.builtin.command:
-    cmd: python3 -m pip install --upgrade --break-system-packages --ignore-installed pipx
-  become: true
-  when: ansible_facts['distribution'] == 'Ubuntu'
-  changed_when: true
-
-- name: Upgrade pipx to latest (Fedora)
-  ansible.builtin.pip:
-    name: pipx
-    state: latest
-  become: true
-  when: ansible_facts['distribution'] == 'Fedora'
-
-- name: Install gnome-extensions-cli via pipx
-  community.general.pipx:
-    name: gnome-extensions-cli
-    state: present
-    install_deps: true
-  become: false
   become_user: "{{ dfe_actual_user }}"
   environment:
-    PIPX_HOME: "{{ dfe_user_home }}/.local/pipx"
-    PIPX_BIN_DIR: "{{ dfe_user_home }}/.local/bin"
-    PATH: "{{ dfe_user_home }}/.local/bin:{{ ansible_env.PATH }}"
+    PATH: "/usr/local/bin:{{ dfe_user_home }}/.local/bin:{{ ansible_env.PATH }}"
+  register: gext_install
+  changed_when: "'Installed' in gext_install.stdout"
+  failed_when:
+    - gext_install.rc != 0
+    - "'already installed' not in gext_install.stderr"
   when: ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
 
 # ============================================================================
