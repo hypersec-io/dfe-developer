@@ -50,23 +50,36 @@
 
 # Distro-packaged pipx can be outdated (Ubuntu 24.04 has 1.4.3).
 # community.general.pipx requires >= 1.7.0 for application parameter.
-# Upgrade pip and pipx system-wide - overwrites older distro versions in-place.
+# Upgrade pip and pipx system-wide - installs alongside distro versions.
 # --break-system-packages required on Ubuntu 24.04+ (PEP 668 protection).
+# --ignore-installed avoids "Cannot uninstall pip, RECORD file not found" error.
 - name: Upgrade pip to latest (system-wide)
+  ansible.builtin.command:
+    cmd: python3 -m pip install --upgrade --break-system-packages --ignore-installed pip
+  become: true
+  when: ansible_facts['distribution'] == 'Ubuntu'
+  changed_when: true
+
+- name: Upgrade pip to latest (Fedora)
   ansible.builtin.pip:
     name: pip
     state: latest
-    extra_args: "{{ '--break-system-packages' if ansible_facts['distribution'] == 'Ubuntu' else omit }}"
   become: true
-  when: ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+  when: ansible_facts['distribution'] == 'Fedora'
 
 - name: Upgrade pipx to latest (system-wide)
+  ansible.builtin.command:
+    cmd: python3 -m pip install --upgrade --break-system-packages --ignore-installed pipx
+  become: true
+  when: ansible_facts['distribution'] == 'Ubuntu'
+  changed_when: true
+
+- name: Upgrade pipx to latest (Fedora)
   ansible.builtin.pip:
     name: pipx
     state: latest
-    extra_args: "{{ '--break-system-packages' if ansible_facts['distribution'] == 'Ubuntu' else omit }}"
   become: true
-  when: ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+  when: ansible_facts['distribution'] == 'Fedora'
 
 - name: Install gnome-extensions-cli via pipx
   community.general.pipx:
