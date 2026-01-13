@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.14.8](https://github.com/hypersec-io/dfe-developer/compare/v2.14.7...v2.14.8) (2026-01-13)
+
+
+### Bug Fixes
+
+* **gnome:** use --ignore-installed for pip upgrade on Ubuntu ([fc4bfb2](https://github.com/hypersec-io/dfe-developer/commit/fc4bfb2e0f5349d2db66306f342f8192e9ea9021))
+
 ## [2.14.7](https://github.com/hypersec-io/dfe-developer/compare/v2.14.6...v2.14.7) (2026-01-13)
 
 
