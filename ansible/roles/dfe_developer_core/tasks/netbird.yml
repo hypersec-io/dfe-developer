@@ -23,7 +23,7 @@
         name: netbird
         state: present
 
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 # ============================================================================
 # UBUNTU - Add APT repository and install
@@ -60,7 +60,7 @@
         state: present
         update_cache: true
 
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 # ============================================================================
 # macOS - Install via Homebrew
@@ -80,4 +80,4 @@
 
   become: false
   environment: "{{ homebrew_env }}"
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'

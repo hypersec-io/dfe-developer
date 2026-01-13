@@ -28,7 +28,7 @@
           export PATH="$HOME/.npm-global/bin:$PATH"
       fi
     mode: '0644'
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 # ============================================================================
 # BASH HISTORY AUTO-COMMIT (SYSTEM-WIDE)
@@ -51,7 +51,7 @@
           export HISTTIMEFORMAT="%F %T "           # Timestamp format
       fi
     mode: '0644'
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 - name: Configure zsh history auto-commit system-wide (macOS)
   ansible.builtin.copy:
@@ -68,5 +68,5 @@
       export SAVEHIST=20000                    # Commands in file
       export HISTFILE=~/.zsh_history           # History file location
     mode: '0644'
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 

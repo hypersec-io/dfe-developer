@@ -65,7 +65,7 @@
       changed_when: ubuntu_report.rc == 0
       failed_when: false
 
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 # -----------------------------------------------------------------------------
 # FEDORA: Disable ABRT and telemetry
@@ -86,7 +86,7 @@
         - abrt-pstoreoops
       failed_when: false
 
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 # -----------------------------------------------------------------------------
 # GNOME: Disable desktop telemetry (both distros)
@@ -108,5 +108,5 @@
       become: false
 
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome | default(false)

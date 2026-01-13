@@ -5,7 +5,7 @@
 - name: Load macOS variables
   ansible.builtin.include_vars:
     file: macos.yml
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 # Wait for DNF lock before Fedora updates (auto-updates may have started during playbook)
 - name: Wait for DNF lock to be released (Fedora cleanup)
@@ -19,7 +19,7 @@
     executable: /bin/bash
   register: dnf_lock_wait
   changed_when: false
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
   retries: 30
   delay: 10
   until: dnf_lock_wait.rc == 0
@@ -29,17 +29,17 @@
     name: "*"
     state: latest
     update_cache: true
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 - name: Remove unused packages (Fedora)
   ansible.builtin.dnf:
     autoremove: true
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 - name: Clean DNF cache (Fedora)
   ansible.builtin.command: dnf clean all
   changed_when: false
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 # Wait for APT lock before Ubuntu updates (auto-updates may have started during playbook)
 - name: Wait for APT lock to be released (Ubuntu cleanup)
@@ -53,7 +53,7 @@
     executable: /bin/bash
   register: apt_lock_wait
   changed_when: false
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
   retries: 30
   delay: 10
   until: apt_lock_wait.rc == 0
@@ -63,18 +63,18 @@
     upgrade: dist
     update_cache: true
     cache_valid_time: 3600
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 - name: Remove unused packages (Ubuntu)
   ansible.builtin.apt:
     autoremove: true
     purge: true
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 - name: Clean APT cache (Ubuntu)
   ansible.builtin.apt:
     autoclean: true
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 - name: Update all packages via Homebrew (macOS)
   community.general.homebrew:
@@ -82,14 +82,14 @@
     upgrade_all: true
   become: false
   environment: "{{ homebrew_env }}"
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Clean Homebrew cache (macOS)
   ansible.builtin.command: brew cleanup
   become: false
   environment: "{{ homebrew_env }}"
   changed_when: false
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Display cleanup status
   ansible.builtin.debug:
@@ -104,7 +104,7 @@
   loop:
     - apt-daily.timer
     - apt-daily-upgrade.timer
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
   failed_when: false
 
 - name: Re-enable unattended-upgrades service (Ubuntu)
@@ -112,7 +112,7 @@
     name: unattended-upgrades
     state: started
     enabled: true
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
   failed_when: false
 
 - name: Re-enable dnf-automatic timer (Fedora)
@@ -120,7 +120,7 @@
     name: dnf-automatic.timer
     state: started
     enabled: true
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
   failed_when: false
 
 - name: Remove temporary askpass script (macOS)
@@ -128,4 +128,4 @@
     path: /tmp/askpass.sh
     state: absent
   become: false
-  when: ansible_distribution == "MacOSX"
+  when: ansible_facts['distribution'] == "MacOSX"

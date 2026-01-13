@@ -18,7 +18,7 @@
         name: act-cli
         state: present
 
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 # ============================================================================
 # UBUNTU - Install via binary from GitHub releases
@@ -65,7 +65,7 @@
         - /tmp/LICENSE
         - /tmp/README.md
 
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 # ============================================================================
 # MACOS - Install via Homebrew
@@ -77,4 +77,4 @@
     state: present
   become: false
   environment: "{{ homebrew_env }}"
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'

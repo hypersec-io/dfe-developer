@@ -6,7 +6,7 @@
   register: verify_jfrog
   changed_when: false
   failed_when: verify_jfrog.rc != 0
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 - name: Verify JFrog CLI (macOS)
   ansible.builtin.command: jf --version
@@ -14,14 +14,14 @@
   register: verify_jfrog
   changed_when: false
   failed_when: verify_jfrog.rc != 0
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Verify Azure CLI (Linux)
   ansible.builtin.command: az version
   register: verify_azure
   changed_when: false
   failed_when: verify_azure.rc != 0
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 - name: Verify Azure CLI (macOS)
   ansible.builtin.command: az version
@@ -29,14 +29,14 @@
   register: verify_azure
   changed_when: false
   failed_when: verify_azure.rc != 0
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Verify Node.js (Linux)
   ansible.builtin.command: node --version
   register: verify_node
   changed_when: false
   failed_when: verify_node.rc != 0
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 - name: Verify Node.js (macOS)
   ansible.builtin.command: node --version
@@ -44,7 +44,7 @@
   register: verify_node
   changed_when: false
   failed_when: verify_node.rc != 0
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Verify semantic-release
   ansible.builtin.command: "{{ dfe_user_home }}/.npm-global/bin/semantic-release --version"
@@ -58,7 +58,7 @@
   register: verify_linear
   changed_when: false
   failed_when: verify_linear.rc != 0
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 - name: Verify Linear CLI (macOS)
   ansible.builtin.command: linear --version
@@ -66,14 +66,14 @@
   register: verify_linear
   changed_when: false
   failed_when: verify_linear.rc != 0
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Verify OpenVPN 3 (Linux)
   ansible.builtin.command: openvpn3 version
   register: verify_openvpn
   changed_when: false
   failed_when: verify_openvpn.rc != 0
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 - name: Verify OpenVPN 3 (macOS)
   ansible.builtin.command: openvpn --version
@@ -81,14 +81,14 @@
   register: verify_openvpn
   changed_when: false
   failed_when: verify_openvpn.rc != 0
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Verify NetBird CLI (Linux)
   ansible.builtin.command: netbird version
   register: verify_netbird
   changed_when: false
   failed_when: verify_netbird.rc != 0
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 - name: Verify NetBird CLI (macOS)
   ansible.builtin.command: netbird version
@@ -96,7 +96,7 @@
   register: verify_netbird
   changed_when: false
   failed_when: verify_netbird.rc != 0
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Verify Claude Code CLI
   ansible.builtin.command: "{{ dfe_user_home }}/.npm-global/bin/claude --version"
@@ -110,7 +110,7 @@
   register: verify_gitleaks
   changed_when: false
   failed_when: verify_gitleaks.rc != 0
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 - name: Verify Gitleaks (macOS)
   ansible.builtin.command: gitleaks version
@@ -118,14 +118,14 @@
   register: verify_gitleaks
   changed_when: false
   failed_when: verify_gitleaks.rc != 0
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Verify act (Linux)
   ansible.builtin.command: act --version
   register: verify_act
   changed_when: false
   failed_when: verify_act.rc != 0
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 - name: Verify act (macOS)
   ansible.builtin.command: act --version
@@ -133,7 +133,7 @@
   register: verify_act
   changed_when: false
   failed_when: verify_act.rc != 0
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Display core tools verification
   ansible.builtin.debug:

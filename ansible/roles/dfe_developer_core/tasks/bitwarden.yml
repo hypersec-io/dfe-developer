@@ -13,7 +13,7 @@
     state: present
     method: system
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
 
 # ============================================================================
@@ -50,7 +50,7 @@
         path: /tmp/bw-linux.zip
         state: absent
 
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 # ============================================================================
 # MACOS - GUI via Homebrew Cask, CLI via Homebrew
@@ -62,7 +62,7 @@
     state: present
   become: false
   environment: "{{ homebrew_cask_env }}"
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Install Bitwarden CLI (macOS)
   community.general.homebrew:
@@ -70,4 +70,4 @@
     state: present
   become: false
   environment: "{{ homebrew_env }}"
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'

@@ -9,7 +9,7 @@
   ansible.builtin.command:
     cmd: systemd-sysusers
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
   failed_when: false
   changed_when: false
@@ -18,7 +18,7 @@
   ansible.builtin.command:
     cmd: systemd-tmpfiles --create
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
   failed_when: false
   changed_when: false
@@ -31,7 +31,7 @@
   ansible.builtin.systemd:
     daemon_reload: true
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
 
 - name: Enable gnome-remote-desktop system service
@@ -40,7 +40,7 @@
     enabled: true
     state: started
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
 
 # ============================================================================
@@ -51,7 +51,7 @@
   ansible.builtin.command:
     cmd: grdctl --system rdp enable
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
   failed_when: false
   changed_when: false
@@ -60,7 +60,7 @@
   ansible.builtin.command:
     cmd: grdctl --system rdp disable-view-only
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
   failed_when: false
   changed_when: false
@@ -73,7 +73,7 @@
   ansible.builtin.command:
     cmd: "grdctl --system rdp set-credentials {{ dfe_rdp_username }} {{ dfe_rdp_password }}"
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
   failed_when: false
   changed_when: false
@@ -88,7 +88,7 @@
     name: gnome-remote-desktop.service
     state: restarted
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
 
 # ============================================================================
@@ -107,5 +107,5 @@
       - Username: {{ dfe_rdp_username }}
       - Change password: sudo grdctl --system rdp set-credentials <user> <pass>
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome

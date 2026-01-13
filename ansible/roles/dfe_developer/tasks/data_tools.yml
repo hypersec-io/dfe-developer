@@ -25,7 +25,7 @@
         name: vector
         state: present
 
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 - name: Install Vector (Ubuntu)
   block:
@@ -75,7 +75,7 @@
         state: present
         update_cache: true
 
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 - name: Install Vector via Homebrew (macOS)
   community.general.homebrew:
@@ -83,7 +83,7 @@
     state: present
   become: false
   environment: "{{ homebrew_env }}"
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 # ============================================================================
 # CLICKHOUSE - Analytics database client
@@ -104,7 +104,7 @@
         name: clickhouse-client
         state: present
 
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 - name: Install ClickHouse client (Ubuntu)
   block:
@@ -126,7 +126,7 @@
         state: present
         update_cache: true
 
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 - name: Install ClickHouse via Homebrew (macOS)
   community.general.homebrew:
@@ -134,7 +134,7 @@
     state: present
   become: false
   environment: "{{ homebrew_env }}"
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 # ============================================================================
 # CONFLUENT CLI - Kafka client tools
@@ -171,7 +171,7 @@
         name: confluent-cli
         state: present
 
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 - name: Install Confluent CLI (Ubuntu)
   block:
@@ -203,7 +203,7 @@
         state: present
         update_cache: true
 
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 - name: Install Confluent CLI via Homebrew (macOS)
   community.general.homebrew:
@@ -211,5 +211,5 @@
     state: present
   become: false
   environment: "{{ homebrew_env }}"
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 

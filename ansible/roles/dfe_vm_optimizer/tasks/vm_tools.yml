@@ -9,7 +9,7 @@
       - open-vm-tools-desktop
     state: present
   when:
-    - ansible_distribution == 'Fedora'
+    - ansible_facts['distribution'] == 'Fedora'
     - ansible_virtualization_type == 'VMware'
 
 - name: Install VMware tools (Ubuntu)
@@ -19,7 +19,7 @@
       - open-vm-tools-desktop
     state: present
   when:
-    - ansible_distribution == 'Ubuntu'
+    - ansible_facts['distribution'] == 'Ubuntu'
     - ansible_virtualization_type == 'VMware'
 
 - name: Enable VMware tools service
@@ -28,7 +28,7 @@
     enabled: true
     state: started
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - ansible_virtualization_type == 'VMware'
 
 # QEMU/KVM
@@ -39,7 +39,7 @@
       - spice-vdagent
     state: present
   when:
-    - ansible_distribution == 'Fedora'
+    - ansible_facts['distribution'] == 'Fedora'
     - ansible_virtualization_type in ['kvm', 'qemu']
 
 - name: Install QEMU/KVM guest agent (Ubuntu)
@@ -49,7 +49,7 @@
       - spice-vdagent
     state: present
   when:
-    - ansible_distribution == 'Ubuntu'
+    - ansible_facts['distribution'] == 'Ubuntu'
     - ansible_virtualization_type in ['kvm', 'qemu']
 
 - name: Enable QEMU guest agent services
@@ -62,7 +62,7 @@
     - spice-vdagentd.service
   failed_when: false
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - ansible_virtualization_type in ['kvm', 'qemu']
 
 # Hyper-V
@@ -73,7 +73,7 @@
       - hyperv-tools
     state: present
   when:
-    - ansible_distribution == 'Fedora'
+    - ansible_facts['distribution'] == 'Fedora'
     - ansible_virtualization_type == 'microsoft'
 
 - name: Install Hyper-V integration services (Ubuntu)
@@ -83,7 +83,7 @@
       - linux-cloud-tools-virtual
     state: present
   when:
-    - ansible_distribution == 'Ubuntu'
+    - ansible_facts['distribution'] == 'Ubuntu'
     - ansible_virtualization_type == 'microsoft'
 
 # VirtualBox
@@ -97,5 +97,5 @@
       - perl
     state: present
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - ansible_virtualization_type == 'oracle'

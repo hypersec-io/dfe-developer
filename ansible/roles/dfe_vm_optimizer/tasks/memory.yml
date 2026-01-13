@@ -7,7 +7,7 @@
     enabled: false
   failed_when: false
   when:
-    - ansible_distribution == 'Fedora'
+    - ansible_facts['distribution'] == 'Fedora'
     - ansible_virtualization_role == 'guest'
 
 - name: Create journald.conf.d directory
@@ -16,7 +16,7 @@
     state: directory
     mode: '0755'
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - ansible_virtualization_role == 'guest'
 
 - name: Limit systemd journal size
@@ -28,12 +28,12 @@
       RuntimeMaxUse=100M
     mode: '0644'
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - ansible_virtualization_role == 'guest'
 
 - name: Vacuum journal to 100M
   ansible.builtin.command: journalctl --vacuum-size=100M
   changed_when: false
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - ansible_virtualization_role == 'guest'

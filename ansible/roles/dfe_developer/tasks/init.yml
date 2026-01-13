@@ -5,36 +5,36 @@
 
 - name: Validate supported distribution
   ansible.builtin.fail:
-    msg: "Unsupported distribution: {{ ansible_distribution }}. Supported: {{ dfe_supported_distros | join(', ') }}"
-  when: ansible_distribution not in dfe_supported_distros
+    msg: "Unsupported distribution: {{ ansible_facts['distribution'] }}. Supported: {{ dfe_supported_distros | join(', ') }}"
+  when: ansible_facts['distribution'] not in dfe_supported_distros
 
 - name: Validate Fedora version
   ansible.builtin.fail:
-    msg: "Unsupported Fedora version: {{ ansible_distribution_major_version }}. Minimum required: {{ dfe_min_fedora_version }}"
+    msg: "Unsupported Fedora version: {{ ansible_facts['distribution_major_version'] }}. Minimum required: {{ dfe_min_fedora_version }}"
   when:
-    - ansible_distribution == 'Fedora'
-    - ansible_distribution_major_version | int < dfe_min_fedora_version
+    - ansible_facts['distribution'] == 'Fedora'
+    - ansible_facts['distribution_major_version'] | int < dfe_min_fedora_version
 
 - name: Validate Ubuntu version
   ansible.builtin.fail:
-    msg: "Unsupported Ubuntu version: {{ ansible_distribution_version }}. Minimum required: {{ dfe_min_ubuntu_version }}"
+    msg: "Unsupported Ubuntu version: {{ ansible_facts['distribution_version'] }}. Minimum required: {{ dfe_min_ubuntu_version }}"
   when:
-    - ansible_distribution == 'Ubuntu'
-    - ansible_distribution_version is version(dfe_min_ubuntu_version, '<')
+    - ansible_facts['distribution'] == 'Ubuntu'
+    - ansible_facts['distribution_version'] is version(dfe_min_ubuntu_version, '<')
 
 - name: Detect actual user (for sudo operations)
   ansible.builtin.set_fact:
-    dfe_actual_user: "{{ ansible_env.SUDO_USER | default(ansible_user_id, true) }}"
+    dfe_actual_user: "{{ ansible_facts['env'].SUDO_USER | default(ansible_facts['user_id'], true) }}"
 
 - name: Set actual user home directory (Linux)
   ansible.builtin.set_fact:
     dfe_user_home: "{{ '/home/' + dfe_actual_user if dfe_actual_user != 'root' else '/root' }}"
-  when: ansible_distribution != 'MacOSX'
+  when: ansible_facts['distribution'] != 'MacOSX'
 
 - name: Set actual user home directory (macOS)
   ansible.builtin.set_fact:
     dfe_user_home: "{{ '/Users/' + dfe_actual_user if dfe_actual_user != 'root' else '/var/root' }}"
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Display user information
   ansible.builtin.debug:
@@ -43,7 +43,7 @@
 - name: Load macOS-specific variables
   ansible.builtin.include_vars:
     file: macos.yml
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Create temporary sudo askpass script (macOS)
   ansible.builtin.copy:
@@ -53,7 +53,7 @@
     dest: /tmp/askpass.sh
     mode: '0700'
   become: false
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Install Homebrew (macOS)
   ansible.builtin.shell: |
@@ -62,7 +62,7 @@
   args:
     creates: /opt/homebrew/bin/brew
   become: false
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 # Note: askpass.sh is kept for Docker and other Homebrew cask installs
 # It will be cleaned up in dfe_system_cleanup role
@@ -74,7 +74,7 @@
     create: true
     mode: '0644'
   become: false
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Detect if GNOME is running (Linux only)
   ansible.builtin.command: pgrep -x gnome-shell
@@ -82,7 +82,7 @@
   failed_when: false
   changed_when: false
   when:
-    - ansible_distribution != 'MacOSX'
+    - ansible_facts['distribution'] != 'MacOSX'
     - not (dfe_force_gnome | default(false) | bool)
 
 - name: Check if GNOME Shell is installed (fallback for headless/template builds)
@@ -90,14 +90,14 @@
     path: /usr/bin/gnome-shell
   register: gnome_shell_installed
   when:
-    - ansible_distribution != 'MacOSX'
+    - ansible_facts['distribution'] != 'MacOSX'
     - not (dfe_force_gnome | default(false) | bool)
 
 - name: Set GNOME availability fact (Linux - running session)
   ansible.builtin.set_fact:
     dfe_has_gnome: "{{ gnome_running_check.rc == 0 }}"
   when:
-    - ansible_distribution != 'MacOSX'
+    - ansible_facts['distribution'] != 'MacOSX'
     - not (dfe_force_gnome | default(false) | bool)
     - gnome_running_check is defined
 
@@ -105,13 +105,13 @@
   ansible.builtin.set_fact:
     dfe_has_gnome: true
   when:
-    - ansible_distribution != 'MacOSX'
+    - ansible_facts['distribution'] != 'MacOSX'
     - dfe_force_gnome | default(false) | bool
 
 - name: Set GNOME availability fact (macOS - N/A)
   ansible.builtin.set_fact:
     dfe_has_gnome: false
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Display GNOME status
   ansible.builtin.debug:

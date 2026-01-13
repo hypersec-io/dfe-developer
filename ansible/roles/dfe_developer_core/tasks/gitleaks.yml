@@ -10,7 +10,7 @@
     name: gitleaks
     state: present
   become: false
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 # ============================================================================
 # LINUX - Install via binary from GitHub releases
@@ -57,4 +57,4 @@
         - /tmp/LICENSE
         - /tmp/README.md
 
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']

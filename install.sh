@@ -234,68 +234,64 @@ print_success "Sudo access verified"
 
 # Install latest Ansible in temporary Python venv (isolated from OS)
 # This avoids circular dependency if playbook updates system Ansible
-TEMP_ANSIBLE_DIR="$HOME/.dfe-ansible-temp"
+# The venv is created fresh each run and cleaned up after completion
+TEMP_ANSIBLE_DIR=$(mktemp -d -t dfe-ansible.XXXXXX)
 ANSIBLE_BIN="$TEMP_ANSIBLE_DIR/bin/ansible-playbook"
 
-if [[ -f "$ANSIBLE_BIN" ]]; then
-    ANSIBLE_VERSION=$("$TEMP_ANSIBLE_DIR/bin/ansible" --version | head -1 | awk '{print $2}')
-    print_info "Using temporary Ansible venv (version $ANSIBLE_VERSION)"
-else
-    print_info "Creating temporary Ansible environment (isolated from OS)..."
+print_info "Creating temporary Ansible environment (isolated from OS)..."
 
-    # Ensure Python 3 and curl are installed (prerequisites)
-    case "$OS_FAMILY" in
-        fedora)
-            if ! command -v python3 &>/dev/null || ! command -v curl &>/dev/null; then
-                sudo dnf install -y python3 python3-pip curl || {
-                    print_error "Failed to install Python 3 or curl"
-                    exit 1
-                }
-            fi
-            ;;
-        ubuntu)
-            if ! command -v python3 &>/dev/null || ! command -v curl &>/dev/null; then
-                sudo apt-get update -qq
-                sudo apt-get install -y python3 python3-pip python3-venv curl || {
-                    print_error "Failed to install Python 3 or curl"
-                    exit 1
-                }
-            elif ! python3 -m venv --help &>/dev/null; then
-                # Python exists but venv module missing
-                sudo apt-get update -qq
-                sudo apt-get install -y python3-venv || {
-                    print_error "Failed to install python3-venv"
-                    exit 1
-                }
-            fi
-            ;;
-        macos)
-            if ! command -v python3 &>/dev/null; then
-                print_error "Python 3 not found. Install from https://www.python.org or use: brew install python3"
+# Ensure Python 3 and curl are installed (prerequisites)
+case "$OS_FAMILY" in
+    fedora)
+        if ! command -v python3 &>/dev/null || ! command -v curl &>/dev/null; then
+            sudo dnf install -y python3 python3-pip curl || {
+                print_error "Failed to install Python 3 or curl"
                 exit 1
-            fi
-            # curl pre-installed on macOS
-            ;;
-    esac
+            }
+        fi
+        ;;
+    ubuntu)
+        if ! command -v python3 &>/dev/null || ! command -v curl &>/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y python3 python3-pip python3-venv curl || {
+                print_error "Failed to install Python 3 or curl"
+                exit 1
+            }
+        elif ! python3 -m venv --help &>/dev/null; then
+            # Python exists but venv module missing
+            sudo apt-get update -qq
+            sudo apt-get install -y python3-venv || {
+                print_error "Failed to install python3-venv"
+                exit 1
+            }
+        fi
+        ;;
+    macos)
+        if ! command -v python3 &>/dev/null; then
+            print_error "Python 3 not found. Install from https://www.python.org or use: brew install python3"
+            exit 1
+        fi
+        # curl pre-installed on macOS
+        ;;
+esac
 
-    # Create temporary Python venv
-    python3 -m venv "$TEMP_ANSIBLE_DIR" || {
-        print_error "Failed to create Python venv"
-        exit 1
-    }
+# Create temporary Python venv
+python3 -m venv "$TEMP_ANSIBLE_DIR" || {
+    print_error "Failed to create Python venv"
+    exit 1
+}
 
-    # Install latest Ansible via pip
-    print_info "Installing latest Ansible via pip (isolated venv)..."
-    "$TEMP_ANSIBLE_DIR/bin/pip" install --upgrade pip setuptools wheel >/dev/null 2>&1
-    "$TEMP_ANSIBLE_DIR/bin/pip" install ansible >/dev/null 2>&1 || {
-        print_error "Failed to install Ansible via pip"
-        exit 1
-    }
+# Install latest Ansible via pip
+print_info "Installing latest Ansible via pip..."
+"$TEMP_ANSIBLE_DIR/bin/pip" install --upgrade pip setuptools wheel >/dev/null 2>&1
+"$TEMP_ANSIBLE_DIR/bin/pip" install ansible >/dev/null 2>&1 || {
+    print_error "Failed to install Ansible via pip"
+    rm -rf "$TEMP_ANSIBLE_DIR"
+    exit 1
+}
 
-    ANSIBLE_VERSION=$("$TEMP_ANSIBLE_DIR/bin/ansible" --version | head -1 | awk '{print $2}')
-    print_success "Ansible $ANSIBLE_VERSION installed to temporary venv"
-    print_info "Location: $TEMP_ANSIBLE_DIR (will be reused on subsequent runs)"
-fi
+ANSIBLE_VERSION=$("$TEMP_ANSIBLE_DIR/bin/ansible" --version | head -1 | awk '{print $2}')
+print_success "Ansible $ANSIBLE_VERSION installed (temporary venv)"
 
 # Determine script directory and check for ansible directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -350,10 +346,17 @@ cd ansible || exit 1
     $ANSIBLE_CHECK \
     $ANSIBLE_TAGS \
     $ANSIBLE_SKIP_TAGS_ARG \
-    $ANSIBLE_EXTRA_VARS || {
+    $ANSIBLE_EXTRA_VARS
+ANSIBLE_EXIT_CODE=$?
+
+# Clean up temporary Ansible venv
+print_info "Cleaning up temporary Ansible venv..."
+rm -rf "$TEMP_ANSIBLE_DIR"
+
+if [[ $ANSIBLE_EXIT_CODE -ne 0 ]]; then
     print_error "Ansible playbook failed"
     exit 1
-}
+fi
 
 print_success "DFE Developer Environment installation complete!"
 print_info ""

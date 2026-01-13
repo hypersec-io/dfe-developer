@@ -7,13 +7,13 @@
   ansible.builtin.apt:
     name: python3-psutil
     state: present
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 - name: Install psutil for dconf module (Fedora)
   ansible.builtin.dnf:
     name: python3-psutil
     state: present
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 - name: Set wallpaper filename
   ansible.builtin.set_fact:
@@ -29,7 +29,7 @@
     dest: "/usr/share/backgrounds/{{ dfe_wallpaper_name }}"
     mode: '0644'
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
 
 - name: Set GNOME wallpaper (light mode)
@@ -39,7 +39,7 @@
     state: present
   become: false
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
 
 - name: Set GNOME wallpaper (dark mode)
@@ -49,13 +49,13 @@
     state: present
   become: false
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
 
 - name: Display wallpaper status (Linux)
   ansible.builtin.debug:
     msg: "Wallpaper set: {{ dfe_wallpaper_name }}"
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 # ============================================================================
 # macOS - Install desktoppr and set wallpaper
@@ -67,7 +67,7 @@
     state: present
   become: false
   environment: "{{ homebrew_env }}"
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Copy wallpaper to user Pictures directory (macOS)
   ansible.builtin.copy:
@@ -75,7 +75,7 @@
     dest: "{{ dfe_user_home }}/Pictures/{{ dfe_wallpaper_name }}"
     mode: '0644'
   become: false
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Set macOS wallpaper using desktoppr
   ansible.builtin.command:
@@ -83,9 +83,9 @@
   environment: "{{ homebrew_env }}"
   become: false
   changed_when: false
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Display wallpaper status (macOS)
   ansible.builtin.debug:
     msg: "Wallpaper set: {{ dfe_wallpaper_name }}"
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'

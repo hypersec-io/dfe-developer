@@ -9,7 +9,7 @@
     name: python3-psutil
     state: present
   when:
-    - ansible_distribution == 'Fedora'
+    - ansible_facts['distribution'] == 'Fedora'
     - dfe_has_gnome
 
 - name: Install psutil for dconf module (Ubuntu)
@@ -17,7 +17,7 @@
     name: python3-psutil
     state: present
   when:
-    - ansible_distribution == 'Ubuntu'
+    - ansible_facts['distribution'] == 'Ubuntu'
     - dfe_has_gnome
 
 - name: Disable GNOME animations for RDP performance
@@ -27,12 +27,12 @@
     state: present
   become: false
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
 
 - name: Display dconf status
   ansible.builtin.debug:
     msg: "GNOME Remote Desktop configured via grdctl (system service mode) - animations disabled for RDP performance"
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome

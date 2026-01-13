@@ -13,13 +13,13 @@
   ansible.builtin.apt:
     name: python3-psutil
     state: present
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 - name: Install psutil for dconf module (Fedora)
   ansible.builtin.dnf:
     name: python3-psutil
     state: present
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 - name: Install GNOME extension prerequisites (Ubuntu)
   ansible.builtin.apt:
@@ -30,7 +30,7 @@
       - python3-pip                   # For pipx
       - pipx                          # Isolated Python apps
     state: present
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 - name: Install GNOME extension prerequisites (Fedora)
   ansible.builtin.dnf:
@@ -39,14 +39,14 @@
       - gnome-extensions-app          # GUI for managing extensions
       - pipx                          # Isolated Python apps
     state: present
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 - name: Ensure pipx path is configured
   ansible.builtin.command:
     cmd: pipx ensurepath
   become: false
   changed_when: false
-  when: ansible_distribution in ['Ubuntu', 'Fedora']
+  when: ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
 
 - name: Install gnome-extensions-cli via pipx
   community.general.pipx:
@@ -58,7 +58,7 @@
   environment:
     PIPX_HOME: "{{ dfe_user_home }}/.local/pipx"
     PIPX_BIN_DIR: "{{ dfe_user_home }}/.local/bin"
-  when: ansible_distribution in ['Ubuntu', 'Fedora']
+  when: ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
 
 # ============================================================================
 # DEPLOY UI-MODE UTILITY
@@ -71,7 +71,7 @@
     mode: '0755'
     owner: root
     group: root
-  when: ansible_distribution in ['Ubuntu', 'Fedora']
+  when: ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
 
 - name: Deploy ui-mode utility to /usr/local/sbin
   ansible.builtin.copy:
@@ -80,7 +80,7 @@
     mode: '0755'
     owner: root
     group: root
-  when: ansible_distribution in ['Ubuntu', 'Fedora']
+  when: ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
 
 # ============================================================================
 # INSTALL ALL EXTENSIONS (for both winlike and maclike modes)
@@ -260,7 +260,7 @@
     path: /usr/local/share/fonts/martel-sans
     state: directory
     mode: '0755'
-  when: ansible_distribution in ['Ubuntu', 'Fedora']
+  when: ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
 
 - name: Install Martel Sans fonts
   ansible.builtin.copy:
@@ -275,7 +275,7 @@
     - MartelSans-Bold.ttf
     - MartelSans-ExtraBold.ttf
     - MartelSans-Black.ttf
-  when: ansible_distribution in ['Ubuntu', 'Fedora']
+  when: ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
   register: martel_fonts_installed
 
 # ============================================================================
@@ -287,7 +287,7 @@
   ansible.builtin.stat:
     path: /usr/share/fonts/adwaita-sans/AdwaitaSans-Regular.ttf
   register: adwaita_sans_check
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 # Install Adwaita Sans and Mono fonts on Ubuntu (to match Fedora GNOME 47+)
 - name: Create Adwaita fonts directory (Ubuntu)
@@ -296,7 +296,7 @@
     state: directory
     mode: '0755'
   when:
-    - ansible_distribution == 'Ubuntu'
+    - ansible_facts['distribution'] == 'Ubuntu'
     - not adwaita_sans_check.stat.exists | default(true)
 
 - name: Install Adwaita Sans fonts (Ubuntu)
@@ -312,7 +312,7 @@
     - AdwaitaMono-Italic.ttf
     - AdwaitaMono-BoldItalic.ttf
   when:
-    - ansible_distribution == 'Ubuntu'
+    - ansible_facts['distribution'] == 'Ubuntu'
     - not adwaita_sans_check.stat.exists | default(true)
   register: adwaita_fonts_installed
 
@@ -321,7 +321,7 @@
     cmd: fc-cache -f
   changed_when: true
   when:
-    - ansible_distribution in ['Ubuntu', 'Fedora']
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
     - (adwaita_fonts_installed.changed | default(false)) or (martel_fonts_installed.changed | default(false))
 
 # Set Adwaita Sans as default fonts (GNOME 47+ style for all Linux distros)
@@ -331,7 +331,7 @@
     value: "'Adwaita Sans 11'"
     state: present
   become: false
-  when: ansible_distribution in ['Ubuntu', 'Fedora']
+  when: ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
 
 - name: Set document font (Adwaita Sans 11)
   community.general.dconf:
@@ -339,7 +339,7 @@
     value: "'Adwaita Sans 11'"
     state: present
   become: false
-  when: ansible_distribution in ['Ubuntu', 'Fedora']
+  when: ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
 
 - name: Set monospace font (Adwaita Mono 11)
   community.general.dconf:
@@ -347,7 +347,7 @@
     value: "'Adwaita Mono 11'"
     state: present
   become: false
-  when: ansible_distribution in ['Ubuntu', 'Fedora']
+  when: ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
 
 - name: Set window title font (Adwaita Sans Bold 11)
   community.general.dconf:
@@ -355,4 +355,4 @@
     value: "'Adwaita Sans Bold 11'"
     state: present
   become: false
-  when: ansible_distribution in ['Ubuntu', 'Fedora']
+  when: ansible_facts['distribution'] in ['Ubuntu', 'Fedora']

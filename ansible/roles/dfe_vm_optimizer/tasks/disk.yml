@@ -9,12 +9,12 @@
       ACTION=="add|change", KERNEL=="sd[a-z]|vd[a-z]", ATTR{queue/scheduler}="none"
     mode: '0644'
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - ansible_virtualization_role == 'guest'
 
 - name: Reload udev rules
   ansible.builtin.command: udevadm control --reload-rules
   changed_when: false
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - ansible_virtualization_role == 'guest'

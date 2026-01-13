@@ -14,5 +14,5 @@
     - bolt.service
   failed_when: false
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - ansible_virtualization_role == 'guest'

@@ -23,7 +23,7 @@
         name: jfrog-cli-v2-jf
         state: present
 
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 # ============================================================================
 # UBUNTU - Add JFrog repository and install
@@ -49,7 +49,7 @@
         state: present
         update_cache: true
 
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 # ============================================================================
 # macOS - Install via Homebrew
@@ -61,4 +61,4 @@
     state: present
   become: false
   environment: "{{ homebrew_env }}"
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'

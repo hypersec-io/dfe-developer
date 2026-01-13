@@ -13,7 +13,7 @@
     apply:
       tags: ['desktop']
   tags: ['desktop']
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 - name: Configure OS repositories (mirrors, performance)
   ansible.builtin.include_tasks:
@@ -157,7 +157,7 @@
   tags: ['winlike', 'never']
   when:
     - dfe_has_gnome | default(false)
-    - ansible_distribution in ['Ubuntu', 'Fedora']
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
     - "'winlike' in ansible_run_tags"
 
 - name: Configure system-wide GNOME defaults (maclike)
@@ -195,7 +195,7 @@
   tags: ['maclike', 'never']
   when:
     - dfe_has_gnome | default(false)
-    - ansible_distribution in ['Ubuntu', 'Fedora']
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
     - "'maclike' in ansible_run_tags"
 
 - name: Install Ghostty terminal

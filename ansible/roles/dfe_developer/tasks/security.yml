@@ -50,7 +50,7 @@
         enabled: true
         state: started
 
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 # ============================================================================
 # UBUNTU - unattended-upgrades for security updates
@@ -95,7 +95,7 @@
           APT::Periodic::AutocleanInterval "7";
         mode: '0644'
 
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 # ============================================================================
 # STATUS DISPLAY
@@ -103,4 +103,4 @@
 
 - name: Display automatic updates status
   ansible.builtin.debug:
-    msg: "Automatic security updates: ENABLED ({{ 'dnf-automatic' if ansible_distribution == 'Fedora' else 'unattended-upgrades' }})"
+    msg: "Automatic security updates: ENABLED ({{ 'dnf-automatic' if ansible_facts['distribution'] == 'Fedora' else 'unattended-upgrades' }})"

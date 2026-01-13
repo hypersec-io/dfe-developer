@@ -6,4 +6,4 @@
     name: eu.betterbird.Betterbird
     state: present
     method: system
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']

@@ -11,7 +11,7 @@
     cmd: dnf config-manager addrepo --from-repofile=https://download.docker.com/linux/fedora/docker-ce.repo --overwrite
   args:
     creates: /etc/yum.repos.d/docker-ce.repo
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 # ============================================================================
 # UBUNTU - Add Docker repository
@@ -33,7 +33,7 @@
 
     - name: Add Docker repository
       ansible.builtin.apt_repository:
-        repo: "deb [arch={{ dfe_docker_arch }} signed-by=/etc/apt/keyrings/docker.asc] {{ dfe_docker_repo_url }} {{ ansible_distribution_release }} stable"
+        repo: "deb [arch={{ dfe_docker_arch }} signed-by=/etc/apt/keyrings/docker.asc] {{ dfe_docker_repo_url }} {{ ansible_facts['distribution_release'] }} stable"
         filename: docker
         state: present
 
@@ -41,7 +41,7 @@
       ansible.builtin.apt:
         update_cache: true
 
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 # macOS
 - name: Install Docker Desktop via Homebrew (macOS)
@@ -50,7 +50,7 @@
     state: present
   environment: "{{ homebrew_cask_env }}"
   become: false
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Display Docker Desktop installation note (macOS)
   ansible.builtin.debug:
@@ -64,7 +64,7 @@
       4. Docker CLI will be available after initialization
 
       This is a one-time setup - Docker will auto-start on subsequent logins.
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 # ============================================================================
 # REMOVE CONFLICTING PACKAGES
@@ -79,7 +79,7 @@
       - skopeo
       - toolbox
     state: absent
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
   failed_when: false  # OK if packages don't exist
 
 # ============================================================================
@@ -95,7 +95,7 @@
       - docker-buildx-plugin
       - docker-compose-plugin
     state: present
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 - name: Install Docker CE (Ubuntu)
   ansible.builtin.apt:
@@ -106,7 +106,7 @@
       - docker-buildx-plugin
       - docker-compose-plugin
     state: present
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 # ============================================================================
 # INSTALL DOCKER DESKTOP (GUI)
@@ -131,7 +131,7 @@
         path: /tmp/docker-desktop.rpm
         state: absent
   when:
-    - ansible_distribution == 'Fedora'
+    - ansible_facts['distribution'] == 'Fedora'
     - dfe_has_gnome | default(false)
     - dfe_docker_install_desktop | default(true)
 
@@ -153,7 +153,7 @@
         path: /tmp/docker-desktop.deb
         state: absent
   when:
-    - ansible_distribution == 'Ubuntu'
+    - ansible_facts['distribution'] == 'Ubuntu'
     - dfe_has_gnome | default(false)
     - dfe_docker_install_desktop | default(true)
 
@@ -168,14 +168,14 @@
     append: true
   loop: "{{ dfe_docker_users }}"
   notify: Inform user to logout
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 - name: Enable and start Docker service
   ansible.builtin.systemd:
     name: docker
     enabled: true
     state: started
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 # ============================================================================
 # VERIFY INSTALLATION
@@ -186,16 +186,16 @@
   register: docker_version
   changed_when: false
   failed_when: docker_version.rc != 0
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 - name: Verify Docker CLI is available (macOS - may fail if not launched yet)
   ansible.builtin.command: docker --version
   environment:
-    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ ansible_env.PATH }}"
+    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ ansible_facts['env'].PATH }}"
   register: docker_version
   changed_when: false
   failed_when: false
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Display Docker version
   ansible.builtin.debug:

@@ -7,28 +7,28 @@
   register: verify_docker
   changed_when: false
   failed_when: verify_docker.rc != 0
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 - name: Verify Docker Desktop installed (macOS - CLI available after manual launch)
   ansible.builtin.stat:
     path: /Applications/Docker.app
   register: verify_docker_app
   failed_when: not verify_docker_app.stat.exists
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Set Docker version fact for macOS
   ansible.builtin.set_fact:
     verify_docker:
       stdout: "Docker Desktop installed (launch manually for CLI access)"
       rc: 0
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Verify Docker service enabled (will be active after reboot)
   ansible.builtin.systemd:
     name: docker.service
   register: verify_docker_service
   failed_when: verify_docker_service.status.UnitFileState != 'enabled'
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 # Docker group membership requires logout/reboot - skip verification
 
@@ -37,7 +37,7 @@
   ansible.builtin.command: kubectl version --client
   register: verify_kubectl
   environment:
-    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_env.PATH }}"
+    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_facts['env'].PATH }}"
   changed_when: false
   failed_when: verify_kubectl.rc != 0
 
@@ -45,7 +45,7 @@
   ansible.builtin.command: helm version --short
   register: verify_helm
   environment:
-    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_env.PATH }}"
+    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_facts['env'].PATH }}"
   changed_when: false
   failed_when: verify_helm.rc != 0
 
@@ -53,7 +53,7 @@
   ansible.builtin.command: terraform version
   register: verify_terraform
   environment:
-    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_env.PATH }}"
+    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_facts['env'].PATH }}"
   changed_when: false
   failed_when: verify_terraform.rc != 0
 
@@ -62,7 +62,7 @@
   ansible.builtin.command: git --version
   register: verify_git
   environment:
-    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_env.PATH }}"
+    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_facts['env'].PATH }}"
   changed_when: false
   failed_when: verify_git.rc != 0
 
@@ -71,20 +71,20 @@
   register: verify_git_subtree
   changed_when: false
   failed_when: verify_git_subtree.rc != 0
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 - name: Verify Git subtree (macOS - skip, not in Homebrew git)
   ansible.builtin.set_fact:
     verify_git_subtree:
       stdout: "git subtree not included in Homebrew git (install separately if needed)"
       rc: 0
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Verify Git LFS filter installed
   ansible.builtin.command: git lfs env
   register: verify_git_lfs
   environment:
-    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_env.PATH }}"
+    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_facts['env'].PATH }}"
   changed_when: false
   failed_when: verify_git_lfs.rc != 0
   become: false
@@ -95,7 +95,7 @@
   ansible.builtin.command: "{{ dfe_user_home }}/.cargo/bin/uv --version"
   register: verify_uv
   environment:
-    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_env.PATH }}"
+    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_facts['env'].PATH }}"
   changed_when: false
   failed_when: verify_uv.rc != 0
   become: false
@@ -105,7 +105,7 @@
   ansible.builtin.command: "{{ dfe_user_home }}/.cargo/bin/uv python list"
   register: verify_uv_python
   environment:
-    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_env.PATH }}"
+    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_facts['env'].PATH }}"
   changed_when: false
   failed_when: verify_uv_python.rc != 0
   become: false
@@ -116,7 +116,7 @@
   ansible.builtin.command: aws --version
   register: verify_aws
   environment:
-    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_env.PATH }}"
+    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_facts['env'].PATH }}"
   changed_when: false
   failed_when: verify_aws.rc != 0
 
@@ -124,7 +124,7 @@
   ansible.builtin.command: yq --version
   register: verify_yq
   environment:
-    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_env.PATH }}"
+    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_facts['env'].PATH }}"
   changed_when: false
   failed_when: verify_yq.rc != 0
 
@@ -135,7 +135,7 @@
   register: verify_dnf_conf
   failed_when: not verify_dnf_conf.stat.exists
   when:
-    - ansible_distribution == 'Fedora'
+    - ansible_facts['distribution'] == 'Fedora'
     - dfe_use_fastestmirror | default(true)
 
 - name: Verify APT performance config (Ubuntu)
@@ -144,7 +144,7 @@
   register: verify_apt_conf
   failed_when: not verify_apt_conf.stat.exists
   when:
-    - ansible_distribution == 'Ubuntu'
+    - ansible_facts['distribution'] == 'Ubuntu'
     - dfe_use_fastestmirror | default(true)
 
 - name: Display base tools verification (Linux)
@@ -162,7 +162,7 @@
       - UV: {{ verify_uv.stdout }} (can list Python versions ✅)
       - AWS CLI: {{ verify_aws.stdout }}
       - yq: {{ verify_yq.stdout }}
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 - name: Display base tools verification (macOS)
   ansible.builtin.debug:
@@ -178,4 +178,4 @@
       - UV: {{ verify_uv.stdout }} (can list Python versions ✅)
       - AWS CLI: {{ verify_aws.stdout }}
       - yq: {{ verify_yq.stdout }}
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'

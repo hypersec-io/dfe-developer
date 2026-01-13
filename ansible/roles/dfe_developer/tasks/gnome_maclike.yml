@@ -75,4 +75,4 @@
   become_user: "{{ dfe_actual_user }}"
   changed_when: false
   failed_when: false
-  when: ansible_distribution in ['Ubuntu', 'Fedora']
+  when: ansible_facts['distribution'] in ['Ubuntu', 'Fedora']

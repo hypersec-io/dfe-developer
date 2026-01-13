@@ -6,27 +6,27 @@
   ansible.builtin.shell: curl -fsSL https://rpm.nodesource.com/setup_lts.x | bash -
   args:
     creates: /etc/yum.repos.d/nodesource-*.repo
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 - name: Install Node.js (Fedora)
   ansible.builtin.dnf:
     name: nodejs
     state: present
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 # Ubuntu - Add Node.js LTS repository
 - name: Add Node.js LTS repository (Ubuntu)
   ansible.builtin.shell: curl -fsSL https://deb.nodesource.com/setup_lts.x | bash -
   args:
     creates: /etc/apt/sources.list.d/nodesource.list
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 - name: Install Node.js (Ubuntu)
   ansible.builtin.apt:
     name: nodejs
     state: present
     update_cache: true
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 # macOS
 - name: Install Node.js via Homebrew (macOS)
@@ -35,7 +35,7 @@
     state: present
   become: false
   environment: "{{ homebrew_env }}"
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 # Configure npm for user-specific global packages
 - name: Create npm global directory for user (Linux)
@@ -45,7 +45,7 @@
     mode: '0755'
     owner: "{{ dfe_actual_user }}"
     group: "{{ dfe_actual_user }}"
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 - name: Create npm global directory for user (macOS)
   ansible.builtin.file:
@@ -53,7 +53,7 @@
     state: directory
     mode: '0755'
   become: false
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Configure npm prefix for user (Linux)
   ansible.builtin.command:
@@ -61,7 +61,7 @@
   become: false
   become_user: "{{ dfe_actual_user }}"
   changed_when: false
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 - name: Configure npm prefix for user (macOS)
   ansible.builtin.command:
@@ -69,7 +69,7 @@
   become: false
   environment: "{{ homebrew_env }}"
   changed_when: false
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Add npm global bin to PATH in .bashrc (Linux)
   ansible.builtin.lineinfile:
@@ -80,7 +80,7 @@
     owner: "{{ dfe_actual_user }}"
     group: "{{ dfe_actual_user }}"
     create: true
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 - name: Add npm global bin to PATH in .zshrc (macOS)
   ansible.builtin.lineinfile:
@@ -90,27 +90,27 @@
     state: present
     create: true
   become: false
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 # Install semantic-release and plugins (user-specific)
 - name: Update npm to latest (Linux)
   ansible.builtin.command:
     cmd: npm install -g npm@latest
   environment:
-    PATH: "{{ dfe_user_home }}/.npm-global/bin:{{ ansible_env.PATH }}"
+    PATH: "{{ dfe_user_home }}/.npm-global/bin:{{ ansible_facts['env'].PATH }}"
   become: false
   become_user: "{{ dfe_actual_user }}"
   changed_when: false
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 - name: Update npm to latest (macOS)
   ansible.builtin.command:
     cmd: npm install -g npm@latest
   environment:
-    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.npm-global/bin:{{ ansible_env.PATH }}"
+    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ dfe_user_home }}/.npm-global/bin:{{ ansible_facts['env'].PATH }}"
   become: false
   changed_when: false
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Install semantic-release globally (Linux)
   community.general.npm:
@@ -121,7 +121,7 @@
     NPM_CONFIG_PREFIX: "{{ dfe_user_home }}/.npm-global"
   become: false
   become_user: "{{ dfe_actual_user }}"
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 - name: Install semantic-release globally (macOS)
   community.general.npm:
@@ -130,7 +130,7 @@
     state: present
   environment: "{{ npm_config_env }}"
   become: false
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Install semantic-release plugins globally (Linux)
   community.general.npm:
@@ -149,7 +149,7 @@
     NPM_CONFIG_PREFIX: "{{ dfe_user_home }}/.npm-global"
   become: false
   become_user: "{{ dfe_actual_user }}"
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 - name: Install semantic-release plugins globally (macOS)
   community.general.npm:
@@ -166,4 +166,4 @@
     - conventional-changelog-conventionalcommits
   environment: "{{ npm_config_env }}"
   become: false
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'

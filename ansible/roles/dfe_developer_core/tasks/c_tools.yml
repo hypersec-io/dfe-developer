@@ -6,7 +6,7 @@
   ansible.builtin.dnf:
     name: '@c-development'
     state: present
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 # Ubuntu - build-essential meta-package
 - name: Install build-essential (Ubuntu)
@@ -19,7 +19,7 @@
       - cmake
       - pkg-config
     state: present
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 # macOS - Xcode Command Line Tools
 - name: Check if Xcode Command Line Tools installed (macOS)
@@ -27,9 +27,9 @@
   register: xcode_check
   failed_when: false
   changed_when: false
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Display Xcode status (macOS)
   ansible.builtin.debug:
     msg: "{{ 'Xcode Command Line Tools already installed' if xcode_check.rc == 0 else 'Install manually: xcode-select --install' }}"
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'

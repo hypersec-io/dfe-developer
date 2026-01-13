@@ -31,6 +31,6 @@
       net.ipv6.conf.default.disable_ipv6 = 1
     mode: '0644'
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - ansible_virtualization_role == 'guest'
 

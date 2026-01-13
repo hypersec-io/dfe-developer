@@ -7,14 +7,14 @@
 - name: Skip RDP optimizer on macOS
   ansible.builtin.debug:
     msg: "RDP optimizer not applicable on macOS - skipping"
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 # Skip if no GNOME desktop
 - name: Skip RDP optimizer if no GNOME
   ansible.builtin.debug:
     msg: "GNOME desktop not detected - skipping RDP optimizer"
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - not dfe_has_gnome
 
 - name: Configure RDP certificates

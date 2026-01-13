@@ -19,5 +19,5 @@
       net.core.netdev_max_backlog = 5000
     mode: '0644'
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome

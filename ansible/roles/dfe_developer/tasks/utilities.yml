@@ -6,13 +6,13 @@
   ansible.builtin.apt:
     name: flatpak
     state: present
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 - name: Install Flatpak (Fedora)
   ansible.builtin.dnf:
     name: flatpak
     state: present
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 # Configure Flathub repository (system-wide)
 - name: Add Flathub repository (system-wide)
@@ -21,7 +21,7 @@
     state: present
     flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
     method: system
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 
 # Common development utilities
@@ -54,7 +54,7 @@
       - python3               # base interpreter
       - python3-pytest        # testing framework
     state: present
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 - name: Install development utilities (Ubuntu)
   ansible.builtin.apt:
@@ -88,7 +88,7 @@
       - python3               # base interpreter
       - python3-pytest        # testing framework
     state: present
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 # Set Nemo as default file manager (replaces Nautilus)
 - name: Set Nemo as default file manager
@@ -97,7 +97,7 @@
   become: false
   changed_when: false
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome | default(false)
 
 # yq - Binary download
@@ -106,7 +106,7 @@
     url: https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
     dest: /usr/local/bin/yq
     mode: '0755'
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 # sd - sane sed replacement (binary download for Fedora, apt for Ubuntu)
 - name: Get latest sd version
@@ -114,7 +114,7 @@
     url: https://api.github.com/repos/chmln/sd/releases/latest
     return_content: true
   register: sd_release
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 - name: Download and extract sd (Fedora)
   ansible.builtin.unarchive:
@@ -126,7 +126,7 @@
       - --wildcards
       - "*/sd"
     mode: '0755'
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 # macOS - Install utilities via Homebrew
 - name: Install development utilities (macOS)
@@ -160,7 +160,7 @@
     state: present
   environment: "{{ homebrew_env }}"
   become: false
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 # Remmina - Remote Desktop Client (Linux GUI only)
 # Using Flatpak for latest version (PPA discontinued as of 2025)
@@ -171,7 +171,7 @@
     state: present
     method: system
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome | default(false)
 
 # ============================================================================
@@ -185,7 +185,7 @@
     mode: '0755'
     owner: root
     group: root
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 # add-dev-user - Script to add new developer users with full environment access
 - name: Install add-dev-user script
@@ -195,4 +195,4 @@
     owner: root
     group: root
     mode: '0755'
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']

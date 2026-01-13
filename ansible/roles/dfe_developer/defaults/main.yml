@@ -19,10 +19,10 @@ dfe_min_ubuntu_version: "24.04"
 
 # Docker configuration
 dfe_docker_users:
-  - "{{ ansible_user_id }}"
+  - "{{ ansible_facts['user_id'] }}"
 dfe_docker_install_desktop: true
 dfe_docker_repo_base_url: "https://download.docker.com/linux"
-dfe_docker_distro_name: "{{ ansible_distribution | lower }}"
+dfe_docker_distro_name: "{{ ansible_facts['distribution'] | lower }}"
 dfe_docker_gpg_url: "{{ dfe_docker_repo_base_url }}/{{ dfe_docker_distro_name }}/gpg"
 dfe_docker_repo_url: "{{ dfe_docker_repo_base_url }}/{{ dfe_docker_distro_name }}"
 dfe_docker_desktop_url_ubuntu: "https://desktop.docker.com/linux/main/amd64/docker-desktop-amd64.deb"

@@ -15,7 +15,7 @@
   failed_when: false
   changed_when: false
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
 
 - name: Install libva-utils for VA-API detection (Fedora)
@@ -23,7 +23,7 @@
     name: libva-utils
     state: present
   when:
-    - ansible_distribution == 'Fedora'
+    - ansible_facts['distribution'] == 'Fedora'
     - dfe_has_gnome
     - vainfo_check.rc != 0
 
@@ -32,7 +32,7 @@
     name: vainfo
     state: present
   when:
-    - ansible_distribution == 'Ubuntu'
+    - ansible_facts['distribution'] == 'Ubuntu'
     - dfe_has_gnome
     - vainfo_check.rc != 0
 
@@ -46,7 +46,7 @@
     dest: /usr/local/bin/dfe-vaapi-check
     mode: '0755'
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
 
 - name: Deploy VA-API auto-detection systemd service
@@ -56,14 +56,14 @@
     mode: '0644'
   register: vaapi_service_deployed
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
 
 - name: Reload systemd daemon
   ansible.builtin.systemd:
     daemon_reload: true
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
     - vaapi_service_deployed.changed | default(false)
 
@@ -72,7 +72,7 @@
     name: dfe-vaapi-check.service
     enabled: true
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
 
 # ============================================================================
@@ -86,21 +86,21 @@
   failed_when: false
   changed_when: false
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
 
 - name: Set VA-API H.264 availability fact
   ansible.builtin.set_fact:
     dfe_vaapi_h264_available: "{{ vaapi_h264_check.rc == 0 }}"
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
 
 - name: Run VA-API check script now (enables if available)
   ansible.builtin.command:
     cmd: /usr/local/bin/dfe-vaapi-check
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
   changed_when: false
 
@@ -114,5 +114,5 @@
       VA-API H.264 encoding: {{ 'AVAILABLE' if dfe_vaapi_h264_available | default(false) else 'NOT AVAILABLE (CPU fallback)' }}
       Auto-detection service: ENABLED (will auto-enable hardware encoding when VA-API becomes available)
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome

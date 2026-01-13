@@ -5,7 +5,7 @@
 - name: Load macOS variables
   ansible.builtin.include_vars:
     file: macos.yml
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Install C development tools
   ansible.builtin.include_tasks:
@@ -36,13 +36,13 @@
   ansible.builtin.include_tasks:
     file: slack.yml
   tags: ['slack']
-  when: ansible_env.DISPLAY is defined or ansible_env.WAYLAND_DISPLAY is defined
+  when: ansible_facts['env'].DISPLAY is defined or ansible_facts['env'].WAYLAND_DISPLAY is defined
 
 - name: Install Betterbird
   ansible.builtin.include_tasks:
     file: betterbird.yml
   tags: ['betterbird', 'email']
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 - name: Install Bitwarden
   ansible.builtin.include_tasks:

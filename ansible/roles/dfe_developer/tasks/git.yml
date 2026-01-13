@@ -12,7 +12,7 @@
       - git-lfs
       - git-filter-repo
     state: latest
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 # ============================================================================
 # UBUNTU - Latest Git from PPA
@@ -30,7 +30,7 @@
     - git-core-ubuntu-ppa-noble.list
     - git-core-ubuntu-ppa-jammy.list
     - ppa_git_core_ppa.list
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 - name: Install latest Git (Ubuntu)
   block:
@@ -42,7 +42,7 @@
 
     - name: Add git-core PPA repository
       ansible.builtin.apt_repository:
-        repo: "deb [signed-by=/etc/apt/keyrings/git-core-ppa.asc] https://ppa.launchpadcontent.net/git-core/ppa/ubuntu {{ ansible_distribution_release }} main"
+        repo: "deb [signed-by=/etc/apt/keyrings/git-core-ppa.asc] https://ppa.launchpadcontent.net/git-core/ppa/ubuntu {{ ansible_facts['distribution_release'] }} main"
         filename: git-core-ppa
         state: present
 
@@ -55,7 +55,7 @@
         state: latest
         update_cache: true
 
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 # ============================================================================
 # macOS - Latest Git from Homebrew
@@ -70,7 +70,7 @@
     state: latest
   become: false
   environment: "{{ homebrew_env }}"
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 # ============================================================================
 # GITHUB CLI (all platforms)
@@ -80,13 +80,13 @@
   ansible.builtin.dnf:
     name: gh
     state: present
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 - name: Install GitHub CLI (Ubuntu)
   ansible.builtin.apt:
     name: gh
     state: present
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 - name: Install GitHub CLI (macOS)
   community.general.homebrew:
@@ -94,7 +94,7 @@
     state: present
   become: false
   environment: "{{ homebrew_env }}"
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 # ============================================================================
 # CONFIGURE GIT LFS (all platforms, user-level)

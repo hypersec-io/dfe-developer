@@ -17,7 +17,7 @@
         name: openvpn3-client
         state: present
 
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 # ============================================================================
 # UBUNTU - Add OpenVPN repository and install
@@ -33,7 +33,7 @@
 
     - name: Add OpenVPN 3 repository
       ansible.builtin.apt_repository:
-        repo: "deb [signed-by=/etc/apt/keyrings/openvpn.asc] https://packages.openvpn.net/openvpn3/debian {{ ansible_distribution_release }} main"
+        repo: "deb [signed-by=/etc/apt/keyrings/openvpn.asc] https://packages.openvpn.net/openvpn3/debian {{ ansible_facts['distribution_release'] }} main"
         filename: openvpn3
         state: present
 
@@ -46,9 +46,9 @@
   rescue:
     - name: Warn about OpenVPN 3 installation failure
       ansible.builtin.debug:
-        msg: "⚠️  WARNING: OpenVPN 3 installation failed (repository may not support {{ ansible_distribution_release }} yet). Install manually if needed for SSO web auth."
+        msg: "⚠️  WARNING: OpenVPN 3 installation failed (repository may not support {{ ansible_facts['distribution_release'] }} yet). Install manually if needed for SSO web auth."
 
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 # ============================================================================
 # macOS - Install via Homebrew
@@ -60,4 +60,4 @@
     state: present
   become: false
   environment: "{{ homebrew_env }}"
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'

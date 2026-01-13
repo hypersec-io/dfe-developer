@@ -14,7 +14,7 @@
     path: /etc/dnf/dnf.conf.d
     state: directory
     mode: '0755'
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 - name: Configure DNF performance optimizations (Fedora)
   ansible.builtin.copy:
@@ -31,7 +31,7 @@
     mode: '0644'
   tags: ['fastestmirror']
   when:
-    - ansible_distribution == 'Fedora'
+    - ansible_facts['distribution'] == 'Fedora'
 
 # ============================================================================
 # UBUNTU REPOSITORY CONFIGURATION
@@ -49,4 +49,4 @@
     mode: '0644'
   tags: ['fastestmirror']
   when:
-    - ansible_distribution == 'Ubuntu'
+    - ansible_facts['distribution'] == 'Ubuntu'

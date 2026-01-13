@@ -10,19 +10,19 @@
   ansible.builtin.dnf:
     name: '@gnome-desktop'
     state: present
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 - name: Install LibreOffice (Fedora)
   ansible.builtin.dnf:
     name: '@libreoffice'
     state: present
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 - name: Set default target to graphical (Fedora)
   ansible.builtin.command:
     cmd: systemctl set-default graphical.target
   changed_when: true
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 # ============================================================================
 # UBUNTU
@@ -32,16 +32,16 @@
   ansible.builtin.apt:
     name: ubuntu-desktop-minimal
     state: present
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 - name: Install LibreOffice (Ubuntu)
   ansible.builtin.apt:
     name: libreoffice
     state: present
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 - name: Set default target to graphical (Ubuntu)
   ansible.builtin.command:
     cmd: systemctl set-default graphical.target
   changed_when: true
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'

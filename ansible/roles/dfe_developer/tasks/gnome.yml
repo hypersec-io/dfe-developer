@@ -19,7 +19,7 @@
   tags: ['winlike', 'never']
   when:
     - dfe_has_gnome | default(false)
-    - ansible_distribution in ['Ubuntu', 'Fedora']
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
 
 # ============================================================================
 # MACOS-LIKE GNOME CONFIGURATION (--tags maclike)
@@ -33,7 +33,7 @@
   tags: ['maclike', 'never']
   when:
     - dfe_has_gnome | default(false)
-    - ansible_distribution in ['Ubuntu', 'Fedora']
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
 
 # ============================================================================
 # SYSTEM-WIDE DCONF DEFAULTS (winlike)
@@ -75,7 +75,7 @@
   tags: ['winlike', 'never']
   when:
     - dfe_has_gnome | default(false)
-    - ansible_distribution in ['Ubuntu', 'Fedora']
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
 
 # ============================================================================
 # SYSTEM-WIDE DCONF DEFAULTS (maclike)
@@ -117,4 +117,4 @@
   tags: ['maclike', 'never']
   when:
     - dfe_has_gnome | default(false)
-    - ansible_distribution in ['Ubuntu', 'Fedora']
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']

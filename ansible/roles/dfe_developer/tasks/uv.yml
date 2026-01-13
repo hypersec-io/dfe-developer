@@ -18,11 +18,11 @@
 - name: Determine UV binary architecture
   ansible.builtin.set_fact:
     uv_arch: >-
-      {%- if ansible_system == 'Linux' and ansible_architecture == 'x86_64' -%}
+      {%- if ansible_system == 'Linux' and ansible_facts['architecture'] == 'x86_64' -%}
       x86_64-unknown-linux-gnu
-      {%- elif ansible_system == 'Darwin' and ansible_architecture == 'x86_64' -%}
+      {%- elif ansible_system == 'Darwin' and ansible_facts['architecture'] == 'x86_64' -%}
       x86_64-apple-darwin
-      {%- elif ansible_system == 'Darwin' and ansible_architecture == 'arm64' -%}
+      {%- elif ansible_system == 'Darwin' and ansible_facts['architecture'] == 'arm64' -%}
       aarch64-apple-darwin
       {%- else -%}
       unsupported
@@ -30,7 +30,7 @@
 
 - name: Fail if unsupported architecture
   ansible.builtin.fail:
-    msg: "Unsupported architecture: {{ ansible_system }}/{{ ansible_architecture }}"
+    msg: "Unsupported architecture: {{ ansible_system }}/{{ ansible_facts['architecture'] }}"
   when: uv_arch == 'unsupported'
 
 - name: Download UV binary tarball
@@ -46,7 +46,7 @@
     mode: '0755'
     owner: "{{ dfe_actual_user }}"
     group: "{{ dfe_actual_user }}"
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 - name: Create UV directory (macOS)
   ansible.builtin.file:
@@ -54,7 +54,7 @@
     state: directory
     mode: '0755'
   become: false
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Extract UV binary (Linux)
   ansible.builtin.unarchive:
@@ -66,7 +66,7 @@
     group: "{{ dfe_actual_user }}"
     extra_opts:
       - --strip-components=1
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 - name: Extract UV binary (macOS - use shell for BSD tar)
   ansible.builtin.shell: |
@@ -75,7 +75,7 @@
   args:
     creates: "{{ dfe_user_home }}/.cargo/bin/uv"
   become: false
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Remove UV tarball
   ansible.builtin.file:

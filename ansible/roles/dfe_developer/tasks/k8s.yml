@@ -30,13 +30,13 @@
     enabled: true
     gpgcheck: true
     gpgkey: "https://pkgs.k8s.io/core:/stable:/v{{ k8s_version }}/rpm/repodata/repomd.xml.key"
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 - name: Install kubectl (Fedora)
   ansible.builtin.dnf:
     name: kubectl
     state: present
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'
 
 # Ubuntu
 - name: Add Kubernetes GPG key (Ubuntu)
@@ -44,21 +44,21 @@
     url: "https://pkgs.k8s.io/core:/stable:/v{{ k8s_version }}/deb/Release.key"
     dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
     mode: '0644'
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 - name: Add Kubernetes repository (Ubuntu)
   ansible.builtin.apt_repository:
     repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v{{ k8s_version }}/deb/ /"
     filename: kubernetes
     state: present
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 - name: Install kubectl (Ubuntu)
   ansible.builtin.apt:
     name: kubectl
     state: present
     update_cache: true
-  when: ansible_distribution == 'Ubuntu'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 
 # ============================================================================
@@ -148,7 +148,7 @@
         include: dive
         mode: '0755'
 
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 # Freelens - Flatpak (GUI only)
 
@@ -158,7 +158,7 @@
     state: present
     method: system
   when:
-    - ansible_distribution in ['Fedora', 'Ubuntu']
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome | default(false)
 
 # ============================================================================
@@ -199,7 +199,7 @@
 
   become: false
   environment: "{{ homebrew_env }}"
-  when: ansible_distribution == 'MacOSX'
+  when: ansible_facts['distribution'] == 'MacOSX'
 # ============================================================================
 # LINUX - Binary downloads for k9s, kubectx/kubens, Minikube, ArgoCD, dive
 # ============================================================================
@@ -287,4 +287,4 @@
         include: dive
         mode: '0755'
 
-  when: ansible_distribution in ['Fedora', 'Ubuntu']
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
