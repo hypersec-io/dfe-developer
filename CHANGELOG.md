@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.14.2](https://github.com/hypersec-io/dfe-developer/compare/v2.14.1...v2.14.2) (2026-01-13)
+
+
+### Bug Fixes
+
+* **utilities:** add apt fallback for Remmina on Ubuntu ([a1d5d5f](https://github.com/hypersec-io/dfe-developer/commit/a1d5d5f915d1baed31b46f0e02f32f10f3f4cfd8))
+
 ## [2.14.1](https://github.com/hypersec-io/dfe-developer/compare/v2.14.0...v2.14.1) (2026-01-13)
 
 
