@@ -165,6 +165,7 @@
 # Remmina - Remote Desktop Client (Linux GUI only)
 # Using Flatpak for latest version (PPA discontinued as of 2025)
 # Flatpak provides better updates and cross-distro compatibility
+# ignore_errors: Flathub can be slow/unreliable, don't fail build for this
 - name: Install Remmina via Flatpak (system-wide)
   community.general.flatpak:
     name: org.remmina.Remmina
@@ -173,6 +174,15 @@
   when:
     - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome | default(false)
+  ignore_errors: true
+  register: remmina_install
+
+- name: Warn if Remmina installation failed
+  ansible.builtin.debug:
+    msg: "WARNING: Remmina Flatpak install failed (Flathub timeout). Install manually: flatpak install flathub org.remmina.Remmina"
+  when:
+    - remmina_install is defined
+    - remmina_install is failed
 
 # ============================================================================
 # DFE ADMIN TOOLS
