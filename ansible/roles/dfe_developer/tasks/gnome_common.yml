@@ -50,17 +50,23 @@
 
 # Distro-packaged pipx can be outdated (Ubuntu 24.04 has 1.4.3).
 # community.general.pipx requires >= 1.7.0 for application parameter.
-# Upgrade system-wide pip/pipx using --break-system-packages flag.
-- name: Upgrade pip system-wide to latest
-  ansible.builtin.command:
-    cmd: python3 -m pip install --upgrade --break-system-packages pip
-  changed_when: false
-  when: ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+# Remove distro pipx and install via pip to /usr/local (system-wide, latest version)
+- name: Remove distro-packaged pipx (outdated version) - Ubuntu
+  ansible.builtin.apt:
+    name: pipx
+    state: absent
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
-- name: Upgrade pipx system-wide to latest
-  ansible.builtin.command:
-    cmd: python3 -m pip install --upgrade --break-system-packages pipx
-  changed_when: false
+- name: Remove distro-packaged pipx (outdated version) - Fedora
+  ansible.builtin.dnf:
+    name: pipx
+    state: absent
+  when: ansible_facts['distribution'] == 'Fedora'
+
+- name: Install pipx via pip system-wide (latest version)
+  ansible.builtin.pip:
+    name: pipx
+    state: latest
   when: ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
 
 - name: Install gnome-extensions-cli via pipx
