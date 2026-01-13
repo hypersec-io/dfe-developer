@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.14.9](https://github.com/hypersec-io/dfe-developer/compare/v2.14.8...v2.14.9) (2026-01-13)
+
+
+### Bug Fixes
+
+* **gnome:** skip ui-mode when GNOME Shell not running ([5178358](https://github.com/hypersec-io/dfe-developer/commit/51783589d68d8e9216bd9240642a20c882651610))
+
 ## [2.14.8](https://github.com/hypersec-io/dfe-developer/compare/v2.14.7...v2.14.8) (2026-01-13)
 
 
