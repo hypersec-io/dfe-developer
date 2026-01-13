@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.14.4](https://github.com/hypersec-io/dfe-developer/compare/v2.14.3...v2.14.4) (2026-01-13)
+
+
+### Bug Fixes
+
+* **gnome:** upgrade pip and pipx to latest on all distros ([e41e605](https://github.com/hypersec-io/dfe-developer/commit/e41e6050838f195e0e2ef37f1cf25c82a22dbf3d))
+* **gnome:** upgrade pip/pipx system-wide with --break-system-packages ([a8ad318](https://github.com/hypersec-io/dfe-developer/commit/a8ad318a2ff5aa29581f323064eeaca840130b0f))
+* **gnome:** use --user for pip/pipx upgrade, not --break-system-packages ([7f3dad4](https://github.com/hypersec-io/dfe-developer/commit/7f3dad4153a174ff4afbb05a177d9a570dbc8e50))
+
 ## [2.14.3](https://github.com/hypersec-io/dfe-developer/compare/v2.14.2...v2.14.3) (2026-01-13)
 
 
