@@ -48,6 +48,17 @@
   changed_when: false
   when: ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
 
+# Ubuntu 24.04 ships pipx 1.4.3 but community.general.pipx requires >= 1.7.0
+# Upgrade pipx via pip before using the module
+- name: Upgrade pipx to latest (Ubuntu - apt version is too old)
+  ansible.builtin.pip:
+    name: pipx
+    state: latest
+    extra_args: --user --break-system-packages
+  become: false
+  become_user: "{{ dfe_actual_user }}"
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
 - name: Install gnome-extensions-cli via pipx
   community.general.pipx:
     name: gnome-extensions-cli
@@ -58,6 +69,7 @@
   environment:
     PIPX_HOME: "{{ dfe_user_home }}/.local/pipx"
     PIPX_BIN_DIR: "{{ dfe_user_home }}/.local/bin"
+    PATH: "{{ dfe_user_home }}/.local/bin:{{ ansible_env.PATH }}"
   when: ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
 
 # ============================================================================
