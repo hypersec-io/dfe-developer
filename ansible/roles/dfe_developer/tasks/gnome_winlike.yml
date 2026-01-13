@@ -18,12 +18,37 @@
 # APPLY WINLIKE MODE VIA UI-MODE UTILITY
 # ============================================================================
 
+- name: Check if GNOME Shell is running
+  ansible.builtin.shell: pgrep -x gnome-shell
+  register: gnome_shell_running
+  changed_when: false
+  failed_when: false
+  become: true
+  become_user: "{{ dfe_actual_user }}"
+
 - name: Apply Windows-like UI mode
   ansible.builtin.command:
     cmd: /usr/local/sbin/ui-mode winlike
   become: true
   become_user: "{{ dfe_actual_user }}"
   changed_when: true
+  when: gnome_shell_running.rc == 0
+
+- name: Save UI mode preference for first login (when GNOME not running)
+  ansible.builtin.file:
+    path: "{{ dfe_user_home }}/.config/dfe"
+    state: directory
+    owner: "{{ dfe_actual_user }}"
+    mode: '0755'
+  when: gnome_shell_running.rc != 0
+
+- name: Write UI mode preference file for first login
+  ansible.builtin.copy:
+    dest: "{{ dfe_user_home }}/.config/dfe/ui-mode"
+    content: "winlike"
+    owner: "{{ dfe_actual_user }}"
+    mode: '0644'
+  when: gnome_shell_running.rc != 0
 
 # ============================================================================
 # WALLPAPER DEPLOYMENT (system-wide, safe from apt/dnf updates)
