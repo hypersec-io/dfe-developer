@@ -50,20 +50,16 @@
 
 # Distro-packaged pipx can be outdated (Ubuntu 24.04 has 1.4.3).
 # community.general.pipx requires >= 1.7.0 for application parameter.
-# Install latest pip/pipx to user's ~/.local/bin (does NOT modify system packages)
-- name: Install latest pip to user directory
+# Upgrade system-wide pip/pipx using --break-system-packages flag.
+- name: Upgrade pip system-wide to latest
   ansible.builtin.command:
-    cmd: python3 -m pip install --user --upgrade pip
-  become: false
-  become_user: "{{ dfe_actual_user }}"
+    cmd: python3 -m pip install --upgrade --break-system-packages pip
   changed_when: false
   when: ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
 
-- name: Install latest pipx to user directory
+- name: Upgrade pipx system-wide to latest
   ansible.builtin.command:
-    cmd: python3 -m pip install --user --upgrade pipx
-  become: false
-  become_user: "{{ dfe_actual_user }}"
+    cmd: python3 -m pip install --upgrade --break-system-packages pipx
   changed_when: false
   when: ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
 
