@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [2.13.0](https://github.com/hypersec-io/dfe-developer/compare/v2.12.0...v2.13.0) (2026-01-13)
+
+
+### Features
+
+* add --force-gnome flag for headless template builds ([a95e6e7](https://github.com/hypersec-io/dfe-developer/commit/a95e6e7c496e50ea0f22063d515568ea5438e912))
+
 # [2.12.0](https://github.com/hypersec-io/dfe-developer/compare/v2.11.9...v2.12.0) (2026-01-06)
 
 
