@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.14.1](https://github.com/hypersec-io/dfe-developer/compare/v2.14.0...v2.14.1) (2026-01-13)
+
+
+### Bug Fixes
+
+* **utilities:** make Remmina Flatpak install non-fatal ([74ea5e4](https://github.com/hypersec-io/dfe-developer/commit/74ea5e40236cd2fec3a8d102a09a5860184732e1))
+
 # [2.14.0](https://github.com/hypersec-io/dfe-developer/compare/v2.13.1...v2.14.0) (2026-01-13)
 
 
