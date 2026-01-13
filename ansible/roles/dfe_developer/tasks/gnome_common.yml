@@ -48,25 +48,23 @@
   changed_when: false
   when: ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
 
-# Distro-packaged pip/pipx can be outdated. Upgrade to latest via pip.
-# --break-system-packages allows modifying system Python packages.
+# Distro-packaged pipx can be outdated (Ubuntu 24.04 has 1.4.3).
 # community.general.pipx requires >= 1.7.0 for application parameter.
-- name: Upgrade pip to latest
-  ansible.builtin.pip:
-    name: pip
-    state: latest
-    extra_args: --user --break-system-packages
+# Install latest pip/pipx to user's ~/.local/bin (does NOT modify system packages)
+- name: Install latest pip to user directory
+  ansible.builtin.command:
+    cmd: python3 -m pip install --user --upgrade pip
   become: false
   become_user: "{{ dfe_actual_user }}"
+  changed_when: false
   when: ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
 
-- name: Upgrade pipx to latest
-  ansible.builtin.pip:
-    name: pipx
-    state: latest
-    extra_args: --user --break-system-packages
+- name: Install latest pipx to user directory
+  ansible.builtin.command:
+    cmd: python3 -m pip install --user --upgrade pipx
   become: false
   become_user: "{{ dfe_actual_user }}"
+  changed_when: false
   when: ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
 
 - name: Install gnome-extensions-cli via pipx
