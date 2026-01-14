@@ -36,11 +36,13 @@
         mode: '0644'
 
     # --- Apport (crash reporting to Canonical) ---
+    # Skip if apport is not installed (e.g., removed by desktop.yml)
     - name: Disable Apport crash reporting
       ansible.builtin.lineinfile:
         path: /etc/default/apport
         regexp: '^enabled='
         line: 'enabled=0'
+      failed_when: false
 
     - name: Stop and disable Apport service
       ansible.builtin.systemd:
