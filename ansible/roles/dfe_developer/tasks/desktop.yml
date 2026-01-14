@@ -30,14 +30,40 @@
 # UBUNTU
 # ============================================================================
 
-# NOTE: install_recommends: false prevents LibreOffice from being pulled in
-# LibreOffice is opt-in via dfe_install_libreoffice variable
+# Install with recommends (gets all essential GNOME tools, fonts, themes)
+# Then remove unwanted packages explicitly
 - name: Install GNOME desktop (Ubuntu)
   ansible.builtin.apt:
     name: ubuntu-desktop-minimal
     state: present
-    install_recommends: false
   when: ansible_facts['distribution'] == 'Ubuntu'
+
+# Remove unwanted packages that come as recommends
+# - firefox: We install Chrome + Brave
+# - gnome-initial-setup: We suppress this anyway
+# - snapd: We don't use snaps, prefer apt/flatpak
+# - ubuntu-report, whoopsie, apport-gtk: Telemetry/crash reporting
+- name: Remove unwanted packages (Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - firefox
+      - gnome-initial-setup
+      - snapd
+      - ubuntu-report
+      - whoopsie
+      - apport-gtk
+      - apport
+    state: absent
+    purge: true
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+# Prevent snapd from being reinstalled as a dependency
+- name: Hold snapd package to prevent reinstall
+  ansible.builtin.dpkg_selections:
+    name: snapd
+    selection: hold
+  when: ansible_facts['distribution'] == 'Ubuntu'
+  failed_when: false
 
 - name: Install LibreOffice (Ubuntu)
   ansible.builtin.apt:
