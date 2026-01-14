@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [2.15.0](https://github.com/hypersec-io/dfe-developer/compare/v2.14.9...v2.15.0) (2026-01-14)
+
+
+### Features
+
+* configurable branding, browser policies, gnome-initial-setup fix ([1c9dddc](https://github.com/hypersec-io/dfe-developer/commit/1c9dddc96d6d7d8c9d1a01ae03b706c55211a648))
+
 ## [2.14.9](https://github.com/hypersec-io/dfe-developer/compare/v2.14.8...v2.14.9) (2026-01-13)
 
 
