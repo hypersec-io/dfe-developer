@@ -15,6 +15,16 @@
   tags: ['desktop']
   when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
+- name: Install Nemo file manager (replaces Nautilus as default)
+  ansible.builtin.include_tasks:
+    file: nemo.yml
+    apply:
+      tags: ['nemo', 'desktop']
+  tags: ['nemo', 'desktop']
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - dfe_has_gnome | default(false)
+
 - name: Configure OS repositories (mirrors, performance)
   ansible.builtin.include_tasks:
     file: repository.yml
