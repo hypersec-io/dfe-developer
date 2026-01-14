@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [2.17.0](https://github.com/hypersec-io/dfe-developer/compare/v2.16.2...v2.17.0) (2026-01-14)
+
+
+### Features
+
+* enable LibreOffice by default in desktop builds ([cd62384](https://github.com/hypersec-io/dfe-developer/commit/cd62384794a7b05ce5b6b6f9bbc5bf88c5e9a2d6))
+
 ## [2.16.2](https://github.com/hypersec-io/dfe-developer/compare/v2.16.1...v2.16.2) (2026-01-14)
 
 
