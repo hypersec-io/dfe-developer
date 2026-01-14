@@ -39,14 +39,12 @@
   when: ansible_facts['distribution'] == 'Ubuntu'
 
 # Remove unwanted packages that come as recommends
-# - firefox: We install Chrome + Brave
 # - gnome-initial-setup: We suppress this anyway
 # - snapd: We don't use snaps, prefer apt/flatpak
 # - ubuntu-report, whoopsie, apport-gtk: Telemetry/crash reporting
 - name: Remove unwanted packages (Ubuntu)
   ansible.builtin.apt:
     name:
-      - firefox
       - gnome-initial-setup
       - snapd
       - ubuntu-report
