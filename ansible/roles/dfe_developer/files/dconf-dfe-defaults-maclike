@@ -14,6 +14,10 @@ enabled-extensions=['monitor@astraext.github.io', 'dash-to-dock@micxgx.gmail.com
 # Ubuntu Dock conflicts with Dash to Dock
 disabled-extensions=['ubuntu-dock@ubuntu.com', 'workspace-indicator@gnome-shell-extensions.gcampax.github.com', 'apps-menu@gnome-shell-extensions.gcampax.github.com']
 
+# Pinned applications in taskbar/dock (order matters)
+# Files, Brave, Chrome, VS Code, Bitwarden
+favorite-apps=['org.gnome.Nautilus.desktop', 'brave-browser.desktop', 'google-chrome.desktop', 'code.desktop', 'com.bitwarden.desktop']
+
 [org/gnome/shell/extensions/astra-monitor]
 # Astra Monitor configuration
 processor-header-show=true

@@ -30,39 +30,43 @@
 # ============================================================================
 # WALLPAPER DEPLOYMENT (system-wide, safe from apt/dnf updates)
 # ============================================================================
+# Set dfe_background_file to empty string to skip background deployment
 
-- name: Create local backgrounds directory (safe from package updates)
-  ansible.builtin.file:
-    path: /usr/local/share/backgrounds
-    state: directory
-    mode: '0755'
+- name: Deploy custom wallpaper
+  when: dfe_background_file | default('') | length > 0
+  block:
+    - name: Create local backgrounds directory (safe from package updates)
+      ansible.builtin.file:
+        path: /usr/local/share/backgrounds
+        state: directory
+        mode: '0755'
 
-- name: Deploy DFE background image
-  ansible.builtin.copy:
-    src: dfe-background.svg
-    dest: /usr/local/share/backgrounds/dfe-background.svg
-    mode: '0644'
+    - name: Deploy DFE background image
+      ansible.builtin.copy:
+        src: "{{ dfe_background_file }}"
+        dest: /usr/local/share/backgrounds/dfe-background.svg
+        mode: '0644'
 
-- name: Set DFE background as default (light mode)
-  community.general.dconf:
-    key: "/org/gnome/desktop/background/picture-uri"
-    value: "'file:///usr/local/share/backgrounds/dfe-background.svg'"
-    state: present
-  become: false
+    - name: Set DFE background as default (light mode)
+      community.general.dconf:
+        key: "/org/gnome/desktop/background/picture-uri"
+        value: "'file:///usr/local/share/backgrounds/dfe-background.svg'"
+        state: present
+      become: false
 
-- name: Set DFE background as default (dark mode)
-  community.general.dconf:
-    key: "/org/gnome/desktop/background/picture-uri-dark"
-    value: "'file:///usr/local/share/backgrounds/dfe-background.svg'"
-    state: present
-  become: false
+    - name: Set DFE background as default (dark mode)
+      community.general.dconf:
+        key: "/org/gnome/desktop/background/picture-uri-dark"
+        value: "'file:///usr/local/share/backgrounds/dfe-background.svg'"
+        state: present
+      become: false
 
-- name: Set background scaling mode
-  community.general.dconf:
-    key: "/org/gnome/desktop/background/picture-options"
-    value: "'zoom'"
-    state: present
-  become: false
+    - name: Set background scaling mode
+      community.general.dconf:
+        key: "/org/gnome/desktop/background/picture-options"
+        value: "'zoom'"
+        state: present
+      become: false
 
 # ============================================================================
 # UPDATE ALL EXTENSIONS

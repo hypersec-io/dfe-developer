@@ -28,3 +28,20 @@ dfe_docker_repo_url: "{{ dfe_docker_repo_base_url }}/{{ dfe_docker_distro_name }
 dfe_docker_desktop_url_ubuntu: "https://desktop.docker.com/linux/main/amd64/docker-desktop-amd64.deb"
 dfe_docker_desktop_url_fedora: "https://desktop.docker.com/linux/main/amd64/docker-desktop-x86_64.rpm"
 dfe_docker_arch: "amd64"
+
+# ============================================================================
+# BRANDING / CUSTOMIZATION
+# ============================================================================
+# Default branding assets are in files/branding/
+# To customize: replace files in branding/ or override these variables
+
+# User avatar for GDM login screen (converted to PNG at runtime)
+# Set to empty string to skip avatar deployment
+dfe_avatar_file: "branding/avatar.svg"
+
+# Desktop background wallpaper
+# Set to empty string to skip background deployment
+dfe_background_file: "branding/background.svg"
+
+# Install LibreOffice (opt-in, disabled by default)
+dfe_install_libreoffice: false

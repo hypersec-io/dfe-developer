@@ -170,6 +170,17 @@
   notify: Inform user to logout
   when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
+# Docker Desktop requires KVM access for nested virtualization
+# The kvm group provides access to /dev/kvm
+- name: Add users to kvm group (for Docker Desktop nested virtualization)
+  ansible.builtin.user:
+    name: "{{ item }}"
+    groups: kvm
+    append: true
+  loop: "{{ dfe_docker_users }}"
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+  failed_when: false  # kvm group may not exist on all systems
+
 - name: Enable and start Docker service
   ansible.builtin.systemd:
     name: docker

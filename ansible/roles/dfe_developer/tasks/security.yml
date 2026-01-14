@@ -65,11 +65,14 @@
           - apt-listchanges
         state: present
 
-    - name: Configure automatic security updates
+    - name: Configure automatic security updates (desktop - no auto-reboot)
       ansible.builtin.copy:
         dest: /etc/apt/apt.conf.d/50unattended-upgrades
         content: |
           // Automatic security updates configuration
+          // Desktop policy: Download + install updates, but NO automatic reboot
+          // Users will be nagged by GNOME/update-notifier to reboot manually
+
           Unattended-Upgrade::Allowed-Origins {
               "${distro_id}:${distro_codename}-security";
               "${distro_id}ESMApps:${distro_codename}-apps-security";
@@ -80,9 +83,15 @@
           Unattended-Upgrade::Remove-Unused-Dependencies "true";
           Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
 
-          // Automatic reboot if required (at 3 AM)
-          Unattended-Upgrade::Automatic-Reboot "true";
+          // NO automatic reboot - let developers choose when to restart
+          // GNOME will show "Restart Required" notification in system tray
+          Unattended-Upgrade::Automatic-Reboot "false";
+
+          // If user was crazy enough to set auto-reboot, do it at 3 AM
           Unattended-Upgrade::Automatic-Reboot-Time "03:00";
+
+          // Keep reboot-required file so GNOME knows to nag
+          Unattended-Upgrade::Update-Stamp-File "/var/lib/apt/periodic/update-stamp";
         mode: '0644'
 
     - name: Enable automatic updates
