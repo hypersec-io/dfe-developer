@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.16.2](https://github.com/hypersec-io/dfe-developer/compare/v2.16.1...v2.16.2) (2026-01-14)
+
+
+### Bug Fixes
+
+* skip apport disable when package not installed ([fa63e39](https://github.com/hypersec-io/dfe-developer/commit/fa63e3942a76db2adb8b39b7ded356f37c19f666))
+
 ## [2.16.1](https://github.com/hypersec-io/dfe-developer/compare/v2.16.0...v2.16.1) (2026-01-14)
 
 
