@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [2.16.0](https://github.com/hypersec-io/dfe-developer/compare/v2.15.1...v2.16.0) (2026-01-14)
+
+
+### Features
+
+* add Nemo file manager as default (Ubuntu + Fedora) ([ad09b70](https://github.com/hypersec-io/dfe-developer/commit/ad09b7070032181b1688d187c80ac2dac52c12d0))
+
 ## [2.15.1](https://github.com/hypersec-io/dfe-developer/compare/v2.15.0...v2.15.1) (2026-01-14)
 
 
