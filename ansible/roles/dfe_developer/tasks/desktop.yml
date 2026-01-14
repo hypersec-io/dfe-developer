@@ -30,10 +30,13 @@
 # UBUNTU
 # ============================================================================
 
+# NOTE: install_recommends: false prevents LibreOffice from being pulled in
+# LibreOffice is opt-in via dfe_install_libreoffice variable
 - name: Install GNOME desktop (Ubuntu)
   ansible.builtin.apt:
     name: ubuntu-desktop-minimal
     state: present
+    install_recommends: false
   when: ansible_facts['distribution'] == 'Ubuntu'
 
 - name: Install LibreOffice (Ubuntu)
