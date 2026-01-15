@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.18.1](https://github.com/hypersec-io/dfe-developer/compare/v2.18.0...v2.18.1) (2026-01-15)
+
+
+### Bug Fixes
+
+* add ai/ to gitignore and fix D-Bus session for ui-mode ([6cf453a](https://github.com/hypersec-io/dfe-developer/commit/6cf453a8ce7e4a8bd0c94ba12cd27fa98fdb0e84)), closes [#1](https://github.com/hypersec-io/dfe-developer/issues/1)
+
+
+### Reverts
+
+* remove PipeWire frame rate reduction ([634f698](https://github.com/hypersec-io/dfe-developer/commit/634f69814d6e68f90ac0122fb046c2a26ae49d71))
+
 # [2.18.0](https://github.com/hypersec-io/dfe-developer/compare/v2.17.2...v2.18.0) (2026-01-15)
 
 
