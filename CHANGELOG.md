@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [2.18.0](https://github.com/hypersec-io/dfe-developer/compare/v2.17.2...v2.18.0) (2026-01-15)
+
+
+### Features
+
+* **rdp:** add PipeWire frame rate optimization for software encoding ([9fe2c29](https://github.com/hypersec-io/dfe-developer/commit/9fe2c298843dbd345c2a952807c82e5072d5ced6))
+
 ## [2.17.2](https://github.com/hypersec-io/dfe-developer/compare/v2.17.1...v2.17.2) (2026-01-15)
 
 
