@@ -6,6 +6,15 @@
 # All extensions are installed here; mode-specific tasks only enable/configure them
 
 # ============================================================================
+# UV PACKAGE MANAGER (required for gnome-extensions-cli)
+# ============================================================================
+# UV is required to install gext. Include uv.yml here to ensure it's available
+# even when running with partial tags (e.g., --tags winlike without --tags python)
+
+- name: Ensure UV package manager is installed
+  ansible.builtin.include_tasks: uv.yml
+
+# ============================================================================
 # PREREQUISITES
 # ============================================================================
 
@@ -48,7 +57,7 @@
   become: true
   become_user: "{{ dfe_actual_user }}"
   environment:
-    PATH: "/usr/local/bin:{{ dfe_user_home }}/.local/bin:{{ ansible_env.PATH }}"
+    PATH: "/usr/local/bin:{{ dfe_user_home }}/.local/bin:{{ dfe_user_home }}/.cargo/bin:{{ ansible_facts['env']['PATH'] }}"
   register: gext_install
   changed_when: "'Installed' in gext_install.stdout"
   failed_when:
