@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.17.2](https://github.com/hypersec-io/dfe-developer/compare/v2.17.1...v2.17.2) (2026-01-15)
+
+
+### Bug Fixes
+
+* ensure uv installed before gnome-extensions-cli ([38a0561](https://github.com/hypersec-io/dfe-developer/commit/38a0561b559176e1533b2fb130b905123e8a8127))
+
 ## [2.17.1](https://github.com/hypersec-io/dfe-developer/compare/v2.17.0...v2.17.1) (2026-01-14)
 
 
