@@ -30,9 +30,48 @@
     - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
 
+# ============================================================================
+# PIPEWIRE VIDEO FRAME RATE OPTIMIZATION
+# ============================================================================
+# Reduce video capture frame rate to lower CPU encoding load for software H.264
+# This helps when VA-API hardware encoding is not available (e.g., VirGL VMs)
+# Default PipeWire video rate is 25fps, we reduce to 15fps for dev workloads
+# (text editing, terminals, web browsing don't need high frame rates)
+
+- name: Create PipeWire config directory
+  ansible.builtin.file:
+    path: /etc/pipewire/pipewire.conf.d
+    state: directory
+    mode: '0755'
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - dfe_has_gnome
+
+- name: Deploy PipeWire RDP optimization config
+  ansible.builtin.copy:
+    dest: /etc/pipewire/pipewire.conf.d/99-rdp-optimize.conf
+    mode: '0644'
+    content: |
+      # DFE RDP Optimization - Reduce video frame rate
+      # Lower frame rate = less CPU encoding load for software H.264
+      # Good for dev work (VSCode, terminals) - text doesn't need 60fps
+      # Change default.video.rate.num to 20 or 25 if scrolling feels choppy
+      context.properties = {
+          default.video.rate.num = 15
+          default.video.rate.denom = 1
+      }
+  register: pipewire_rdp_config
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - dfe_has_gnome
+
 - name: Display dconf status
   ansible.builtin.debug:
-    msg: "GNOME Remote Desktop configured via grdctl (system service mode) - animations disabled for RDP performance"
+    msg: |
+      GNOME Remote Desktop optimizations applied:
+      - Animations disabled for RDP performance
+      - PipeWire video rate reduced to 15fps (saves CPU on software H.264 encoding)
+      - Reconnect RDP session for frame rate change to take effect
   when:
     - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - dfe_has_gnome
