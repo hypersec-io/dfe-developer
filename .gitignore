@@ -54,6 +54,7 @@ installers/
 local-config/
 
 # AI assistant work files - never commit (local only, public repo)
+ai/
 STATE.md
 CLAUDE.md
 TODO.md

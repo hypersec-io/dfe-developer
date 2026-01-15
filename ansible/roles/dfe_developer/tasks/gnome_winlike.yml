@@ -26,13 +26,28 @@
   become: true
   become_user: "{{ dfe_actual_user }}"
 
+- name: Get DBUS_SESSION_BUS_ADDRESS from running GNOME session
+  ansible.builtin.shell: |
+    gnome_pid=$(pgrep -u {{ dfe_actual_user }} -x gnome-shell | head -1)
+    if [ -n "$gnome_pid" ]; then
+      grep -z DBUS_SESSION_BUS_ADDRESS /proc/$gnome_pid/environ 2>/dev/null | tr '\0' '\n'
+    fi
+  register: dbus_addr_result
+  changed_when: false
+  failed_when: false
+  when: gnome_shell_running.rc == 0
+
 - name: Apply Windows-like UI mode
   ansible.builtin.command:
     cmd: /usr/local/sbin/ui-mode winlike
   become: true
   become_user: "{{ dfe_actual_user }}"
+  environment:
+    DBUS_SESSION_BUS_ADDRESS: "{{ dbus_addr_result.stdout | regex_replace('^DBUS_SESSION_BUS_ADDRESS=', '') }}"
   changed_when: true
-  when: gnome_shell_running.rc == 0
+  when:
+    - gnome_shell_running.rc == 0
+    - dbus_addr_result.stdout | default('') | length > 0
 
 - name: Save UI mode preference for first login (when GNOME not running)
   ansible.builtin.file:

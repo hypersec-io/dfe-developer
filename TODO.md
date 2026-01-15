@@ -1,29 +1,27 @@
 # TODO - DFE Developer Environment
 
+## Completed This Session
+
+- [x] Fix `ai/` directory management for public repos
+  - Keep `.git/` intact for manual updates via `git -C ai pull`
+  - `/load` uses Glob (no bash approval) to check if `ai/` exists
+  - Updated: `.gitignore`, `.claude/commands/load.md`
+  - Also fixed in `/projects/ai`: `attach-public.sh`, `README.md`
+
 ## Immediate Tasks
 
-### GNOME RDP CPU Usage - Pending Verification
+### GitHub Issue #1: UI mode fails with D-Bus error when GNOME running
 
-**Status:** Fix applied, pending VM restart
+**Status:** Fix implemented, pending test
 
-VM 1000 was configured with `vga: virtio` (2D only) instead of `vga: virtio-gl` (VirGL 3D). Fix applied via `qm set 1000 -vga virtio-gl,memory=256`.
+**Root cause:** `ansible.builtin.command` with `become_user` doesn't inherit the user's D-Bus session environment. The `ui-mode` script uses `dconf` which requires `DBUS_SESSION_BUS_ADDRESS`.
 
-**Next action:** Restart VM 1000 to verify VirGL is active and CPU usage drops.
+**Fix:** Get `DBUS_SESSION_BUS_ADDRESS` from gnome-shell's /proc environment and pass it to the command.
 
-**H.264 GPU Encoding Note:** VirGL will help desktop rendering, but H.264 RDP encoding will remain CPU-based until QEMU merges VA-API H.264 patches.
+**Files modified:**
 
-### VSCode Wayland Fullscreen Bug - Monitor Upstream
-
-**Status:** Documented, upstream bug, cannot fix locally
-
-**Full Documentation:** [docs/VSCODE-WAYLAND.md](docs/VSCODE-WAYLAND.md)
-
-**Future Work:**
-
-- [ ] Monitor GNOME 49/50 for Mutter fixes
-- [ ] Test upcoming Electron versions
-- [ ] Investigate gnome-shell extensions that may help
-- [ ] File consolidated bug on GNOME GitLab if not tracked
+- `ansible/roles/dfe_developer/tasks/gnome_winlike.yml`
+- `ansible/roles/dfe_developer/tasks/gnome_maclike.yml`
 
 ## Platform Support
 
