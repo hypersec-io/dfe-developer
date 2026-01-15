@@ -1,0 +1,25 @@
+---
+# Polkit rules for RDP sessions
+# Allow wheel users to manage Flatpak without repeated auth prompts over RDP
+# See docs/POLKIT-RDP.md for details
+
+- name: Allow wheel users to manage Flatpak on remote sessions
+  ansible.builtin.copy:
+    dest: /etc/polkit-1/rules.d/49-flatpak-wheel.rules
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      polkit.addRule(function(action, subject) {
+          if ((action.id == "org.freedesktop.Flatpak.app-install" ||
+               action.id == "org.freedesktop.Flatpak.runtime-install" ||
+               action.id == "org.freedesktop.Flatpak.app-uninstall" ||
+               action.id == "org.freedesktop.Flatpak.runtime-uninstall" ||
+               action.id == "org.freedesktop.Flatpak.modify-repo") &&
+              subject.active == true &&
+              subject.isInGroup("wheel")) {
+                  return polkit.Result.YES;
+          }
+          return polkit.Result.NOT_HANDLED;
+      });
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']

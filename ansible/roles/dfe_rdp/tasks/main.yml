@@ -17,6 +17,11 @@
     - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - not dfe_has_gnome
 
+- name: Configure polkit rules for RDP sessions
+  ansible.builtin.include_tasks:
+    file: polkit.yml
+  tags: ['polkit']
+
 - name: Configure RDP certificates
   ansible.builtin.include_tasks:
     file: certificates.yml
