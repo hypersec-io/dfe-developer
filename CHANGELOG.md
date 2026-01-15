@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.18.2](https://github.com/hypersec-io/dfe-developer/compare/v2.18.1...v2.18.2) (2026-01-15)
+
+
+### Bug Fixes
+
+* add flatpak polkit rule for RDP sessions and keep snapd ([1279576](https://github.com/hypersec-io/dfe-developer/commit/12795765d92eabb13b75684ad613dc177f0ef1f8))
+
 ## [2.18.1](https://github.com/hypersec-io/dfe-developer/compare/v2.18.0...v2.18.1) (2026-01-15)
 
 
