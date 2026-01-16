@@ -7,21 +7,16 @@
   - `/load` uses Glob (no bash approval) to check if `ai/` exists
   - Updated: `.gitignore`, `.claude/commands/load.md`
   - Also fixed in `/projects/ai`: `attach-public.sh`, `README.md`
+- [x] GitHub Issue #1: D-Bus fix for ui-mode - tested and verified
+  - Commit: `6cf453a`
+- [x] E2E testing on Fedora/Ubuntu with multiple tag combinations
+  - `--all`, `--core`, `--winlike`, `--maclike`, `--rdp` all passed
+  - `--maclike` hit GitHub API rate limit (ArgoCD) - unrelated to changes
+- [x] VMs reset to `initial_build` snapshot
 
 ## Immediate Tasks
 
-### GitHub Issue #1: UI mode fails with D-Bus error when GNOME running
-
-**Status:** Fix implemented, pending test
-
-**Root cause:** `ansible.builtin.command` with `become_user` doesn't inherit the user's D-Bus session environment. The `ui-mode` script uses `dconf` which requires `DBUS_SESSION_BUS_ADDRESS`.
-
-**Fix:** Get `DBUS_SESSION_BUS_ADDRESS` from gnome-shell's /proc environment and pass it to the command.
-
-**Files modified:**
-
-- `ansible/roles/dfe_developer/tasks/gnome_winlike.yml`
-- `ansible/roles/dfe_developer/tasks/gnome_maclike.yml`
+None - all tasks completed.
 
 ## Platform Support
 

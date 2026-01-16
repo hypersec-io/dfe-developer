@@ -1,9 +1,0 @@
----
-# Betterbird email client installation (Linux only, system-wide via Flatpak)
-
-- name: Install Betterbird via Flatpak (system-wide)
-  community.general.flatpak:
-    name: eu.betterbird.Betterbird
-    state: present
-    method: system
-  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']

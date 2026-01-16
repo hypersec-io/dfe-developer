@@ -36,13 +36,11 @@
   ansible.builtin.include_tasks:
     file: slack.yml
   tags: ['slack']
-  when: ansible_facts['env'].DISPLAY is defined or ansible_facts['env'].WAYLAND_DISPLAY is defined
 
-- name: Install Betterbird
+- name: Install OnlyOffice and Mailspring
   ansible.builtin.include_tasks:
-    file: betterbird.yml
-  tags: ['betterbird', 'email']
-  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    file: office.yml
+  tags: ['office', 'email']
 
 - name: Install Bitwarden
   ansible.builtin.include_tasks:
