@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.18.3](https://github.com/hypersec-io/dfe-developer/compare/v2.18.2...v2.18.3) (2026-01-16)
+
+
+### Bug Fixes
+
+* replace Betterbird with OnlyOffice/Mailspring, simplify GNOME detection ([1893754](https://github.com/hypersec-io/dfe-developer/commit/1893754fe6c9be50f69dcbd8874f207747193783)), closes [#2](https://github.com/hypersec-io/dfe-developer/issues/2)
+
 ## [2.18.2](https://github.com/hypersec-io/dfe-developer/compare/v2.18.1...v2.18.2) (2026-01-15)
 
 
