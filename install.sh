@@ -16,7 +16,7 @@
 #   --tags-include TAGS  Include specific tags to run (comma-separated)
 #   --tags-exclude TAGS  Exclude specific tags from running (comma-separated)
 #   --core               Install core developer tools (JFrog, Azure, Node.js, etc.)
-#   --all                Install everything (base + core + VM + RDP + winlike)
+#   --all                Install everything (base + core + VM + RDP + maclike)
 #   --help               Show this help message
 #
 # SUPPORTED PLATFORMS:
@@ -55,9 +55,7 @@ OPTIONS:
   --tags-exclude TAGS  Exclude specific tags from running (comma-separated)
   --branch BRANCH      Git branch to use (default: main)
   --core               Shortcut for: --tags developer,base,core,advanced
-  --all                Shortcut for: --tags developer,base,core,advanced,vm,optimizer,rdp,winlike
-  --force-gnome        Force GNOME configuration even if no GNOME session is running
-                       (for headless/template builds where GNOME is installed but inactive)
+  --all                Shortcut for: --tags developer,base,core,advanced,vm,optimizer,rdp,maclike
   --help               Show this help message
 
 AVAILABLE TAGS:
@@ -103,8 +101,8 @@ EXAMPLES:
   Install everything except wallpaper:
     ./install.sh --all --tags-exclude wallpaper
 
-  Install everything with macOS-style (maclike overrides winlike):
-    ./install.sh --all --tags maclike
+  Install everything with Windows-style (winlike overrides default maclike):
+    ./install.sh --all --tags winlike
 
   Install RDP support for remote desktop access:
     ./install.sh --tags developer,base,rdp
@@ -113,7 +111,7 @@ EXAMPLES:
     ./install.sh --check
 
 NOTES:
-  - If both winlike and maclike are included, maclike takes precedence
+  - If both winlike and maclike are included, winlike takes precedence (overrides default)
   - RDP configures GNOME Remote Desktop with default credentials (dfe/dfe)
   - ghostty, fastestmirror, and wallpaper are included by default
   - Use --tags-exclude to disable default features without specifying all tags
@@ -161,13 +159,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --all)
-            ANSIBLE_TAGS="--tags developer,base,core,advanced,vm,optimizer,rdp,winlike"
-            shift
-            ;;
-        --force-gnome)
-            # Force GNOME configuration even if gnome-shell isn't running
-            # Useful for headless/template builds where GNOME is installed but not active
-            ANSIBLE_EXTRA_VARS="-e dfe_force_gnome=true"
+            ANSIBLE_TAGS="--tags developer,base,core,advanced,vm,optimizer,rdp,maclike"
             shift
             ;;
         --help|-h)
@@ -181,13 +173,13 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Handle maclike/winlike priority: maclike overrides winlike
-# If both are specified, remove winlike from tags
-if [[ "$ANSIBLE_TAGS" == *"maclike"* ]] && [[ "$ANSIBLE_TAGS" == *"winlike"* ]]; then
-    print_info "Both maclike and winlike specified - using maclike (maclike takes precedence)"
-    ANSIBLE_TAGS="${ANSIBLE_TAGS//,winlike/}"
-    ANSIBLE_TAGS="${ANSIBLE_TAGS//winlike,/}"
-    ANSIBLE_TAGS="${ANSIBLE_TAGS//winlike/}"
+# Handle winlike/maclike priority: winlike overrides maclike (since maclike is default in --all)
+# If both are specified, remove maclike from tags
+if [[ "$ANSIBLE_TAGS" == *"winlike"* ]] && [[ "$ANSIBLE_TAGS" == *"maclike"* ]]; then
+    print_info "Both winlike and maclike specified - using winlike (winlike overrides default maclike)"
+    ANSIBLE_TAGS="${ANSIBLE_TAGS//,maclike/}"
+    ANSIBLE_TAGS="${ANSIBLE_TAGS//maclike,/}"
+    ANSIBLE_TAGS="${ANSIBLE_TAGS//maclike/}"
 fi
 
 # Detect operating system

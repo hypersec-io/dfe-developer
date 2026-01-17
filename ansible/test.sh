@@ -2,8 +2,8 @@
 # Test script for running ansible playbooks with install.sh-equivalent flags
 #
 # Usage:
-#   ./test.sh --all                    # Full installation (winlike)
-#   ./test.sh --all --maclike          # Full installation (maclike)
+#   ./test.sh --all                    # Full installation (maclike)
+#   ./test.sh --all --winlike          # Full installation (winlike)
 #   ./test.sh --core                   # Core tools only
 #   ./test.sh --winlike                # Just winlike GNOME config
 #   ./test.sh --maclike                # Just maclike GNOME config
@@ -24,8 +24,8 @@ show_help() {
 Usage: ./test.sh [OPTIONS] [ANSIBLE_ARGS...]
 
 OPTIONS:
-  --all                 Full installation: developer,base,core,advanced,vm,optimizer,rdp,winlike
-  --all --maclike       Full installation with maclike instead of winlike
+  --all                 Full installation: developer,base,core,advanced,vm,optimizer,rdp,maclike
+  --all --winlike       Full installation with winlike instead of maclike
   --core                Core tools: developer,base,core,advanced
   --winlike             Windows-style GNOME: developer,base,winlike
   --maclike             macOS-style GNOME: developer,base,maclike
@@ -40,7 +40,7 @@ EXAMPLES:
   ./test.sh --all --limit fedora           # Full install on Fedora only
   ./test.sh --core --limit ubuntu          # Core tools on Ubuntu only
   ./test.sh --winlike --limit fedora       # Just GNOME winlike on Fedora
-  ./test.sh --all --maclike --limit fedora # Full install with maclike
+  ./test.sh --all --winlike --limit fedora # Full install with winlike
 
 INVENTORY:
   Default: /tmp/inventory_test.yml
@@ -57,12 +57,12 @@ EOF
 }
 
 # Parse arguments
-MACLIKE_OVERRIDE=false
+WINLIKE_OVERRIDE=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
         --all)
-            TAGS="developer,base,core,advanced,vm,optimizer,rdp,winlike"
+            TAGS="developer,base,core,advanced,vm,optimizer,rdp,maclike"
             shift
             ;;
         --core)
@@ -70,6 +70,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --winlike)
+            WINLIKE_OVERRIDE=true
             if [[ -z "$TAGS" ]]; then
                 TAGS="developer,base,winlike"
             else
@@ -78,7 +79,6 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --maclike)
-            MACLIKE_OVERRIDE=true
             if [[ -z "$TAGS" ]]; then
                 TAGS="developer,base,maclike"
             else
@@ -116,12 +116,12 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Handle maclike override (remove winlike if maclike specified)
-if $MACLIKE_OVERRIDE && [[ "$TAGS" == *"winlike"* ]]; then
-    echo "[INFO] maclike specified - removing winlike from tags"
-    TAGS="${TAGS//,winlike/}"
-    TAGS="${TAGS//winlike,/}"
-    TAGS="${TAGS//winlike/}"
+# Handle winlike override (remove maclike if winlike specified with --all)
+if $WINLIKE_OVERRIDE && [[ "$TAGS" == *"maclike"* ]]; then
+    echo "[INFO] winlike specified - removing maclike from tags"
+    TAGS="${TAGS//,maclike/}"
+    TAGS="${TAGS//maclike,/}"
+    TAGS="${TAGS//maclike/}"
 fi
 
 # Default tags if none specified
