@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [2.19.0](https://github.com/hypersec-io/dfe-developer/compare/v2.18.3...v2.19.0) (2026-01-17)
+
+
+### Features
+
+* make maclike (macOS-style) the default GNOME config for --all ([5ddbbe7](https://github.com/hypersec-io/dfe-developer/commit/5ddbbe77fbe868918cdc4b143aef60a8d2c3790c))
+
 ## [2.18.3](https://github.com/hypersec-io/dfe-developer/compare/v2.18.2...v2.18.3) (2026-01-16)
 
 
