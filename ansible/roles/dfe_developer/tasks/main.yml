@@ -120,101 +120,13 @@
   tags: ['browser_policies', 'chrome', 'brave']
   when: dfe_has_gnome | default(false)
 
-- name: Apply Windows-like GNOME configuration
+- name: Apply GNOME configuration (winlike or maclike)
   ansible.builtin.include_tasks:
-    file: gnome_winlike.yml
-    apply:
-      tags: ['winlike']
-  tags: ['winlike', 'never']
-  when:
-    - dfe_has_gnome | default(false)
-    - "'winlike' in ansible_run_tags"
-
-- name: Apply macOS-like GNOME configuration
-  ansible.builtin.include_tasks:
-    file: gnome_maclike.yml
-    apply:
-      tags: ['maclike']
-  tags: ['maclike', 'never']
-  when:
-    - dfe_has_gnome | default(false)
-    - "'maclike' in ansible_run_tags"
-
-- name: Configure system-wide GNOME defaults (winlike)
-  block:
-    - name: Create dconf local.d directory
-      ansible.builtin.file:
-        path: /etc/dconf/db/local.d
-        state: directory
-        mode: '0755'
-
-    - name: Create dconf profile directory
-      ansible.builtin.file:
-        path: /etc/dconf/profile
-        state: directory
-        mode: '0755'
-
-    - name: Deploy dconf profile for users
-      ansible.builtin.copy:
-        src: dconf-profile-user
-        dest: /etc/dconf/profile/user
-        mode: '0644'
-
-    - name: Deploy DFE GNOME defaults (winlike)
-      ansible.builtin.copy:
-        src: dconf-dfe-defaults-winlike
-        dest: /etc/dconf/db/local.d/00-dfe-defaults
-        mode: '0644'
-      register: dconf_defaults_winlike
-
-    - name: Update dconf database
-      ansible.builtin.command:
-        cmd: dconf update
-      changed_when: true
-      when: dconf_defaults_winlike.changed | default(false)
-  tags: ['winlike', 'never']
+    file: gnome.yml
+  tags: ['winlike', 'maclike', 'never']
   when:
     - dfe_has_gnome | default(false)
     - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
-    - "'winlike' in ansible_run_tags"
-
-- name: Configure system-wide GNOME defaults (maclike)
-  block:
-    - name: Create dconf local.d directory
-      ansible.builtin.file:
-        path: /etc/dconf/db/local.d
-        state: directory
-        mode: '0755'
-
-    - name: Create dconf profile directory
-      ansible.builtin.file:
-        path: /etc/dconf/profile
-        state: directory
-        mode: '0755'
-
-    - name: Deploy dconf profile for users
-      ansible.builtin.copy:
-        src: dconf-profile-user
-        dest: /etc/dconf/profile/user
-        mode: '0644'
-
-    - name: Deploy DFE GNOME defaults (maclike)
-      ansible.builtin.copy:
-        src: dconf-dfe-defaults-maclike
-        dest: /etc/dconf/db/local.d/00-dfe-defaults
-        mode: '0644'
-      register: dconf_defaults_maclike
-
-    - name: Update dconf database
-      ansible.builtin.command:
-        cmd: dconf update
-      changed_when: true
-      when: dconf_defaults_maclike.changed | default(false)
-  tags: ['maclike', 'never']
-  when:
-    - dfe_has_gnome | default(false)
-    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
-    - "'maclike' in ansible_run_tags"
 
 - name: Install Ghostty terminal
   ansible.builtin.include_tasks:
