@@ -1,0 +1,135 @@
+---
+# Ensure minimal GNOME desktop environment is installed (Linux only)
+# Idempotent - does nothing if full desktop already present
+
+# ============================================================================
+# FEDORA
+# ============================================================================
+
+- name: Install GNOME desktop (Fedora)
+  ansible.builtin.dnf:
+    name: '@gnome-desktop'
+    state: present
+  when: ansible_facts['distribution'] == 'Fedora'
+
+- name: Install LibreOffice (Fedora)
+  ansible.builtin.dnf:
+    name: '@libreoffice'
+    state: present
+  when:
+    - ansible_facts['distribution'] == 'Fedora'
+    - install_libreoffice | default(true)
+
+- name: Set default target to graphical (Fedora)
+  ansible.builtin.command:
+    cmd: systemctl set-default graphical.target
+  changed_when: true
+  when: ansible_facts['distribution'] == 'Fedora'
+
+# ============================================================================
+# UBUNTU
+# ============================================================================
+
+# Install with recommends (gets all essential GNOME tools, fonts, themes)
+# Then remove unwanted packages explicitly
+- name: Install GNOME desktop (Ubuntu)
+  ansible.builtin.apt:
+    name: ubuntu-desktop-minimal
+    state: present
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+# Remove unwanted packages that come as recommends
+# - gnome-initial-setup: We suppress this anyway
+# - ubuntu-report, whoopsie, apport-gtk: Telemetry/crash reporting
+- name: Remove unwanted packages (Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - gnome-initial-setup
+      - ubuntu-report
+      - whoopsie
+      - apport-gtk
+      - apport
+    state: absent
+    purge: true
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Install LibreOffice (Ubuntu)
+  ansible.builtin.apt:
+    name: libreoffice
+    state: present
+  when:
+    - ansible_facts['distribution'] == 'Ubuntu'
+    - install_libreoffice | default(true)
+
+- name: Set default target to graphical (Ubuntu)
+  ansible.builtin.command:
+    cmd: systemctl set-default graphical.target
+  changed_when: true
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+# ============================================================================
+# DISABLE GNOME INITIAL SETUP (Ubuntu Welcome wizard)
+# ============================================================================
+# Multiple suppression methods to ensure wizard never appears:
+# 1. Remove the autostart desktop file
+# 2. Create system-wide done file in /etc/skel (for new users)
+# 3. Create done file for the target user
+# 4. Disable via dconf (system-wide)
+
+- name: Disable gnome-initial-setup for all users
+  ansible.builtin.file:
+    path: /etc/xdg/autostart/gnome-initial-setup-first-login.desktop
+    state: absent
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+
+# System-wide suppression via /etc/skel (copied to new user home dirs)
+- name: Ensure /etc/skel/.config exists
+  ansible.builtin.file:
+    path: /etc/skel/.config
+    state: directory
+    mode: '0755'
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+
+- name: Create gnome-initial-setup-done in /etc/skel (system-wide)
+  ansible.builtin.copy:
+    dest: /etc/skel/.config/gnome-initial-setup-done
+    content: "yes"
+    mode: '0644'
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+
+# Create gnome-initial-setup-done file for the configured user
+# This prevents the wizard from appearing even if the autostart file returns
+- name: Ensure user .config directory exists
+  ansible.builtin.file:
+    path: "{{ user_home }}/.config"
+    state: directory
+    owner: "{{ actual_user }}"
+    mode: '0700'
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+
+- name: Create gnome-initial-setup-done for target user
+  ansible.builtin.copy:
+    dest: "{{ user_home }}/.config/gnome-initial-setup-done"
+    content: "yes"
+    owner: "{{ actual_user }}"
+    mode: '0644'
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+
+# ============================================================================
+# USER AVATAR
+# ============================================================================
+# NOTE: Avatar deployment is handled in init.yml (supports PNG directly)
+# Uses 256x256 PNG format for best quality on GDM login screen
+
+# ============================================================================
+# DEFAULT BROWSER (set Brave as default)
+# ============================================================================
+
+- name: Set Brave as default browser
+  ansible.builtin.command:
+    cmd: xdg-settings set default-web-browser brave-browser.desktop
+  become: true
+  become_user: "{{ actual_user }}"
+  changed_when: true
+  failed_when: false
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']

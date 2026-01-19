@@ -1,0 +1,91 @@
+---
+# Claude Code CLI installation and managed settings
+#
+# Installs Claude Code CLI and configures system-wide managed settings
+# that apply to all users and cannot be overridden.
+#
+# Settings location: /etc/claude-code/managed-settings.json (Linux)
+#                   /Library/Application Support/ClaudeCode/managed-settings.json (macOS)
+
+- name: Install Claude Code CLI globally for user (Linux)
+  community.general.npm:
+    name: '@anthropic-ai/claude-code'
+    global: true
+    state: present
+  environment:
+    NPM_CONFIG_PREFIX: "{{ user_home }}/.npm-global"
+  become: false
+  become_user: "{{ actual_user }}"
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+
+- name: Install Claude Code CLI globally for user (macOS)
+  community.general.npm:
+    name: '@anthropic-ai/claude-code'
+    global: true
+    state: present
+  environment: "{{ npm_config_env }}"
+  become: false
+  when: ansible_facts['distribution'] == 'MacOSX'
+
+- name: Enable Claude Code auto-update (Linux)
+  ansible.builtin.command:
+    cmd: "{{ user_home }}/.npm-global/bin/claude config set auto_update true"
+  become: false
+  become_user: "{{ actual_user }}"
+  failed_when: false
+  changed_when: false
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+
+- name: Enable Claude Code auto-update (macOS)
+  ansible.builtin.command:
+    cmd: "{{ user_home }}/.npm-global/bin/claude config set auto_update true"
+  environment:
+    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ user_home }}/.npm-global/bin:{{ ansible_facts['env'].PATH }}"
+  become: false
+  failed_when: false
+  changed_when: false
+  when: ansible_facts['distribution'] == 'MacOSX'
+
+# ============================================================================
+# System-wide Managed Settings
+# ============================================================================
+# These settings apply to all users and cannot be overridden.
+# - Disables telemetry and error reporting
+# - Disables Co-Authored-By commit attribution
+# - Prompts before accessing sensitive files (.env, secrets, keys, credentials)
+
+- name: Create Claude Code managed settings directory (Linux)
+  ansible.builtin.file:
+    path: /etc/claude-code
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+
+- name: Create Claude Code managed settings directory (macOS)
+  ansible.builtin.file:
+    path: /Library/Application Support/ClaudeCode
+    state: directory
+    mode: '0755'
+    owner: root
+    group: wheel
+  when: ansible_facts['distribution'] == 'MacOSX'
+
+- name: Install Claude Code managed settings (Linux)
+  ansible.builtin.copy:
+    src: managed-settings.json
+    dest: /etc/claude-code/managed-settings.json
+    mode: '0644'
+    owner: root
+    group: root
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+
+- name: Install Claude Code managed settings (macOS)
+  ansible.builtin.copy:
+    src: managed-settings.json
+    dest: /Library/Application Support/ClaudeCode/managed-settings.json
+    mode: '0644'
+    owner: root
+    group: wheel
+  when: ansible_facts['distribution'] == 'MacOSX'

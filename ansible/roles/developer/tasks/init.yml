@@ -1,0 +1,202 @@
+---
+# Bootstrap tasks - run once at the start
+# Sets up common variables and validates platform
+# NOTE: Package manager lock wait is handled in playbooks/main.yml pre_tasks
+
+- name: Validate supported distribution
+  ansible.builtin.fail:
+    msg: "Unsupported distribution: {{ ansible_facts['distribution'] }}. Supported: {{ supported_distros | join(', ') }}"
+  when: ansible_facts['distribution'] not in supported_distros
+
+- name: Validate Fedora version
+  ansible.builtin.fail:
+    msg: "Unsupported Fedora version: {{ ansible_facts['distribution_major_version'] }}. Minimum required: {{ min_fedora_version }}"
+  when:
+    - ansible_facts['distribution'] == 'Fedora'
+    - ansible_facts['distribution_major_version'] | int < min_fedora_version
+
+- name: Validate Ubuntu version
+  ansible.builtin.fail:
+    msg: "Unsupported Ubuntu version: {{ ansible_facts['distribution_version'] }}. Minimum required: {{ min_ubuntu_version }}"
+  when:
+    - ansible_facts['distribution'] == 'Ubuntu'
+    - ansible_facts['distribution_version'] is version(min_ubuntu_version, '<')
+
+- name: Detect actual user (for sudo operations)
+  ansible.builtin.set_fact:
+    actual_user: "{{ ansible_facts['env'].SUDO_USER | default(ansible_facts['user_id'], true) }}"
+
+- name: Set actual user home directory (Linux)
+  ansible.builtin.set_fact:
+    user_home: "{{ '/home/' + actual_user if actual_user != 'root' else '/root' }}"
+  when: ansible_facts['distribution'] != 'MacOSX'
+
+- name: Set actual user home directory (macOS)
+  ansible.builtin.set_fact:
+    user_home: "{{ '/Users/' + actual_user if actual_user != 'root' else '/var/root' }}"
+  when: ansible_facts['distribution'] == 'MacOSX'
+
+- name: Display user information
+  ansible.builtin.debug:
+    msg: "Installing for user: {{ actual_user }} (home: {{ user_home }})"
+
+- name: Load macOS-specific variables
+  ansible.builtin.include_vars:
+    file: macos.yml
+  when: ansible_facts['distribution'] == 'MacOSX'
+
+- name: Create temporary sudo askpass script (macOS)
+  ansible.builtin.copy:
+    content: |
+      #!/bin/sh
+      echo "{{ ansible_become_password }}"
+    dest: /tmp/askpass.sh
+    mode: '0700'
+  become: false
+  when: ansible_facts['distribution'] == 'MacOSX'
+
+- name: Install Homebrew (macOS)
+  ansible.builtin.shell: |
+    export SUDO_ASKPASS=/tmp/askpass.sh
+    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  args:
+    creates: /opt/homebrew/bin/brew
+  become: false
+  when: ansible_facts['distribution'] == 'MacOSX'
+
+# Note: askpass.sh is kept for Docker and other Homebrew cask installs
+# It will be cleaned up in system_cleanup role
+
+- name: Add Homebrew to shell profile (macOS)
+  ansible.builtin.lineinfile:
+    path: "{{ user_home }}/.zprofile"
+    line: 'eval "$(/opt/homebrew/bin/brew shellenv)"'
+    create: true
+    mode: '0644'
+  become: false
+  when: ansible_facts['distribution'] == 'MacOSX'
+
+# Check if GNOME is installed (not running - works for Packer headless builds)
+- name: Check if GNOME Shell is installed (Linux only)
+  ansible.builtin.stat:
+    path: /usr/bin/gnome-shell
+  register: gnome_shell_installed
+  when: ansible_facts['distribution'] != 'MacOSX'
+
+- name: Set GNOME availability fact (Linux - installed check)
+  ansible.builtin.set_fact:
+    has_gnome: "{{ gnome_shell_installed.stat.exists | default(false) }}"
+  when: ansible_facts['distribution'] != 'MacOSX'
+
+- name: Set GNOME availability fact (macOS - N/A)
+  ansible.builtin.set_fact:
+    has_gnome: false
+  when: ansible_facts['distribution'] == 'MacOSX'
+
+- name: Display GNOME status
+  ansible.builtin.debug:
+    msg: "GNOME desktop: {{ 'Installed' if has_gnome else 'Not installed' }}"
+
+# Install psutil for dconf module (required for GNOME settings tasks)
+- name: Install psutil for dconf module (Fedora)
+  ansible.builtin.dnf:
+    name: python3-psutil
+    state: present
+  when:
+    - ansible_facts['distribution'] == 'Fedora'
+    - has_gnome | default(false)
+
+- name: Install psutil for dconf module (Ubuntu)
+  ansible.builtin.apt:
+    name: python3-psutil
+    state: present
+  when:
+    - ansible_facts['distribution'] == 'Ubuntu'
+    - has_gnome | default(false)
+
+# ============================================================================
+# USER AVATAR (GDM login screen)
+# ============================================================================
+# Deploy custom avatar for GDM login screen and set as system default
+# - Current user: /var/lib/AccountsService/icons/<username>
+# - System default: /usr/share/pixmaps/faces/default-user.png
+# Controlled by branding_enabled and avatar_file variables
+
+- name: Deploy user avatar for current user
+  ansible.builtin.copy:
+    src: "{{ avatar_file }}"
+    dest: "/var/lib/AccountsService/icons/{{ actual_user }}"
+    mode: '0644'
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - has_gnome | default(false)
+    - branding_enabled | default(true)
+    - avatar_file | default('') | length > 0
+
+- name: Configure AccountsService to use custom avatar for current user
+  ansible.builtin.lineinfile:
+    path: "/var/lib/AccountsService/users/{{ actual_user }}"
+    regexp: '^Icon='
+    line: "Icon=/var/lib/AccountsService/icons/{{ actual_user }}"
+    create: true
+    mode: '0600'
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - has_gnome | default(false)
+    - branding_enabled | default(true)
+    - avatar_file | default('') | length > 0
+
+# Set as system-wide default for new users
+- name: Ensure faces directory exists for default avatars
+  ansible.builtin.file:
+    path: /usr/share/pixmaps/faces
+    state: directory
+    mode: '0755'
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - has_gnome | default(false)
+    - branding_enabled | default(true)
+    - avatar_file | default('') | length > 0
+
+- name: Deploy avatar as system default for new users
+  ansible.builtin.copy:
+    src: "{{ avatar_file }}"
+    dest: /usr/share/pixmaps/faces/default-user.png
+    mode: '0644'
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - has_gnome | default(false)
+    - branding_enabled | default(true)
+    - avatar_file | default('') | length > 0
+
+- name: Ensure dconf database directory exists
+  ansible.builtin.file:
+    path: /etc/dconf/db/local.d
+    state: directory
+    mode: '0755'
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - has_gnome | default(false)
+    - branding_enabled | default(true)
+    - avatar_file | default('') | length > 0
+
+- name: Configure AccountsService default icon path
+  ansible.builtin.copy:
+    dest: /etc/dconf/db/local.d/01-default-avatar
+    content: |
+      [org/gnome/login-screen]
+      logo='/usr/share/pixmaps/faces/default-user.png'
+    mode: '0644'
+  register: default_avatar_dconf
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - has_gnome | default(false)
+    - branding_enabled | default(true)
+    - avatar_file | default('') | length > 0
+
+- name: Update dconf database for default avatar
+  ansible.builtin.command:
+    cmd: dconf update
+  changed_when: true
+  when:
+    - default_avatar_dconf.changed | default(false)

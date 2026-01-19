@@ -1,0 +1,23 @@
+---
+# TCP optimizations for RDP (low-latency, mobile-friendly)
+
+- name: Configure TCP BBR congestion control for RDP
+  ansible.builtin.copy:
+    dest: /etc/sysctl.d/99-rdp-optimization.conf
+    content: |
+      # RDP TCP Optimizations
+
+      # BBR congestion control for mobile/high-latency
+      net.core.default_qdisc = fq
+      net.ipv4.tcp_congestion_control = bbr
+
+      # Increase network buffers for RDP
+      net.core.rmem_max = 16777216
+      net.core.wmem_max = 16777216
+      net.ipv4.tcp_rmem = 4096 87380 16777216
+      net.ipv4.tcp_wmem = 4096 65536 16777216
+      net.core.netdev_max_backlog = 5000
+    mode: '0644'
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - has_gnome

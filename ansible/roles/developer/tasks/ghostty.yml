@@ -1,0 +1,184 @@
+---
+# Ghostty terminal emulator installation
+# Uses modular configuration: base config + platform-specific files
+
+# ============================================================
+# Variables
+# ============================================================
+- name: Set Ghostty config directory paths
+  ansible.builtin.set_fact:
+    ghostty_skel_dir: /etc/skel/.config/ghostty
+    ghostty_macos_dir: "{{ ansible_facts['env'].HOME }}/Library/Application Support/com.mitchellh.ghostty"
+
+# ============================================================
+# Font Installation
+# ============================================================
+- name: Install JetBrains Mono font (Fedora)
+  ansible.builtin.dnf:
+    name: jetbrains-mono-fonts
+    state: present
+  when: ansible_facts['distribution'] == 'Fedora'
+
+- name: Install JetBrains Mono font (Ubuntu)
+  ansible.builtin.apt:
+    name: fonts-jetbrains-mono
+    state: present
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Install JetBrains Mono font via Homebrew cask (macOS)
+  community.general.homebrew_cask:
+    name: font-jetbrains-mono
+    state: present
+  become: false
+  environment: "{{ homebrew_cask_env }}"
+  when: ansible_facts['distribution'] == 'MacOSX'
+
+# ============================================================
+# Ghostty Installation - Fedora (COPR)
+# ============================================================
+- name: Enable scottames/ghostty COPR (Fedora)
+  community.general.copr:
+    name: scottames/ghostty
+    state: enabled
+  when: ansible_facts['distribution'] == 'Fedora'
+
+- name: Install Ghostty (Fedora)
+  ansible.builtin.dnf:
+    name: ghostty
+    state: present
+  when: ansible_facts['distribution'] == 'Fedora'
+
+# ============================================================
+# Ghostty Installation - Ubuntu (pre-built .deb)
+# ============================================================
+- name: Get latest Ghostty release
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/mkasberg/ghostty-ubuntu/releases/latest
+    return_content: true
+  register: ghostty_latest
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Find .deb file for detected Ubuntu version
+  ansible.builtin.set_fact:
+    ghostty_deb_url: "{{ item.browser_download_url }}"
+  loop: "{{ ghostty_latest.json.assets }}"
+  when:
+    - ansible_facts['distribution'] == 'Ubuntu'
+    - "'_amd64_' + ansible_facts['distribution_version'] + '.deb' in item.name"
+
+- name: Download Ghostty .deb
+  ansible.builtin.get_url:
+    url: "{{ ghostty_deb_url }}"
+    dest: /tmp/ghostty.deb
+    mode: '0644'
+  when:
+    - ansible_facts['distribution'] == 'Ubuntu'
+    - ghostty_deb_url is defined
+
+- name: Install Ghostty (Ubuntu)
+  ansible.builtin.apt:
+    deb: /tmp/ghostty.deb
+    state: present
+  when:
+    - ansible_facts['distribution'] == 'Ubuntu'
+    - ghostty_deb_url is defined
+
+- name: Remove Ghostty .deb
+  ansible.builtin.file:
+    path: /tmp/ghostty.deb
+    state: absent
+  when:
+    - ansible_facts['distribution'] == 'Ubuntu'
+    - ghostty_deb_url is defined
+
+# ============================================================
+# Ghostty Installation - macOS (Homebrew)
+# ============================================================
+- name: Install Ghostty via Homebrew cask (macOS)
+  community.general.homebrew_cask:
+    name: ghostty
+    state: present
+  become: false
+  environment: "{{ homebrew_cask_env }}"
+  when: ansible_facts['distribution'] == 'MacOSX'
+
+# ============================================================
+# Linux Configuration Deployment (system-wide via /etc/skel)
+# ============================================================
+- name: Create Ghostty skel config directory (Linux)
+  ansible.builtin.file:
+    path: "{{ ghostty_skel_dir }}"
+    state: directory
+    mode: '0755'
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+
+- name: Deploy Ghostty base configuration (Linux)
+  ansible.builtin.copy:
+    src: ghostty/config
+    dest: "{{ ghostty_skel_dir }}/config"
+    mode: '0644'
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+
+- name: Deploy Ghostty Linux platform configuration
+  ansible.builtin.copy:
+    src: ghostty/platform-linux.conf
+    dest: "{{ ghostty_skel_dir }}/platform-linux.conf"
+    mode: '0644'
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+
+# Deploy to current user as well (Linux)
+- name: Create Ghostty config directory for actual user (Linux)
+  ansible.builtin.file:
+    path: "{{ user_home }}/.config/ghostty"
+    state: directory
+    mode: '0755'
+    owner: "{{ actual_user }}"
+    group: "{{ actual_user }}"
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+
+- name: Deploy Ghostty base configuration for actual user (Linux)
+  ansible.builtin.copy:
+    src: ghostty/config
+    dest: "{{ user_home }}/.config/ghostty/config"
+    mode: '0644'
+    owner: "{{ actual_user }}"
+    group: "{{ actual_user }}"
+    force: false
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+
+- name: Deploy Ghostty Linux platform config for actual user
+  ansible.builtin.copy:
+    src: ghostty/platform-linux.conf
+    dest: "{{ user_home }}/.config/ghostty/platform-linux.conf"
+    mode: '0644'
+    owner: "{{ actual_user }}"
+    group: "{{ actual_user }}"
+    force: false
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+
+# ============================================================
+# macOS Configuration Deployment
+# ============================================================
+- name: Create Ghostty config directory (macOS)
+  ansible.builtin.file:
+    path: "{{ ghostty_macos_dir }}"
+    state: directory
+    mode: '0755'
+  become: false
+  when: ansible_facts['distribution'] == 'MacOSX'
+
+- name: Deploy Ghostty base configuration (macOS)
+  ansible.builtin.copy:
+    src: ghostty/config
+    dest: "{{ ghostty_macos_dir }}/config"
+    mode: '0644'
+  become: false
+  when: ansible_facts['distribution'] == 'MacOSX'
+
+- name: Deploy Ghostty macOS platform configuration
+  ansible.builtin.copy:
+    src: ghostty/platform-macos.conf
+    dest: "{{ ghostty_macos_dir }}/platform-macos.conf"
+    mode: '0644'
+  become: false
+  when: ansible_facts['distribution'] == 'MacOSX'

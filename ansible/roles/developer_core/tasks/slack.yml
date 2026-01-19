@@ -1,0 +1,22 @@
+---
+# Slack installation (Flatpak for Linux with GUI, Homebrew for macOS)
+
+# Linux (Fedora/Ubuntu) - via Flatpak
+
+- name: Install Slack via Flatpak (system-wide)
+  community.general.flatpak:
+    name: com.slack.Slack
+    state: present
+    method: system
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - has_gnome
+
+# macOS
+- name: Install Slack via Homebrew Cask (macOS)
+  community.general.homebrew_cask:
+    name: slack
+    state: present
+  become: false
+  environment: "{{ homebrew_cask_env }}"
+  when: ansible_facts['distribution'] == 'MacOSX'

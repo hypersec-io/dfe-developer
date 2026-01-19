@@ -1,0 +1,64 @@
+---
+# DFE VM Optimizer - Main Tasks
+# Maps to: fedora/install-vm-optimizer.sh
+
+# Skip on macOS (not applicable)
+- name: Skip VM optimizer on macOS
+  ansible.builtin.debug:
+    msg: "VM optimizer not applicable on macOS - skipping"
+  when: ansible_facts['distribution'] == 'MacOSX'
+
+- name: Detect virtualization platform
+  ansible.builtin.set_fact:
+    vm_type: "{{ ansible_virtualization_type }}"
+    vm_role: "{{ ansible_virtualization_role }}"
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+
+- name: Display VM detection
+  ansible.builtin.debug:
+    msg: "Virtualization: {{ vm_type }} (role: {{ vm_role }})"
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - vm_role == 'guest'
+
+- name: Skip if not a VM
+  ansible.builtin.debug:
+    msg: "Not running in a VM - skipping optimizations"
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - vm_role != 'guest'
+
+- name: Optimize services
+  ansible.builtin.include_tasks:
+    file: services.yml
+  tags: ['services']
+
+- name: Optimize kernel parameters
+  ansible.builtin.include_tasks:
+    file: kernel.yml
+  tags: ['kernel']
+
+- name: Optimize GRUB configuration
+  ansible.builtin.include_tasks:
+    file: grub.yml
+  tags: ['grub']
+
+- name: Optimize disk I/O
+  ansible.builtin.include_tasks:
+    file: disk.yml
+  tags: ['disk']
+
+- name: Install VM platform tools
+  ansible.builtin.include_tasks:
+    file: vm_tools.yml
+  tags: ['vm_tools']
+
+- name: Optimize memory usage
+  ansible.builtin.include_tasks:
+    file: memory.yml
+  tags: ['memory']
+
+- name: Verify VM optimizations
+  ansible.builtin.include_tasks:
+    file: verify.yml
+  tags: ['verify']

@@ -1,5 +1,5 @@
 ---
-# DFE Developer Environment - Main Playbook
+# Developer Environment - Main Playbook
 # Installs and configures complete development environment
 #
 # Usage:
@@ -7,7 +7,7 @@
 #   ansible-playbook playbooks/main.yml --check         # Dry-run
 #   ansible-playbook playbooks/main.yml --tags docker   # Specific tags
 
-- name: DFE Developer Environment Setup
+- name: Developer Environment Setup
   hosts: all
   become: false
   gather_facts: true
@@ -100,24 +100,24 @@
 
     - name: Detect actual user (for sudo operations)
       ansible.builtin.set_fact:
-        dfe_actual_user: "{{ ansible_facts['env'].SUDO_USER | default(ansible_facts['user_id'], true) }}"
+        actual_user: "{{ ansible_facts['env'].SUDO_USER | default(ansible_facts['user_id'], true) }}"
       tags: ['always']
 
     - name: Set actual user home directory (Linux)
       ansible.builtin.set_fact:
-        dfe_user_home: "{{ '/home/' + dfe_actual_user if dfe_actual_user != 'root' else '/root' }}"
+        user_home: "{{ '/home/' + actual_user if actual_user != 'root' else '/root' }}"
       when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
       tags: ['always']
 
     - name: Set actual user home directory (macOS)
       ansible.builtin.set_fact:
-        dfe_user_home: "{{ '/Users/' + dfe_actual_user }}"
+        user_home: "{{ '/Users/' + actual_user }}"
       when: ansible_facts['distribution'] == 'MacOSX'
       tags: ['always']
 
     - name: Display user information
       ansible.builtin.debug:
-        msg: "Installing for user: {{ dfe_actual_user }} (home: {{ dfe_user_home }})"
+        msg: "Installing for user: {{ actual_user }} (home: {{ user_home }})"
       tags: ['always']
 
     - name: Detect if GNOME is running (Linux only)
@@ -130,39 +130,39 @@
 
     - name: Set GNOME availability fact (Linux)
       ansible.builtin.set_fact:
-        dfe_has_gnome: "{{ gnome_running_check.rc == 0 }}"
+        has_gnome: "{{ gnome_running_check.rc == 0 }}"
       when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
       tags: ['always']
 
     - name: Set GNOME availability fact (macOS - N/A)
       ansible.builtin.set_fact:
-        dfe_has_gnome: false
+        has_gnome: false
       when: ansible_facts['distribution'] == 'MacOSX'
       tags: ['always']
 
     - name: Display GNOME status
       ansible.builtin.debug:
-        msg: "GNOME desktop: {{ 'Detected' if dfe_has_gnome else 'Not detected' }}"
+        msg: "GNOME desktop: {{ 'Detected' if has_gnome else 'Not detected' }}"
       tags: ['always']
 
   roles:
-    - role: dfe_developer
+    - role: developer
       become: "{{ ansible_facts['distribution'] != 'MacOSX' }}"
       tags: ['developer', 'base']
 
-    - role: dfe_developer_core
+    - role: developer_core
       become: "{{ ansible_facts['distribution'] != 'MacOSX' }}"
       tags: ['core', 'advanced']
 
-    - role: dfe_vm_optimizer
+    - role: vm_optimizer
       become: "{{ ansible_facts['distribution'] != 'MacOSX' }}"
       tags: ['vm', 'optimizer']
 
-    - role: dfe_rdp
+    - role: rdp
       become: "{{ ansible_facts['distribution'] != 'MacOSX' }}"
       tags: ['rdp']
 
-    - role: dfe_system_cleanup
+    - role: system_cleanup
       become: "{{ ansible_facts['distribution'] != 'MacOSX' }}"
       tags: ['always']
 
@@ -170,7 +170,7 @@
     - name: Display completion message
       ansible.builtin.debug:
         msg: |
-          DFE Developer Environment installation complete!
+          Developer Environment installation complete!
 
           Next steps:
           1. Log out and back in for Docker group membership

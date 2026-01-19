@@ -1,0 +1,748 @@
+---
+# GNOME Desktop customizations and extensions
+# Unified configuration for both Windows-like (winlike) and macOS-like (maclike) modes
+#
+# Usage: --tags winlike OR --tags maclike
+# If neither tag is specified, GNOME is left untouched.
+#
+# This file handles:
+# - Prerequisites (UV, psutil, gext)
+# - Extension installation (all extensions for both modes)
+# - ui-mode utility deployment
+# - Mode application (via ui-mode script)
+# - System-wide dconf defaults
+# - Wallpaper deployment
+# - Font installation
+
+# ============================================================================
+# DETERMINE UI MODE FROM TAGS
+# ============================================================================
+# Set ui_mode based on which tag is active. This is the SSoT for mode selection.
+
+- name: Set UI mode to winlike
+  ansible.builtin.set_fact:
+    ui_mode: "winlike"
+  tags: ['winlike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+
+- name: Set UI mode to maclike
+  ansible.builtin.set_fact:
+    ui_mode: "maclike"
+  tags: ['maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+
+# ============================================================================
+# UV PACKAGE MANAGER (required for gnome-extensions-cli)
+# ============================================================================
+# UV is required to install gext. Include uv.yml here to ensure it's available
+# even when running with partial tags (e.g., --tags winlike without --tags python)
+
+- name: Ensure UV package manager is installed
+  ansible.builtin.include_tasks: uv.yml
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+
+# ============================================================================
+# PREREQUISITES
+# ============================================================================
+# Note: psutil is installed in init.yml (consolidated there for all GNOME tasks)
+
+- name: Install GNOME extension prerequisites (Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - gnome-shell-extensions       # Base extension infrastructure
+      - gnome-shell-extension-manager  # GUI for managing extensions
+      - gir1.2-gmenu-3.0             # Required by ArcMenu and Logo Menu
+    state: present
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Install GNOME extension prerequisites (Fedora)
+  ansible.builtin.dnf:
+    name:
+      - gnome-shell-extension-common  # Base extension infrastructure
+      - gnome-extensions-app          # GUI for managing extensions
+    state: present
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] == 'Fedora'
+
+# Install gnome-extensions-cli via UV tool (not pipx)
+# UV manages its own Python environment - no system packages modified
+# Tool venv: ~/.local/share/uv/tools/gnome-extensions-cli/
+# Binary symlink: ~/.local/bin/gext
+- name: Install gnome-extensions-cli via uv tool
+  ansible.builtin.command:
+    cmd: uv tool install gnome-extensions-cli
+  become: true
+  become_user: "{{ actual_user }}"
+  environment:
+    PATH: "/usr/local/bin:{{ user_home }}/.local/bin:{{ user_home }}/.cargo/bin:{{ ansible_facts['env']['PATH'] }}"
+  register: gext_install
+  changed_when: "'Installed' in gext_install.stdout"
+  failed_when:
+    - gext_install.rc != 0
+    - "'already installed' not in gext_install.stderr"
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+
+# ============================================================================
+# DEPLOY UI-MODE UTILITY
+# ============================================================================
+
+- name: Ensure /usr/local/sbin exists
+  ansible.builtin.file:
+    path: /usr/local/sbin
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+
+- name: Deploy ui-mode utility to /usr/local/sbin
+  ansible.builtin.copy:
+    src: ui-mode
+    dest: /usr/local/sbin/ui-mode
+    mode: '0755'
+    owner: root
+    group: root
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+
+# ============================================================================
+# INSTALL MODE-SPECIFIC EXTENSIONS
+# Only install extensions needed for the selected mode, uninstall conflicting ones
+# ============================================================================
+
+# Common extension: Astra Monitor (replaces system-monitor) - used by both modes
+- name: Install Astra Monitor extension via gext
+  ansible.builtin.command:
+    cmd: "{{ user_home }}/.local/bin/gext -F install monitor@astraext.github.io"
+  become: true
+  become_user: "{{ actual_user }}"
+  register: astra_monitor_install
+  changed_when: "'already installed' not in astra_monitor_install.stdout"
+  failed_when:
+    - astra_monitor_install.rc != 0
+    - "'already installed' not in astra_monitor_install.stdout"
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+
+- name: Compile Astra Monitor schemas
+  ansible.builtin.command:
+    cmd: glib-compile-schemas {{ user_home }}/.local/share/gnome-shell/extensions/monitor@astraext.github.io/schemas/
+  become: true
+  become_user: "{{ actual_user }}"
+  changed_when: false
+  failed_when: false
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+
+# Common extension: Window State Manager - used by both modes
+- name: Install Window State Manager extension via gext
+  ansible.builtin.command:
+    cmd: "{{ user_home }}/.local/bin/gext -F install window-state-manager@kishorv06.github.io"
+  become: true
+  become_user: "{{ actual_user }}"
+  register: window_state_install
+  changed_when: "'already installed' not in window_state_install.stdout"
+  failed_when:
+    - window_state_install.rc != 0
+    - "'already installed' not in window_state_install.stdout"
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+
+# ============================================================================
+# WINLIKE MODE: Install Dash to Panel, remove maclike extensions
+# ============================================================================
+
+- name: Install Dash to Panel extension (winlike)
+  ansible.builtin.command:
+    cmd: "{{ user_home }}/.local/bin/gext -F install dash-to-panel@jderose9.github.com"
+  become: true
+  become_user: "{{ actual_user }}"
+  register: dash_to_panel_install
+  changed_when: "'already installed' not in dash_to_panel_install.stdout"
+  failed_when:
+    - dash_to_panel_install.rc != 0
+    - "'already installed' not in dash_to_panel_install.stdout"
+  tags: ['winlike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+    - ui_mode == 'winlike'
+
+- name: Compile Dash to Panel schemas
+  ansible.builtin.command:
+    cmd: glib-compile-schemas {{ user_home }}/.local/share/gnome-shell/extensions/dash-to-panel@jderose9.github.com/schemas/
+  become: true
+  become_user: "{{ actual_user }}"
+  changed_when: false
+  failed_when: false
+  tags: ['winlike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+    - ui_mode == 'winlike'
+
+# Remove maclike extensions when installing winlike
+- name: Uninstall maclike extensions (winlike mode)
+  ansible.builtin.command:
+    cmd: "{{ user_home }}/.local/bin/gext -F uninstall {{ item }}"
+  become: true
+  become_user: "{{ actual_user }}"
+  loop:
+    - dash-to-dock@micxgx.gmail.com
+    - logomenu@aryan_k
+    - compiz-alike-magic-lamp-effect@hermes83.github.com
+  changed_when: false
+  failed_when: false
+  tags: ['winlike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+    - ui_mode == 'winlike'
+
+# ============================================================================
+# MACLIKE MODE: Install Dash to Dock + extras, remove winlike extensions
+# ============================================================================
+
+- name: Install Dash to Dock extension (maclike)
+  ansible.builtin.command:
+    cmd: "{{ user_home }}/.local/bin/gext -F install dash-to-dock@micxgx.gmail.com"
+  become: true
+  become_user: "{{ actual_user }}"
+  register: dash_to_dock_install
+  changed_when: "'already installed' not in dash_to_dock_install.stdout"
+  failed_when:
+    - dash_to_dock_install.rc != 0
+    - "'already installed' not in dash_to_dock_install.stdout"
+  tags: ['maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+    - ui_mode == 'maclike'
+
+- name: Compile Dash to Dock schemas
+  ansible.builtin.command:
+    cmd: glib-compile-schemas {{ user_home }}/.local/share/gnome-shell/extensions/dash-to-dock@micxgx.gmail.com/schemas/
+  become: true
+  become_user: "{{ actual_user }}"
+  changed_when: false
+  failed_when: false
+  tags: ['maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+    - ui_mode == 'maclike'
+
+- name: Install Logo Menu extension (maclike)
+  ansible.builtin.command:
+    cmd: "{{ user_home }}/.local/bin/gext -F install logomenu@aryan_k"
+  become: true
+  become_user: "{{ actual_user }}"
+  register: logo_menu_install
+  changed_when: "'already installed' not in logo_menu_install.stdout"
+  failed_when:
+    - logo_menu_install.rc != 0
+    - "'already installed' not in logo_menu_install.stdout"
+  tags: ['maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+    - ui_mode == 'maclike'
+
+- name: Install Magic Lamp effect extension (maclike)
+  ansible.builtin.command:
+    cmd: "{{ user_home }}/.local/bin/gext -F install compiz-alike-magic-lamp-effect@hermes83.github.com"
+  become: true
+  become_user: "{{ actual_user }}"
+  register: magic_lamp_install
+  changed_when: "'already installed' not in magic_lamp_install.stdout"
+  failed_when:
+    - magic_lamp_install.rc != 0
+    - "'already installed' not in magic_lamp_install.stdout"
+  tags: ['maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+    - ui_mode == 'maclike'
+
+# Remove winlike extensions when installing maclike
+- name: Uninstall winlike extensions (maclike mode)
+  ansible.builtin.command:
+    cmd: "{{ user_home }}/.local/bin/gext -F uninstall dash-to-panel@jderose9.github.com"
+  become: true
+  become_user: "{{ actual_user }}"
+  changed_when: false
+  failed_when: false
+  tags: ['maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+    - ui_mode == 'maclike'
+
+# ============================================================================
+# COMMON DCONF SETTINGS
+# ============================================================================
+
+- name: Enable global extensions toggle
+  community.general.dconf:
+    key: "/org/gnome/shell/disable-user-extensions"
+    value: "false"
+    state: present
+  become: false
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+
+- name: Configure Astra Monitor - show CPU
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/astra-monitor/processor-header-show"
+    value: "true"
+    state: present
+  become: false
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+
+- name: Configure Astra Monitor - show memory
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/astra-monitor/memory-header-show"
+    value: "true"
+    state: present
+  become: false
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+
+- name: Configure Astra Monitor - hide storage
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/astra-monitor/storage-header-show"
+    value: "false"
+    state: present
+  become: false
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+
+- name: Configure Astra Monitor - hide network
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/astra-monitor/network-header-show"
+    value: "false"
+    state: present
+  become: false
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+
+- name: Configure Astra Monitor - hide GPU
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/astra-monitor/gpu-header-show"
+    value: "false"
+    state: present
+  become: false
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+
+- name: Configure Astra Monitor - hide sensors
+  community.general.dconf:
+    key: "/org/gnome/shell/extensions/astra-monitor/sensors-header-show"
+    value: "false"
+    state: present
+  become: false
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+
+- name: Enable window title bar buttons (minimize, maximize, close)
+  community.general.dconf:
+    key: "/org/gnome/desktop/wm/preferences/button-layout"
+    value: "':minimize,maximize,close'"
+    state: present
+  become: false
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+
+- name: Set dark theme preference
+  community.general.dconf:
+    key: "/org/gnome/desktop/interface/color-scheme"
+    value: "'prefer-dark'"
+    state: present
+  become: false
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+
+# ============================================================================
+# FONT INSTALLATION (system-wide fonts for consistency across distros)
+# ============================================================================
+
+# Install Martel Sans font (used for various UI elements)
+- name: Create Martel Sans fonts directory
+  ansible.builtin.file:
+    path: /usr/local/share/fonts/martel-sans
+    state: directory
+    mode: '0755'
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+
+- name: Install Martel Sans fonts
+  ansible.builtin.copy:
+    src: "fonts/martel-sans/{{ item }}"
+    dest: "/usr/local/share/fonts/martel-sans/{{ item }}"
+    mode: '0644'
+  loop:
+    - MartelSans-Regular.ttf
+    - MartelSans-Light.ttf
+    - MartelSans-ExtraLight.ttf
+    - MartelSans-SemiBold.ttf
+    - MartelSans-Bold.ttf
+    - MartelSans-ExtraBold.ttf
+    - MartelSans-Black.ttf
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+  register: martel_fonts_installed
+
+# ============================================================================
+# FONT CONFIGURATION (Adwaita Sans for GNOME 47+ consistency across distros)
+# ============================================================================
+
+# Check if Adwaita Sans is installed (GNOME 47+ font, not available in Ubuntu 24.04)
+- name: Check if Adwaita Sans font is installed
+  ansible.builtin.stat:
+    path: /usr/share/fonts/adwaita-sans/AdwaitaSans-Regular.ttf
+  register: adwaita_sans_check
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] == 'Ubuntu'
+
+# Install Adwaita Sans and Mono fonts on Ubuntu (to match Fedora GNOME 47+)
+- name: Create Adwaita fonts directory (Ubuntu)
+  ansible.builtin.file:
+    path: /usr/share/fonts/adwaita-sans
+    state: directory
+    mode: '0755'
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] == 'Ubuntu'
+    - not adwaita_sans_check.stat.exists | default(true)
+
+- name: Install Adwaita Sans fonts (Ubuntu)
+  ansible.builtin.copy:
+    src: "fonts/adwaita/{{ item }}"
+    dest: "/usr/share/fonts/adwaita-sans/{{ item }}"
+    mode: '0644'
+  loop:
+    - AdwaitaSans-Regular.ttf
+    - AdwaitaSans-Italic.ttf
+    - AdwaitaMono-Regular.ttf
+    - AdwaitaMono-Bold.ttf
+    - AdwaitaMono-Italic.ttf
+    - AdwaitaMono-BoldItalic.ttf
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] == 'Ubuntu'
+    - not adwaita_sans_check.stat.exists | default(true)
+  register: adwaita_fonts_installed
+
+- name: Rebuild font cache
+  ansible.builtin.command:
+    cmd: fc-cache -f
+  changed_when: true
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+    - (adwaita_fonts_installed.changed | default(false)) or (martel_fonts_installed.changed | default(false))
+
+# Set Adwaita Sans as default fonts (GNOME 47+ style for all Linux distros)
+- name: Set interface font (Adwaita Sans 11)
+  community.general.dconf:
+    key: "/org/gnome/desktop/interface/font-name"
+    value: "'Adwaita Sans 11'"
+    state: present
+  become: false
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+
+- name: Set document font (Adwaita Sans 11)
+  community.general.dconf:
+    key: "/org/gnome/desktop/interface/document-font-name"
+    value: "'Adwaita Sans 11'"
+    state: present
+  become: false
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+
+- name: Set monospace font (Adwaita Mono 11)
+  community.general.dconf:
+    key: "/org/gnome/desktop/interface/monospace-font-name"
+    value: "'Adwaita Mono 11'"
+    state: present
+  become: false
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+
+- name: Set window title font (Adwaita Sans Bold 11)
+  community.general.dconf:
+    key: "/org/gnome/desktop/wm/preferences/titlebar-font"
+    value: "'Adwaita Sans Bold 11'"
+    state: present
+  become: false
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+
+# ============================================================================
+# APPLY UI MODE VIA UI-MODE UTILITY
+# ============================================================================
+
+- name: Check if GNOME Shell is running
+  ansible.builtin.shell: pgrep -x gnome-shell
+  register: gnome_shell_running
+  changed_when: false
+  failed_when: false
+  become: true
+  become_user: "{{ actual_user }}"
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+
+- name: Get DBUS_SESSION_BUS_ADDRESS from running GNOME session
+  ansible.builtin.shell: |
+    gnome_pid=$(pgrep -u {{ actual_user }} -x gnome-shell | head -1)
+    if [ -n "$gnome_pid" ]; then
+      grep -z DBUS_SESSION_BUS_ADDRESS /proc/$gnome_pid/environ 2>/dev/null | tr '\0' '\n'
+    fi
+  register: dbus_addr_result
+  changed_when: false
+  failed_when: false
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+    - gnome_shell_running.rc == 0
+
+- name: Apply UI mode via ui-mode utility
+  ansible.builtin.command:
+    cmd: "/usr/local/sbin/ui-mode {{ ui_mode }}"
+  become: true
+  become_user: "{{ actual_user }}"
+  environment:
+    DBUS_SESSION_BUS_ADDRESS: "{{ dbus_addr_result.stdout | regex_replace('^DBUS_SESSION_BUS_ADDRESS=', '') }}"
+  changed_when: true
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+    - gnome_shell_running.rc == 0
+    - dbus_addr_result.stdout | default('') | length > 0
+
+- name: Save UI mode preference for first login (when GNOME not running)
+  ansible.builtin.file:
+    path: "{{ user_home }}/.config/devenv"
+    state: directory
+    owner: "{{ actual_user }}"
+    mode: '0755'
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+    - gnome_shell_running.rc != 0
+
+- name: Write UI mode preference file for first login
+  ansible.builtin.copy:
+    dest: "{{ user_home }}/.config/devenv/ui-mode"
+    content: "{{ ui_mode }}"
+    owner: "{{ actual_user }}"
+    mode: '0644'
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+    - gnome_shell_running.rc != 0
+
+- name: Create autostart directory for first-login ui-mode application
+  ansible.builtin.file:
+    path: "{{ user_home }}/.config/autostart"
+    state: directory
+    owner: "{{ actual_user }}"
+    mode: '0755'
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+    - gnome_shell_running.rc != 0
+
+- name: Deploy autostart entry to apply UI mode on first login
+  ansible.builtin.copy:
+    dest: "{{ user_home }}/.config/autostart/devenv-ui-mode.desktop"
+    content: |
+      [Desktop Entry]
+      Type=Application
+      Name=DevEnv UI Mode
+      Comment=Apply UI mode on first login
+      Exec=/bin/bash -c 'if [ -f ~/.config/devenv/ui-mode ]; then /usr/local/sbin/ui-mode --apply && rm -f ~/.config/autostart/devenv-ui-mode.desktop; fi'
+      Hidden=false
+      NoDisplay=true
+      X-GNOME-Autostart-enabled=true
+      X-GNOME-Autostart-Delay=3
+    owner: "{{ actual_user }}"
+    mode: '0644'
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+    - gnome_shell_running.rc != 0
+
+# ============================================================================
+# WALLPAPER DEPLOYMENT (system-wide, safe from apt/dnf updates)
+# ============================================================================
+# Controlled by branding_enabled and background_file variables
+
+- name: Deploy custom wallpaper
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+    - branding_enabled | default(true)
+    - background_file | default('') | length > 0
+  block:
+    - name: Create local backgrounds directory (safe from package updates)
+      ansible.builtin.file:
+        path: /usr/local/share/backgrounds
+        state: directory
+        mode: '0755'
+
+    - name: Deploy background image
+      ansible.builtin.copy:
+        src: "{{ background_file }}"
+        dest: /usr/local/share/backgrounds/desktop-background.svg
+        mode: '0644'
+
+    - name: Set background as default (light mode)
+      community.general.dconf:
+        key: "/org/gnome/desktop/background/picture-uri"
+        value: "'file:///usr/local/share/backgrounds/desktop-background.svg'"
+        state: present
+      become: false
+
+    - name: Set background as default (dark mode)
+      community.general.dconf:
+        key: "/org/gnome/desktop/background/picture-uri-dark"
+        value: "'file:///usr/local/share/backgrounds/desktop-background.svg'"
+        state: present
+      become: false
+
+    - name: Set background scaling mode
+      community.general.dconf:
+        key: "/org/gnome/desktop/background/picture-options"
+        value: "'zoom'"
+        state: present
+      become: false
+
+# ============================================================================
+# UPDATE ALL EXTENSIONS TO LATEST
+# ============================================================================
+
+- name: Update all installed extensions to latest versions
+  ansible.builtin.command:
+    cmd: "{{ user_home }}/.local/bin/gext -F update"
+  become: true
+  become_user: "{{ actual_user }}"
+  changed_when: false
+  failed_when: false
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+
+# ============================================================================
+# SYSTEM-WIDE DCONF DEFAULTS
+# ============================================================================
+
+- name: Configure system-wide GNOME defaults
+  tags: ['winlike', 'maclike', 'never']
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+  block:
+    - name: Create dconf local.d directory
+      ansible.builtin.file:
+        path: /etc/dconf/db/local.d
+        state: directory
+        mode: '0755'
+
+    - name: Create dconf profile directory
+      ansible.builtin.file:
+        path: /etc/dconf/profile
+        state: directory
+        mode: '0755'
+
+    - name: Deploy dconf profile for users
+      ansible.builtin.copy:
+        src: dconf-profile-user
+        dest: /etc/dconf/profile/user
+        mode: '0644'
+
+    - name: Deploy GNOME defaults
+      ansible.builtin.copy:
+        src: "dconf-defaults-{{ ui_mode }}"
+        dest: /etc/dconf/db/local.d/00-devenv-defaults
+        mode: '0644'
+      register: dconf_defaults
+
+    - name: Update dconf database
+      ansible.builtin.command:
+        cmd: dconf update
+      changed_when: true
+      when: dconf_defaults.changed | default(false)

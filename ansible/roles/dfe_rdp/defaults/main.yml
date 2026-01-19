@@ -1,8 +1,0 @@
----
-# DFE RDP Optimizer - Default Configuration
-
-# RDP credentials for GNOME Remote Desktop
-# These are the default credentials that will be set for RDP access
-# Change these in your inventory or playbook vars to customize
-dfe_rdp_username: "dfe"
-dfe_rdp_password: "dfe"

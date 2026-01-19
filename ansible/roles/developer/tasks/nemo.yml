@@ -1,0 +1,57 @@
+---
+# Nemo File Manager - Linux Mint's fork of Nautilus
+# More feature-rich: dual-pane (F3), tree view, plugins, better bulk rename
+# https://github.com/linuxmint/nemo
+#
+# Strategy: Install alongside Nautilus (keeps GNOME integration intact),
+# set Nemo as default file manager for user file browsing.
+
+# ============================================================================
+# FEDORA
+# ============================================================================
+
+- name: Install Nemo file manager (Fedora)
+  ansible.builtin.dnf:
+    name:
+      - nemo
+      - nemo-fileroller  # Archive integration
+      - nemo-preview     # Quick preview with spacebar
+    state: present
+  when: ansible_facts['distribution'] == 'Fedora'
+
+# ============================================================================
+# UBUNTU
+# ============================================================================
+
+# Nemo 6.x available in Ubuntu 24.04 universe - no PPA needed
+- name: Install Nemo file manager (Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - nemo
+      - nemo-fileroller  # Archive integration
+    state: present
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+# ============================================================================
+# SET AS DEFAULT FILE MANAGER (both distros)
+# ============================================================================
+
+# Set Nemo as default for opening directories
+# This affects "Open Folder" actions throughout the system
+- name: Set Nemo as default file manager
+  ansible.builtin.command:
+    cmd: xdg-mime default nemo.desktop inode/directory
+  become: true
+  become_user: "{{ actual_user }}"
+  changed_when: true
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+
+# Also set for application/x-gnome-saved-search (saved searches)
+- name: Set Nemo as default for saved searches
+  ansible.builtin.command:
+    cmd: xdg-mime default nemo.desktop application/x-gnome-saved-search
+  become: true
+  become_user: "{{ actual_user }}"
+  changed_when: true
+  failed_when: false
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
