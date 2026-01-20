@@ -140,6 +140,16 @@
       tags: ['data']
   tags: ['data']
 
+- name: Install OnlyOffice Desktop Editors
+  ansible.builtin.include_tasks:
+    file: onlyoffice.yml
+    apply:
+      tags: ['onlyoffice']
+  tags: ['onlyoffice']
+  when:
+    - has_gnome | default(false)
+    - install_onlyoffice | default(true)
+
 - name: Install VS Code
   ansible.builtin.include_tasks:
     file: vscode.yml

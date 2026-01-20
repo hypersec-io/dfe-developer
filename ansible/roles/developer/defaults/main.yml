@@ -40,5 +40,10 @@ avatar_file: "user-avatar.png"
 # Only deployed if branding_enabled is true
 background_file: "default-background.svg"
 
-# Install LibreOffice (opt-in, disabled by default)
+# ============================================================================
+# OFFICE SUITE
+# ============================================================================
+# OnlyOffice is the default (better MS Office compatibility)
+# LibreOffice is opt-in for users who prefer it
+install_onlyoffice: true
 install_libreoffice: false

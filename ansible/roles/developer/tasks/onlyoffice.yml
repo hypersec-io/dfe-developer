@@ -1,0 +1,41 @@
+---
+# OnlyOffice Desktop Editors installation
+# https://www.onlyoffice.com/desktop.aspx
+#
+# OnlyOffice is a modern office suite with MS Office compatibility
+# Installs from official OnlyOffice apt repository
+
+- name: Add OnlyOffice GPG key (Ubuntu)
+  ansible.builtin.apt_key:
+    url: https://download.onlyoffice.com/GPG-KEY-ONLYOFFICE
+    state: present
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Add OnlyOffice apt repository (Ubuntu)
+  ansible.builtin.apt_repository:
+    repo: "deb https://download.onlyoffice.com/repo/debian squeeze main"
+    state: present
+    filename: onlyoffice
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Install OnlyOffice Desktop Editors (Ubuntu)
+  ansible.builtin.apt:
+    name: onlyoffice-desktopeditors
+    state: present
+    update_cache: true
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Add OnlyOffice rpm repository (Fedora)
+  ansible.builtin.yum_repository:
+    name: onlyoffice
+    description: OnlyOffice Desktop Editors
+    baseurl: https://download.onlyoffice.com/repo/centos/main/noarch/
+    gpgcheck: true
+    gpgkey: https://download.onlyoffice.com/GPG-KEY-ONLYOFFICE
+  when: ansible_facts['distribution'] == 'Fedora'
+
+- name: Install OnlyOffice Desktop Editors (Fedora)
+  ansible.builtin.dnf:
+    name: onlyoffice-desktopeditors
+    state: present
+  when: ansible_facts['distribution'] == 'Fedora'
