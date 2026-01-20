@@ -1,8 +1,13 @@
 ---
-# Docker role handlers
+# Developer role handlers
 
 - name: Inform user to logout
   ansible.builtin.debug:
     msg: |
       IMPORTANT: Log out and back in for Docker group membership to take effect.
       You can then run Docker commands without sudo.
+
+- name: update desktop database
+  ansible.builtin.command:
+    cmd: update-desktop-database /usr/share/applications
+  changed_when: true

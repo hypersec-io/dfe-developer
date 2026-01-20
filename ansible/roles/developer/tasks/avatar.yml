@@ -19,12 +19,38 @@
     - branding_enabled | default(true)
     - avatar_file | default('') | length > 0
 
+- name: Ensure AccountsService user config file exists
+  ansible.builtin.file:
+    path: "/var/lib/AccountsService/users/{{ actual_user }}"
+    state: touch
+    mode: '0600'
+    modification_time: preserve
+    access_time: preserve
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - has_gnome | default(false)
+    - branding_enabled | default(true)
+    - avatar_file | default('') | length > 0
+
+- name: Ensure [User] section exists in AccountsService config
+  ansible.builtin.lineinfile:
+    path: "/var/lib/AccountsService/users/{{ actual_user }}"
+    regexp: '^\[User\]'
+    line: "[User]"
+    insertbefore: BOF
+    mode: '0600'
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - has_gnome | default(false)
+    - branding_enabled | default(true)
+    - avatar_file | default('') | length > 0
+
 - name: Configure AccountsService to use custom avatar for current user
   ansible.builtin.lineinfile:
     path: "/var/lib/AccountsService/users/{{ actual_user }}"
     regexp: '^Icon='
     line: "Icon=/var/lib/AccountsService/icons/{{ actual_user }}"
-    create: true
+    insertafter: '^\[User\]'
     mode: '0600'
   when:
     - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']

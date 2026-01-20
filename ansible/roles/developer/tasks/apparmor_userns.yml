@@ -1,0 +1,44 @@
+---
+# AppArmor User Namespace Fix for Ubuntu 24.04+
+#
+# Ubuntu 24.04 restricts unprivileged user namespace creation by default,
+# which breaks Chromium-based apps (Chrome, Brave, VSCode, Electron apps),
+# Flatpak, Snap sandboxes, and many other applications.
+#
+# Error: apparmor="DENIED" operation="userns_create"
+#
+# This task disables the restriction via sysctl.
+# Reference: https://ubuntu.com/blog/ubuntu-24-04-lts-and-unprivileged-user-namespace-restrictions
+#
+# Note: This is the recommended approach for developer workstations.
+# For servers, use per-application AppArmor profiles instead.
+
+- name: Check if AppArmor userns restriction sysctl exists
+  ansible.builtin.stat:
+    path: /proc/sys/kernel/apparmor_restrict_unprivileged_userns
+  register: userns_sysctl
+
+- name: Disable AppArmor unprivileged user namespace restriction
+  when: userns_sysctl.stat.exists
+  block:
+    - name: Create sysctl config to allow unprivileged user namespaces
+      ansible.builtin.copy:
+        content: |
+          # Allow unprivileged user namespace creation
+          # Required for Chromium-based apps (Chrome, Brave, VSCode, Electron),
+          # Flatpak, Snap sandboxes, and many other applications.
+          #
+          # Ubuntu 24.04+ restricts this by default for security, but it breaks
+          # too many legitimate desktop applications.
+          #
+          # Reference: https://ubuntu.com/blog/ubuntu-24-04-lts-and-unprivileged-user-namespace-restrictions
+          kernel.apparmor_restrict_unprivileged_userns = 0
+        dest: /etc/sysctl.d/99-allow-unprivileged-userns.conf
+        mode: '0644'
+      register: sysctl_file
+
+    - name: Apply sysctl setting immediately
+      ansible.builtin.command:
+        cmd: sysctl -p /etc/sysctl.d/99-allow-unprivileged-userns.conf
+      when: sysctl_file.changed
+      changed_when: true

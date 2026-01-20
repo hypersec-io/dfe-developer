@@ -77,6 +77,17 @@
     - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - has_gnome | default(false)
 
+# Fix AppArmor user namespace restriction (Ubuntu 24.04+)
+# This allows Chromium-based apps (Chrome, Brave, VSCode, Electron) to work
+# Uses global sysctl: kernel.apparmor_restrict_unprivileged_userns = 0
+- name: Fix AppArmor user namespace restriction for desktop apps
+  ansible.builtin.include_tasks:
+    file: apparmor_userns.yml
+    apply:
+      tags: ['security', 'apparmor']
+  tags: ['security', 'apparmor']
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
 - name: Configure OS repositories (mirrors, performance)
   ansible.builtin.include_tasks:
     file: repository.yml

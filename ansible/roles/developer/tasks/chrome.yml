@@ -52,6 +52,15 @@
         state: present
         update_cache: true
 
+    # Remove duplicate desktop file that causes two icons in GNOME app menu
+    # Chrome packages com.google.Chrome.desktop for XDG portal but puts NoDisplay=true
+    # at the end of the file (after Actions) where GNOME doesn't parse it
+    - name: Remove duplicate Chrome desktop file
+      ansible.builtin.file:
+        path: /usr/share/applications/com.google.Chrome.desktop
+        state: absent
+      notify: update desktop database
+
   when: ansible_facts['distribution'] == 'Ubuntu'
 
 # ============================================================================

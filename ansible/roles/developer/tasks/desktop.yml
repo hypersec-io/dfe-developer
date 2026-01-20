@@ -18,7 +18,7 @@
     state: present
   when:
     - ansible_facts['distribution'] == 'Fedora'
-    - install_libreoffice | default(true)
+    - install_libreoffice | default(false)
 
 - name: Set default target to graphical (Fedora)
   ansible.builtin.command:
@@ -59,7 +59,7 @@
     state: present
   when:
     - ansible_facts['distribution'] == 'Ubuntu'
-    - install_libreoffice | default(true)
+    - install_libreoffice | default(false)
 
 - name: Set default target to graphical (Ubuntu)
   ansible.builtin.command:

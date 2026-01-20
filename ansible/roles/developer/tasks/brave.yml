@@ -49,6 +49,15 @@
         state: present
         update_cache: true
 
+    # Remove duplicate desktop file that causes two icons in GNOME app menu
+    # Brave packages com.brave.Browser.desktop for XDG portal but puts NoDisplay=true
+    # at the end of the file (after Actions) where GNOME doesn't parse it
+    - name: Remove duplicate Brave desktop file
+      ansible.builtin.file:
+        path: /usr/share/applications/com.brave.Browser.desktop
+        state: absent
+      notify: update desktop database
+
   when: ansible_facts['distribution'] == 'Ubuntu'
 
 # ============================================================================
