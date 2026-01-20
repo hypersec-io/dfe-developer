@@ -14,6 +14,59 @@
   tags: ['desktop']
   when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
+# Re-detect GNOME after desktop.yml installs it
+# This is critical for Packer headless builds where GNOME wasn't installed at init.yml time
+- name: Re-check if GNOME Shell is now installed (after desktop.yml)
+  ansible.builtin.stat:
+    path: /usr/bin/gnome-shell
+  register: gnome_shell_post_desktop
+  when: ansible_facts['distribution'] != 'MacOSX'
+  tags: ['desktop']
+
+- name: Update GNOME availability fact after desktop installation
+  ansible.builtin.set_fact:
+    has_gnome: "{{ gnome_shell_post_desktop.stat.exists | default(false) }}"
+  when:
+    - ansible_facts['distribution'] != 'MacOSX'
+    - gnome_shell_post_desktop is defined
+  tags: ['desktop']
+
+- name: Display updated GNOME status
+  ansible.builtin.debug:
+    msg: "GNOME desktop (post-install check): {{ 'Installed' if has_gnome else 'Not installed' }}"
+  tags: ['desktop']
+
+# Install psutil for dconf module (required for GNOME settings tasks)
+# This needs to run after GNOME is detected/installed, not in init.yml
+- name: Install psutil for dconf module (Fedora - post desktop install)
+  ansible.builtin.dnf:
+    name: python3-psutil
+    state: present
+  when:
+    - ansible_facts['distribution'] == 'Fedora'
+    - has_gnome | default(false)
+  tags: ['desktop']
+
+- name: Install psutil for dconf module (Ubuntu - post desktop install)
+  ansible.builtin.apt:
+    name: python3-psutil
+    state: present
+  when:
+    - ansible_facts['distribution'] == 'Ubuntu'
+    - has_gnome | default(false)
+  tags: ['desktop']
+
+# Deploy avatar after GNOME is installed (moved from init.yml)
+- name: Deploy user avatar for GDM login screen
+  ansible.builtin.include_tasks:
+    file: avatar.yml
+    apply:
+      tags: ['desktop', 'avatar']
+  tags: ['desktop', 'avatar']
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - has_gnome | default(false)
+
 - name: Install Nemo file manager (replaces Nautilus as default)
   ansible.builtin.include_tasks:
     file: nemo.yml
