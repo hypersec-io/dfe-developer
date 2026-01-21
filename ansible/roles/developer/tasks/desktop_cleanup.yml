@@ -1,0 +1,120 @@
+---
+# Desktop Entry Cleanup - Hide duplicate and replaced apps from menus
+#
+# Strategy:
+# 1. Hide Nautilus (Files) when Nemo is installed (Nemo replaces it)
+# 2. Detect duplicate Flatpak apps that also have apt versions and hide the Flatpak ones
+#
+# We use user-local overrides (~/.local/share/applications/) with NoDisplay=true
+# This preserves the original .desktop files and survives package updates
+
+# ============================================================================
+# HIDE NAUTILUS (replaced by Nemo)
+# ============================================================================
+
+- name: Check if Nemo is installed
+  ansible.builtin.stat:
+    path: /usr/bin/nemo
+  register: nemo_installed
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+
+- name: Ensure user applications directory exists
+  ansible.builtin.file:
+    path: "{{ user_home }}/.local/share/applications"
+    state: directory
+    owner: "{{ actual_user }}"
+    mode: '0755'
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - nemo_installed.stat.exists | default(false)
+
+# Hide Nautilus from menus (user still has full Nautilus functionality if needed)
+- name: Hide Nautilus Files from menus (Nemo replaces it)
+  ansible.builtin.copy:
+    dest: "{{ user_home }}/.local/share/applications/org.gnome.Nautilus.desktop"
+    content: |
+      [Desktop Entry]
+      Type=Application
+      Name=Files
+      NoDisplay=true
+      Hidden=true
+    owner: "{{ actual_user }}"
+    mode: '0644'
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - nemo_installed.stat.exists | default(false)
+
+# ============================================================================
+# HIDE DUPLICATE FLATPAK APPS (when apt version exists)
+# ============================================================================
+
+# Get list of Flatpak desktop files
+- name: Get Flatpak application desktop files
+  ansible.builtin.find:
+    paths: /var/lib/flatpak/exports/share/applications
+    patterns: "*.desktop"
+  register: flatpak_desktop_files
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+
+# For each Flatpak app, check if an equivalent apt app exists
+# Common pattern: Flatpak uses org.foo.Bar.desktop, apt uses foo-bar.desktop
+- name: Check for duplicate apt versions of Flatpak apps
+  ansible.builtin.shell: |
+    # Get app name from Flatpak desktop file (e.g., org.onlyoffice.desktopeditors)
+    flatpak_name="{{ item.path | basename | regex_replace('\\.desktop$', '') }}"
+
+    # Extract the last part as the likely app name (e.g., desktopeditors)
+    app_simple=$(echo "$flatpak_name" | rev | cut -d. -f1 | rev)
+
+    # Search for matching apt .desktop file
+    for apt_file in /usr/share/applications/*.desktop; do
+      [ -f "$apt_file" ] || continue
+      apt_name=$(basename "$apt_file" .desktop)
+
+      # Match if apt_name contains the app_simple name (case insensitive)
+      if echo "$apt_name" | grep -qi "$app_simple"; then
+        # Found duplicate - output the Flatpak desktop filename to hide
+        echo "{{ item.path | basename }}"
+        exit 0
+      fi
+    done
+
+    # No duplicate found
+    exit 0
+  register: duplicate_check
+  loop: "{{ flatpak_desktop_files.files | default([]) }}"
+  changed_when: false
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - flatpak_desktop_files.files | default([]) | length > 0
+
+# Build list of Flatpak desktop files to hide
+- name: Build list of duplicate Flatpak apps to hide
+  ansible.builtin.set_fact:
+    flatpak_duplicates: "{{ duplicate_check.results | default([]) | map(attribute='stdout') | select('match', '.+\\.desktop$') | list }}"
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+
+# Hide each duplicate Flatpak app
+- name: Hide duplicate Flatpak apps (apt version exists)
+  ansible.builtin.copy:
+    dest: "{{ user_home }}/.local/share/applications/{{ item }}"
+    content: |
+      [Desktop Entry]
+      Type=Application
+      Name={{ item | regex_replace('\\.desktop$', '') }}
+      NoDisplay=true
+      Hidden=true
+    owner: "{{ actual_user }}"
+    mode: '0644'
+  loop: "{{ flatpak_duplicates | default([]) }}"
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - flatpak_duplicates | default([]) | length > 0
+
+- name: Display hidden duplicate apps
+  ansible.builtin.debug:
+    msg: |
+      Desktop cleanup complete:
+      - Nautilus hidden: {{ nemo_installed.stat.exists | default(false) }}
+      - Flatpak duplicates hidden: {{ flatpak_duplicates | default([]) | join(', ') | default('none') }}
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']

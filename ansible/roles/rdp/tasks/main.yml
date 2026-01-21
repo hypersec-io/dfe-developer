@@ -17,6 +17,11 @@
     - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - not has_gnome
 
+- name: Configure GPU groups for VirGL acceleration
+  ansible.builtin.include_tasks:
+    file: gpu_groups.yml
+  tags: ['gpu_groups']
+
 - name: Configure polkit rules for RDP sessions
   ansible.builtin.include_tasks:
     file: polkit.yml

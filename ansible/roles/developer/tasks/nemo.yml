@@ -55,3 +55,12 @@
   changed_when: true
   failed_when: false
   when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+
+# ============================================================================
+# DESKTOP CLEANUP (hide Nautilus and duplicate Flatpak apps)
+# ============================================================================
+
+- name: Run desktop cleanup (hide Nautilus and duplicates)
+  ansible.builtin.include_tasks:
+    file: desktop_cleanup.yml
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']

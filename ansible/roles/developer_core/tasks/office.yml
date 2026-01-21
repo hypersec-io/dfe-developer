@@ -1,12 +1,25 @@
 ---
-# OnlyOffice and Mailspring installation (Linux only, system-wide via Flatpak)
+# OnlyOffice and Mailspring installation (Linux only)
 # macOS users use native apps (Apple Mail, Pages/Numbers/Keynote)
+#
+# Strategy: Prefer apt/dnf packages (faster, native), only use Flatpak as fallback
+# - If apt/dnf package exists: use it (developer/tasks/onlyoffice.yml handles this)
+# - If no apt/dnf package: install via Flatpak
+# This avoids duplicate icons in app menus
 
 # ============================================================================
 # ONLYOFFICE DESKTOP EDITORS
 # ============================================================================
 
-- name: Install OnlyOffice via Flatpak (system-wide)
+# Check if OnlyOffice is already installed via apt/dnf
+- name: Check if OnlyOffice is installed via apt/dnf
+  ansible.builtin.stat:
+    path: /usr/bin/onlyoffice-desktopeditors
+  register: onlyoffice_native
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+
+# Only install Flatpak if native package not present
+- name: Install OnlyOffice via Flatpak (system-wide, fallback only)
   community.general.flatpak:
     name: org.onlyoffice.desktopeditors
     state: present
@@ -14,11 +27,18 @@
   when:
     - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - has_gnome | default(false)
+    - not (onlyoffice_native.stat.exists | default(false))
+
+# Determine correct desktop file name based on installation method
+- name: Set OnlyOffice desktop file variable
+  ansible.builtin.set_fact:
+    onlyoffice_desktop_file: "{{ 'onlyoffice-desktopeditors.desktop' if (onlyoffice_native.stat.exists | default(false)) else 'org.onlyoffice.desktopeditors.desktop' }}"
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 # Set OnlyOffice as default for common document types
 - name: Set OnlyOffice as default for office documents
   ansible.builtin.command:
-    cmd: "xdg-mime default org.onlyoffice.desktopeditors.desktop {{ item }}"
+    cmd: "xdg-mime default {{ onlyoffice_desktop_file }} {{ item }}"
   loop:
     # Word documents
     - application/msword

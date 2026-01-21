@@ -1,0 +1,78 @@
+---
+# GPU Group Configuration for VirGL/virtio-gl Acceleration
+# Ensures all non-system users can access GPU render nodes for hardware acceleration
+# Without this, gnome-remote-desktop sessions fall back to software rendering (CPU-intensive)
+
+# ============================================================================
+# ENSURE GPU GROUPS EXIST
+# ============================================================================
+
+- name: Ensure render group exists
+  ansible.builtin.group:
+    name: render
+    state: present
+    system: true
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - has_gnome
+
+- name: Ensure video group exists
+  ansible.builtin.group:
+    name: video
+    state: present
+    system: true
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - has_gnome
+
+# ============================================================================
+# ADD ALL NON-SYSTEM USERS TO GPU GROUPS
+# ============================================================================
+
+- name: Get list of non-system users (UID 1000-60000)
+  ansible.builtin.shell:
+    cmd: awk -F: '$3 >= 1000 && $3 < 60000 && $1 != "nobody" {print $1}' /etc/passwd
+  register: non_system_users
+  changed_when: false
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - has_gnome
+
+- name: Add non-system users to render and video groups
+  ansible.builtin.user:
+    name: "{{ item }}"
+    groups:
+      - render
+      - video
+    append: true
+  loop: "{{ non_system_users.stdout_lines | default([]) }}"
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - has_gnome
+    - non_system_users.stdout_lines is defined
+    - non_system_users.stdout_lines | length > 0
+
+# ============================================================================
+# VERIFY GPU ACCESS
+# ============================================================================
+
+- name: Check /dev/dri/renderD128 exists
+  ansible.builtin.stat:
+    path: /dev/dri/renderD128
+  register: render_device
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - has_gnome
+
+- name: Display GPU group configuration status
+  ansible.builtin.debug:
+    msg: |
+      GPU Groups configured for VirGL acceleration:
+      - Users added to render/video groups: {{ non_system_users.stdout_lines | default([]) | join(', ') }}
+      - Render device (/dev/dri/renderD128): {{ 'PRESENT' if render_device.stat.exists | default(false) else 'NOT FOUND (not a VM or no virtio-gl)' }}
+
+      Note: Users must log out and back in for group changes to take effect.
+      For RDP sessions, restart gnome-remote-desktop: systemctl restart gnome-remote-desktop
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - has_gnome
