@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.20.4](https://github.com/hypersec-io/dfe-developer/compare/v2.20.3...v2.20.4) (2026-02-03)
+
+
+### Bug Fixes
+
+* add Rust toolchain and cargo tools to developer_core role ([914a873](https://github.com/hypersec-io/dfe-developer/commit/914a8736707febef1859e0ba98db7253c14a4447))
+
 ## [2.20.3](https://github.com/hypersec-io/dfe-developer/compare/v2.20.2...v2.20.3) (2026-02-01)
 
 
