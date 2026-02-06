@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [2.21.0](https://github.com/hypersec-io/dfe-developer/compare/v2.20.7...v2.21.0) (2026-02-06)
+
+
+### Features
+
+* add cargo-update for keeping cargo tools current ([f591c2c](https://github.com/hypersec-io/dfe-developer/commit/f591c2cbc1bb26d95c5f395c93f02a71b656de7c))
+
 ## [2.20.7](https://github.com/hypersec-io/dfe-developer/compare/v2.20.6...v2.20.7) (2026-02-06)
 
 
