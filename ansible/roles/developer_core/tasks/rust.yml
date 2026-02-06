@@ -1,28 +1,80 @@
 ---
 # Rust toolchain and cargo tools installation
+# Uses rustup for Linux to get latest stable (distro packages are too old)
 
 # ============================================================
-# Rust Installation (distro packages)
+# Rust Installation
 # ============================================================
 
-- name: Install Rust and Cargo (Fedora)
-  ansible.builtin.dnf:
-    name:
-      - rust
-      - cargo
-      - rustfmt
-      - clippy
-    state: present
+- name: Install Rust via rustup (Fedora)
+  block:
+    - name: Remove distro Rust packages if present (Fedora)
+      ansible.builtin.dnf:
+        name:
+          - rust
+          - cargo
+          - rustfmt
+          - clippy
+        state: absent
+
+    - name: Install Rust via rustup (Fedora)
+      ansible.builtin.shell:
+        cmd: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+        creates: "{{ user_home }}/.cargo/bin/rustup"
+      become: true
+      become_user: "{{ actual_user }}"
+      environment:
+        CARGO_HOME: "{{ user_home }}/.cargo"
+        RUSTUP_HOME: "{{ user_home }}/.rustup"
+
+    - name: Install Rust components via rustup (Fedora)
+      ansible.builtin.command:
+        cmd: "{{ user_home }}/.cargo/bin/rustup component add rustfmt clippy"
+      become: true
+      become_user: "{{ actual_user }}"
+      environment:
+        CARGO_HOME: "{{ user_home }}/.cargo"
+        RUSTUP_HOME: "{{ user_home }}/.rustup"
+      changed_when: true
+
   when: ansible_facts['distribution'] == 'Fedora'
 
-- name: Install Rust and Cargo (Ubuntu)
-  ansible.builtin.apt:
-    name:
-      - rustc
-      - cargo
-      - rustfmt
-      - rust-clippy
-    state: present
+- name: Install Rust via rustup (Ubuntu)
+  block:
+    - name: Remove distro Rust packages if present (Ubuntu)
+      ansible.builtin.apt:
+        name:
+          - rustc
+          - cargo
+          - rustfmt
+          - rust-clippy
+        state: absent
+
+    - name: Install curl for rustup (Ubuntu)
+      ansible.builtin.apt:
+        name: curl
+        state: present
+
+    - name: Install Rust via rustup (Ubuntu)
+      ansible.builtin.shell:
+        cmd: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+        creates: "{{ user_home }}/.cargo/bin/rustup"
+      become: true
+      become_user: "{{ actual_user }}"
+      environment:
+        CARGO_HOME: "{{ user_home }}/.cargo"
+        RUSTUP_HOME: "{{ user_home }}/.rustup"
+
+    - name: Install Rust components via rustup (Ubuntu)
+      ansible.builtin.command:
+        cmd: "{{ user_home }}/.cargo/bin/rustup component add rustfmt clippy"
+      become: true
+      become_user: "{{ actual_user }}"
+      environment:
+        CARGO_HOME: "{{ user_home }}/.cargo"
+        RUSTUP_HOME: "{{ user_home }}/.rustup"
+      changed_when: true
+
   when: ansible_facts['distribution'] == 'Ubuntu'
 
 - name: Install Rust via Homebrew (macOS)
@@ -86,6 +138,7 @@
     cargo_env:
       PATH: "{{ user_home }}/.cargo/bin:{{ ansible_facts['env'].PATH }}"
       CARGO_HOME: "{{ user_home }}/.cargo"
+      RUSTUP_HOME: "{{ user_home }}/.rustup"
   when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
 - name: Set cargo environment (macOS)
