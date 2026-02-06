@@ -21,6 +21,11 @@
     file: azure.yml
   tags: ['azure']
 
+- name: Install Google Cloud CLI
+  ansible.builtin.include_tasks:
+    file: gcloud.yml
+  tags: ['gcloud']
+
 - name: Install Node.js and semantic-release
   ansible.builtin.include_tasks:
     file: nodejs.yml

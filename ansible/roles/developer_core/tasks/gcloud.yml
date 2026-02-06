@@ -1,0 +1,74 @@
+---
+# Google Cloud CLI installation via official repositories
+# Auto-updates via standard package manager upgrades
+
+# ============================================================================
+# FEDORA - Add Google Cloud repository and install
+# ============================================================================
+
+- name: Install Google Cloud CLI (Fedora)
+  block:
+    - name: Add Google Cloud SDK repository
+      ansible.builtin.yum_repository:
+        name: google-cloud-cli
+        description: Google Cloud CLI
+        baseurl: https://packages.cloud.google.com/yum/repos/cloud-sdk-el9-x86_64
+        enabled: true
+        gpgcheck: true
+        repo_gpgcheck: false
+        gpgkey:
+          - https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+
+    - name: Install Google Cloud CLI
+      ansible.builtin.dnf:
+        name: google-cloud-cli
+        state: present
+
+  when: ansible_facts['distribution'] == 'Fedora'
+
+# ============================================================================
+# UBUNTU - Add Google Cloud repository and install
+# ============================================================================
+
+- name: Install Google Cloud CLI (Ubuntu)
+  block:
+    - name: Install dependencies
+      ansible.builtin.apt:
+        name:
+          - ca-certificates
+          - curl
+          - apt-transport-https
+          - gnupg
+        state: present
+
+    - name: Download Google Cloud GPG key
+      ansible.builtin.get_url:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        dest: /usr/share/keyrings/cloud.google.gpg
+        mode: '0644'
+
+    - name: Add Google Cloud CLI repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main"
+        filename: google-cloud-sdk
+        state: present
+
+    - name: Install Google Cloud CLI
+      ansible.builtin.apt:
+        name: google-cloud-cli
+        state: present
+        update_cache: true
+
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+# ============================================================================
+# macOS - Install via Homebrew
+# ============================================================================
+
+- name: Install Google Cloud CLI via Homebrew cask (macOS)
+  community.general.homebrew_cask:
+    name: google-cloud-sdk
+    state: present
+  become: false
+  environment: "{{ homebrew_cask_env }}"
+  when: ansible_facts['distribution'] == 'MacOSX'
