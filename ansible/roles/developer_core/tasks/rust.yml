@@ -189,3 +189,16 @@
   environment: "{{ cargo_env }}"
   become: "{{ ansible_facts['distribution'] != 'MacOSX' }}"
   become_user: "{{ actual_user if ansible_facts['distribution'] != 'MacOSX' else omit }}"
+
+# ============================================================
+# cargo-update: allows manual `cargo install-update -a` to
+# update all cargo-installed tools to latest versions
+# ============================================================
+
+- name: Install cargo-update (for updating cargo tools)
+  ansible.builtin.command:
+    cmd: cargo install cargo-update
+    creates: "{{ user_home }}/.cargo/bin/cargo-install-update"
+  environment: "{{ cargo_env }}"
+  become: "{{ ansible_facts['distribution'] != 'MacOSX' }}"
+  become_user: "{{ actual_user if ansible_facts['distribution'] != 'MacOSX' else omit }}"
