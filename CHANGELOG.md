@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.20.6](https://github.com/hypersec-io/dfe-developer/compare/v2.20.5...v2.20.6) (2026-02-06)
+
+
+### Bug Fixes
+
+* dearmor Google Cloud GPG key for apt repository ([00f5769](https://github.com/hypersec-io/dfe-developer/commit/00f5769d0b0d45c649934232ea182286330e403c))
+
 ## [2.20.5](https://github.com/hypersec-io/dfe-developer/compare/v2.20.4...v2.20.5) (2026-02-06)
 
 
