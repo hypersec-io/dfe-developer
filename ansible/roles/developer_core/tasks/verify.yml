@@ -151,7 +151,7 @@
   when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Verify Rust (Linux)
-  ansible.builtin.command: rustc --version
+  ansible.builtin.command: "{{ user_home }}/.cargo/bin/rustc --version"
   register: verify_rust
   changed_when: false
   failed_when: verify_rust.rc != 0
