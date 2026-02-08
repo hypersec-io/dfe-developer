@@ -130,6 +130,26 @@
   when: ansible_facts['distribution'] == 'MacOSX'
 
 # ============================================================
+# Build dependencies for cargo tools that compile from source
+# ============================================================
+
+- name: Install cargo build dependencies (Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - libssl-dev
+      - pkg-config
+    state: present
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Install cargo build dependencies (Fedora)
+  ansible.builtin.dnf:
+    name:
+      - openssl-devel
+      - pkg-config
+    state: present
+  when: ansible_facts['distribution'] == 'Fedora'
+
+# ============================================================
 # Cargo tools installation
 # ============================================================
 
