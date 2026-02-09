@@ -4,5 +4,5 @@
 # RDP credentials for GNOME Remote Desktop
 # These are the default credentials that will be set for RDP access
 # Change these in your inventory or playbook vars to customize
-rdp_username: "hypersec"
-rdp_password: "hypersec"
+rdp_username: "hyperi"
+rdp_password: "hyperi"

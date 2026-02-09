@@ -30,11 +30,11 @@
 
 - name: Deploy Chrome policy (testing browser - minimal restrictions)
   ansible.builtin.copy:
-    dest: /etc/opt/chrome/policies/managed/hypersec.json
+    dest: /etc/opt/chrome/policies/managed/hyperi.json
     mode: '0644'
     content: |
       {
-        "_comment": "HyperSec Chrome Policy - Testing Browser (minimal restrictions)",
+        "_comment": "HyperI Chrome Policy - Testing Browser (minimal restrictions)",
         "_philosophy": "Chrome is our web UI testing browser - no privacy restrictions that could break OAuth/SSO/cookies",
 
         "_section_locale": "=== LOCALE: Australian English ===",
@@ -95,11 +95,11 @@
 
 - name: Deploy Brave privacy policy (daily driver - privacy focused)
   ansible.builtin.copy:
-    dest: /etc/brave/policies/managed/hypersec.json
+    dest: /etc/brave/policies/managed/hyperi.json
     mode: '0644'
     content: |
       {
-        "_comment": "HyperSec Brave Policy - Daily Driver (privacy focused)",
+        "_comment": "HyperI Brave Policy - Daily Driver (privacy focused)",
         "_philosophy": "Brave is our privacy browser - block tracking, allow internal sites",
 
         "_section_locale": "=== LOCALE: Australian English ===",
@@ -151,6 +151,8 @@
         "BlockThirdPartyCookies": true,
         "SitePerProcess": true,
         "CookiesAllowedForUrls": [
+          "[*.]hyperi.io",
+          "[*.]devex.hyperi.io",
           "[*.]hypersec.io",
           "[*.]devex.hypersec.io",
           "10.0.0.0/8",
@@ -158,6 +160,8 @@
           "192.168.0.0/16"
         ],
         "ThirdPartyCookiesAllowedForUrls": [
+          "[*.]hyperi.io",
+          "[*.]devex.hyperi.io",
           "[*.]hypersec.io",
           "[*.]devex.hypersec.io",
           "[*.]google.com",
@@ -175,6 +179,8 @@
 
         "_section_brave_shields": "=== BRAVE SHIELDS: Disabled for internal sites ===",
         "BraveShieldsDisabledForUrls": [
+          "[*.]hyperi.io",
+          "[*.]devex.hyperi.io",
           "[*.]hypersec.io",
           "[*.]devex.hypersec.io",
           "10.*",
