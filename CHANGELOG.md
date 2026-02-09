@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.22.2](https://github.com/hypersec-io/dfe-developer/compare/v2.22.1...v2.22.2) (2026-02-09)
+
+
+### Bug Fixes
+
+* skip git-core PPA on non-LTS Ubuntu (Plucky 25.04+) ([72d1f03](https://github.com/hypersec-io/dfe-developer/commit/72d1f03a31896459223d5d015f341efc51817c80))
+
 ## [2.22.1](https://github.com/hypersec-io/dfe-developer/compare/v2.22.0...v2.22.1) (2026-02-09)
 
 
