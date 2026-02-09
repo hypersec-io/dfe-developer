@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.22.1](https://github.com/hypersec-io/dfe-developer/compare/v2.22.0...v2.22.1) (2026-02-09)
+
+
+### Bug Fixes
+
+* quote awk command in gpu_groups.yml to fix YAML parsing ([bdba2ec](https://github.com/hypersec-io/dfe-developer/commit/bdba2ec04c1aebbf92f0c90b2ccc98c092099a0c))
+
 # [2.22.0](https://github.com/hypersec-io/dfe-developer/compare/v2.21.3...v2.22.0) (2026-02-09)
 
 
