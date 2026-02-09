@@ -42,15 +42,26 @@
 
 - name: Install latest Git via PPA (Ubuntu)
   block:
-    - name: Import git-core PPA GPG keys (both legacy and current)
+    - name: Import git-core PPA GPG keys via HTTP (more reliable than keyserver)
       ansible.builtin.shell:
         cmd: |
+          set -euo pipefail
+          mkdir -p /etc/apt/keyrings
           export GNUPGHOME=$(mktemp -d)
-          gpg --keyserver keyserver.ubuntu.com \
-            --recv-keys E1DD270288B4E6030699E45FA1715D88E1DF1F24 E363C90F8F1B6217
-          gpg --export E1DD270288B4E6030699E45FA1715D88E1DF1F24 E363C90F8F1B6217 \
+          trap 'rm -rf "$GNUPGHOME"' EXIT
+          # Fetch keys via HTTP export (keyserver.ubuntu.com gpg protocol is unreliable)
+          for KEY_ID in E1DD270288B4E6030699E45FA1715D88E1DF1F24 E363C90F8F1B6217; do
+            curl -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x${KEY_ID}" \
+              | gpg --batch --import 2>/dev/null || true
+          done
+          gpg --batch --export \
+            E1DD270288B4E6030699E45FA1715D88E1DF1F24 \
+            E363C90F8F1B6217 \
             > /etc/apt/keyrings/git-core-ppa.gpg
-          rm -rf "$GNUPGHOME"
+          # Verify we actually got keys (file should be >0 bytes)
+          [ -s /etc/apt/keyrings/git-core-ppa.gpg ] || { echo "ERROR: GPG keyring is empty"; exit 1; }
+      args:
+        executable: /bin/bash
         creates: /etc/apt/keyrings/git-core-ppa.gpg
 
     - name: Add git-core PPA repository
