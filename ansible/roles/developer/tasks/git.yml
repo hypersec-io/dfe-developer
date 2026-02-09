@@ -15,11 +15,11 @@
   when: ansible_facts['distribution'] == 'Fedora'
 
 # ============================================================================
-# UBUNTU - Latest Git from PPA
+# UBUNTU - Latest Git from PPA (LTS only) or distro repos (non-LTS)
 # ============================================================================
-# Note: The PPA uses a weak RSA-1024 signing key which causes apt warnings.
-# This is a Launchpad infrastructure issue - the PPA maintainer hasn't updated
-# their signing key yet. We keep the PPA for latest git (2.52 vs 2.43 in repos).
+# The git-core PPA only publishes for LTS releases and uses a weak RSA-1024
+# signing key that non-LTS releases (25.04+) reject. Non-LTS Ubuntu ships
+# with a recent enough git so the PPA is unnecessary.
 
 # Clean up old PPA configuration if exists (migration from legacy method)
 - name: Remove old git-core PPA configuration
@@ -32,7 +32,8 @@
     - ppa_git_core_ppa.list
   when: ansible_facts['distribution'] == 'Ubuntu'
 
-- name: Install latest Git (Ubuntu)
+# LTS releases: use git-core PPA for latest git
+- name: Install latest Git via PPA (Ubuntu LTS)
   block:
     - name: Import git-core PPA GPG key
       ansible.builtin.get_url:
@@ -46,7 +47,7 @@
         filename: git-core-ppa
         state: present
 
-    - name: Install Git and Git LFS
+    - name: Install Git and Git LFS (from PPA)
       ansible.builtin.apt:
         name:
           - git
@@ -55,7 +56,22 @@
         state: latest
         update_cache: true
 
-  when: ansible_facts['distribution'] == 'Ubuntu'
+  when:
+    - ansible_facts['distribution'] == 'Ubuntu'
+    - ansible_facts['distribution_release'] in ['noble', 'jammy']
+
+# Non-LTS releases: use distro repos (ships recent git, PPA unavailable)
+- name: Install Git and Git LFS (Ubuntu non-LTS)
+  ansible.builtin.apt:
+    name:
+      - git
+      - git-lfs
+      - git-filter-repo
+    state: latest
+    update_cache: true
+  when:
+    - ansible_facts['distribution'] == 'Ubuntu'
+    - ansible_facts['distribution_release'] not in ['noble', 'jammy']
 
 # ============================================================================
 # macOS - Latest Git from Homebrew
