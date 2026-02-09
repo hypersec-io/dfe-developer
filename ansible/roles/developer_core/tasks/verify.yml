@@ -152,6 +152,9 @@
 
 - name: Verify Rust (Linux)
   ansible.builtin.command: "{{ user_home }}/.cargo/bin/rustc --version"
+  environment:
+    RUSTUP_HOME: "{{ user_home }}/.rustup"
+    CARGO_HOME: "{{ user_home }}/.cargo"
   register: verify_rust
   changed_when: false
   failed_when: verify_rust.rc != 0
