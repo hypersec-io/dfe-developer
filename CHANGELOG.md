@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [2.22.0](https://github.com/hypersec-io/dfe-developer/compare/v2.21.3...v2.22.0) (2026-02-09)
+
+
+### Features
+
+* rebrand from HyperSec to HyperI ([9ea5514](https://github.com/hypersec-io/dfe-developer/commit/9ea551460387778b5eb21fe842759ed47f270bde))
+
 ## [2.21.3](https://github.com/hypersec-io/dfe-developer/compare/v2.21.2...v2.21.3) (2026-02-09)
 
 
