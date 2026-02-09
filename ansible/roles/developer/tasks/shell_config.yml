@@ -23,7 +23,7 @@
           export PATH="$HOME/.local/bin:$PATH"
       fi
 
-      # Add ~/.npm-global/bin for npm global tools (claude, semantic-release, etc.)
+      # Add ~/.npm-global/bin for npm global tools (semantic-release, etc.)
       if [ -d "$HOME/.npm-global/bin" ]; then
           export PATH="$HOME/.npm-global/bin:$PATH"
       fi

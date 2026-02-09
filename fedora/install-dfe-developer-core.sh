@@ -14,7 +14,7 @@
 #   - semantic-release and npm packages
 #   - JFrog CLI, GitHub CLI, Azure CLI
 #   - OpenVPN 3 client
-#   - Claude Code CLI with auto-update
+#   - Claude Code CLI (native binary)
 #   - UV and Nox Python tools
 #   - Slack (Flatpak)
 #
@@ -119,13 +119,53 @@ gpgkey=https://packages.microsoft.com/keys/microsoft.asc
 EOF
 sudo dnf install -y azure-cli
 
-# Claude Code CLI (user-specific installation)
-print_info "Installing Claude Code CLI via npm (user-specific)..."
-npm install -g @anthropic-ai/claude-code
+# Claude Code CLI (native binary - user-specific installation)
+print_info "Installing Claude Code CLI (native binary)..."
+CLAUDE_GCS_BUCKET="https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases"
 
-# Enable auto-update for Claude Code
-print_info "Configuring Claude Code auto-update..."
-PATH="$HOME/.npm-global/bin:$PATH" claude config set auto_update true || true
+# Remove deprecated npm installation if present
+if [ -x "$HOME/.npm-global/bin/claude" ]; then
+    print_info "Removing deprecated npm Claude Code installation..."
+    npm uninstall -g @anthropic-ai/claude-code || true
+fi
+
+# Determine platform
+ARCH=$(uname -m)
+case "$ARCH" in
+    x86_64)  CLAUDE_PLATFORM="linux-x64" ;;
+    aarch64) CLAUDE_PLATFORM="linux-arm64" ;;
+    *)       print_error "Unsupported architecture: $ARCH"; exit 1 ;;
+esac
+
+# Fetch latest version
+CLAUDE_VERSION=$(curl -fsSL "${CLAUDE_GCS_BUCKET}/latest")
+print_info "Claude Code version: $CLAUDE_VERSION"
+
+# Fetch manifest and extract checksum
+CLAUDE_CHECKSUM=$(curl -fsSL "${CLAUDE_GCS_BUCKET}/${CLAUDE_VERSION}/manifest.json" \
+    | python3 -c "import sys,json; print(json.load(sys.stdin)['platforms']['${CLAUDE_PLATFORM}']['checksum'])")
+
+# Download binary to temp directory
+mkdir -p /tmp/claude-install
+curl -fsSL -o /tmp/claude-install/claude "${CLAUDE_GCS_BUCKET}/${CLAUDE_VERSION}/${CLAUDE_PLATFORM}/claude"
+chmod +x /tmp/claude-install/claude
+
+# Verify SHA256 checksum
+ACTUAL_CHECKSUM=$(sha256sum /tmp/claude-install/claude | cut -d' ' -f1)
+if [ "$ACTUAL_CHECKSUM" != "$CLAUDE_CHECKSUM" ]; then
+    print_error "Claude Code checksum verification failed!"
+    print_error "  Expected: $CLAUDE_CHECKSUM"
+    print_error "  Actual:   $ACTUAL_CHECKSUM"
+    rm -rf /tmp/claude-install
+    exit 1
+fi
+
+# Install (sets up ~/.local/bin/claude and shell integration)
+mkdir -p "$HOME/.local/bin"
+/tmp/claude-install/claude install
+
+# Cleanup
+rm -rf /tmp/claude-install
 
 # Linear.app CLI tool (system-wide installation)
 sudo npm install -g @digitalstories/linear-cli
@@ -171,9 +211,9 @@ az version &>/dev/null && echo "  [OK] Azure CLI" || echo "  [FAIL] Azure CLI"
 openvpn3 version &>/dev/null && echo "  [OK] OpenVPN 3" || echo "  [FAIL] OpenVPN 3"
 
 echo ""
-echo "User-installed Tools (in ~/.npm-global/bin):"
+echo "User-installed Tools:"
 [ -x "$HOME/.npm-global/bin/semantic-release" ] && echo "  [OK] semantic-release" || echo "  [FAIL] semantic-release"
-[ -x "$HOME/.npm-global/bin/claude --version" ] && echo "  [OK] Claude Code CLI" || echo "  [FAIL] Claude Code CLI"
+[ -x "$HOME/.local/bin/claude" ] && echo "  [OK] Claude Code CLI" || echo "  [FAIL] Claude Code CLI"
 
 echo ""
 echo "Python Tools:"

@@ -1,49 +1,141 @@
 ---
 # Claude Code CLI installation and managed settings
 #
-# Installs Claude Code CLI and configures system-wide managed settings
-# that apply to all users and cannot be overridden.
+# Linux: Native binary download with SHA256 verification from manifest
+# macOS: Homebrew cask
 #
+# Binary location: ~/.local/bin/claude (installed by 'claude install')
 # Settings location: /etc/claude-code/managed-settings.json (Linux)
 #                   /Library/Application Support/ClaudeCode/managed-settings.json (macOS)
 
-- name: Install Claude Code CLI globally for user (Linux)
+# ============================================================================
+# Distribution URL
+# ============================================================================
+
+- name: Set Claude Code distribution URL
+  ansible.builtin.set_fact:
+    claude_gcs_bucket: "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases"
+
+# ============================================================================
+# Cleanup deprecated npm installation
+# ============================================================================
+
+- name: Remove deprecated Claude Code npm package (Linux)
   community.general.npm:
     name: '@anthropic-ai/claude-code'
     global: true
-    state: present
+    state: absent
   environment:
     NPM_CONFIG_PREFIX: "{{ user_home }}/.npm-global"
   become: false
   become_user: "{{ actual_user }}"
+  failed_when: false
   when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
-- name: Install Claude Code CLI globally for user (macOS)
+- name: Remove deprecated Claude Code npm package (macOS)
   community.general.npm:
     name: '@anthropic-ai/claude-code'
     global: true
-    state: present
+    state: absent
   environment: "{{ npm_config_env }}"
   become: false
+  failed_when: false
   when: ansible_facts['distribution'] == 'MacOSX'
 
-- name: Enable Claude Code auto-update (Linux)
-  ansible.builtin.command:
-    cmd: "{{ user_home }}/.npm-global/bin/claude config set auto_update true"
-  become: false
-  become_user: "{{ actual_user }}"
-  failed_when: false
-  changed_when: false
+# ============================================================================
+# Linux - Native binary installation with SHA256 verification
+# ============================================================================
+
+- name: Install Claude Code native binary (Linux)
+  block:
+    - name: Fetch latest Claude Code version
+      ansible.builtin.uri:
+        url: "{{ claude_gcs_bucket }}/latest"
+        return_content: true
+      register: claude_latest_version
+
+    - name: Set Claude Code version fact
+      ansible.builtin.set_fact:
+        claude_version: "{{ claude_latest_version.content | trim }}"
+
+    - name: Determine Claude Code platform
+      ansible.builtin.set_fact:
+        claude_platform: >-
+          {%- if ansible_facts['architecture'] == 'x86_64' -%}
+          linux-x64
+          {%- elif ansible_facts['architecture'] == 'aarch64' -%}
+          linux-arm64
+          {%- else -%}
+          unsupported
+          {%- endif -%}
+
+    - name: Fail if unsupported architecture
+      ansible.builtin.fail:
+        msg: "Unsupported architecture for Claude Code: {{ ansible_facts['architecture'] }}"
+      when: claude_platform == 'unsupported'
+
+    - name: Fetch Claude Code manifest for checksum
+      ansible.builtin.uri:
+        url: "{{ claude_gcs_bucket }}/{{ claude_version }}/manifest.json"
+        return_content: true
+      register: claude_manifest
+
+    - name: Set Claude Code checksum fact
+      ansible.builtin.set_fact:
+        claude_checksum: "{{ claude_manifest.json.platforms[claude_platform].checksum }}"
+
+    - name: Create temporary download directory
+      ansible.builtin.file:
+        path: /tmp/claude-install
+        state: directory
+        mode: '0755'
+
+    - name: Download Claude Code binary with checksum verification
+      ansible.builtin.get_url:
+        url: "{{ claude_gcs_bucket }}/{{ claude_version }}/{{ claude_platform }}/claude"
+        dest: /tmp/claude-install/claude
+        mode: '0755'
+        checksum: "sha256:{{ claude_checksum }}"
+
+    - name: Create ~/.local/bin directory
+      ansible.builtin.file:
+        path: "{{ user_home }}/.local/bin"
+        state: directory
+        mode: '0755'
+        owner: "{{ actual_user }}"
+        group: "{{ actual_user }}"
+
+    - name: Run claude install to set up launcher and shell integration
+      ansible.builtin.command:
+        cmd: /tmp/claude-install/claude install
+      become: true
+      become_user: "{{ actual_user }}"
+      environment:
+        HOME: "{{ user_home }}"
+      register: claude_install_result
+      changed_when: claude_install_result.rc == 0
+
+    - name: Remove temporary download directory
+      ansible.builtin.file:
+        path: /tmp/claude-install
+        state: absent
+
+    - name: Display Claude Code installation info
+      ansible.builtin.debug:
+        msg: "Claude Code {{ claude_version }} installed ({{ claude_platform }})"
+
   when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
-- name: Enable Claude Code auto-update (macOS)
-  ansible.builtin.command:
-    cmd: "{{ user_home }}/.npm-global/bin/claude config set auto_update true"
-  environment:
-    PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ user_home }}/.npm-global/bin:{{ ansible_facts['env'].PATH }}"
+# ============================================================================
+# macOS - Homebrew cask installation
+# ============================================================================
+
+- name: Install Claude Code via Homebrew cask (macOS)
+  community.general.homebrew_cask:
+    name: claude-code
+    state: present
   become: false
-  failed_when: false
-  changed_when: false
+  environment: "{{ homebrew_cask_env }}"
   when: ansible_facts['distribution'] == 'MacOSX'
 
 # ============================================================================

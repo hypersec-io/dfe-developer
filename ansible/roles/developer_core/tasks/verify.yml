@@ -113,12 +113,21 @@
   failed_when: verify_netbird.rc != 0
   when: ansible_facts['distribution'] == 'MacOSX'
 
-- name: Verify Claude Code CLI
-  ansible.builtin.command: "{{ user_home }}/.npm-global/bin/claude --version"
+- name: Verify Claude Code CLI (Linux)
+  ansible.builtin.command: "{{ user_home }}/.local/bin/claude --version"
   register: verify_claude
   changed_when: false
   failed_when: verify_claude.rc != 0
   become: false
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+
+- name: Verify Claude Code CLI (macOS)
+  ansible.builtin.command: claude --version
+  environment: "{{ homebrew_env }}"
+  register: verify_claude
+  changed_when: false
+  failed_when: verify_claude.rc != 0
+  when: ansible_facts['distribution'] == 'MacOSX'
 
 - name: Verify Gitleaks (Linux)
   ansible.builtin.command: gitleaks version

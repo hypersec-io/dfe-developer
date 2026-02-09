@@ -15,11 +15,13 @@
   when: ansible_facts['distribution'] == 'Fedora'
 
 # ============================================================================
-# UBUNTU - Latest Git from PPA (LTS only) or distro repos (non-LTS)
+# UBUNTU - Latest Git from PPA
 # ============================================================================
-# The git-core PPA only publishes for LTS releases and uses a weak RSA-1024
-# signing key that non-LTS releases (25.04+) reject. Non-LTS Ubuntu ships
-# with a recent enough git so the PPA is unnecessary.
+# The git-core PPA signs with two keys:
+#   E1DD270288B4E6030699E45FA1715D88E1DF1F24 (RSA-1024, legacy)
+#   E363C90F8F1B6217 (newer key)
+# Ubuntu 25.04+ rejects the RSA-1024 key. We import both keys into a binary
+# keyring so apt can verify against whichever key the PPA uses.
 
 # Clean up old PPA configuration if exists (migration from legacy method)
 - name: Remove old git-core PPA configuration
@@ -32,18 +34,28 @@
     - ppa_git_core_ppa.list
   when: ansible_facts['distribution'] == 'Ubuntu'
 
-# LTS releases: use git-core PPA for latest git
-- name: Install latest Git via PPA (Ubuntu LTS)
+- name: Remove old git-core PPA ASC key (replaced by binary keyring)
+  ansible.builtin.file:
+    path: /etc/apt/keyrings/git-core-ppa.asc
+    state: absent
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Install latest Git via PPA (Ubuntu)
   block:
-    - name: Import git-core PPA GPG key
-      ansible.builtin.get_url:
-        url: https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xE1DD270288B4E6030699E45FA1715D88E1DF1F24
-        dest: /etc/apt/keyrings/git-core-ppa.asc
-        mode: '0644'
+    - name: Import git-core PPA GPG keys (both legacy and current)
+      ansible.builtin.shell:
+        cmd: |
+          gpg --no-default-keyring --keyring /tmp/git-core-ppa.gpg \
+            --keyserver keyserver.ubuntu.com \
+            --recv-keys E1DD270288B4E6030699E45FA1715D88E1DF1F24 E363C90F8F1B6217
+          gpg --no-default-keyring --keyring /tmp/git-core-ppa.gpg \
+            --export --output /etc/apt/keyrings/git-core-ppa.gpg
+          rm -f /tmp/git-core-ppa.gpg /tmp/git-core-ppa.gpg~
+        creates: /etc/apt/keyrings/git-core-ppa.gpg
 
     - name: Add git-core PPA repository
       ansible.builtin.apt_repository:
-        repo: "deb [signed-by=/etc/apt/keyrings/git-core-ppa.asc] https://ppa.launchpadcontent.net/git-core/ppa/ubuntu {{ ansible_facts['distribution_release'] }} main"
+        repo: "deb [signed-by=/etc/apt/keyrings/git-core-ppa.gpg] https://ppa.launchpadcontent.net/git-core/ppa/ubuntu {{ ansible_facts['distribution_release'] }} main"
         filename: git-core-ppa
         state: present
 
@@ -56,22 +68,7 @@
         state: latest
         update_cache: true
 
-  when:
-    - ansible_facts['distribution'] == 'Ubuntu'
-    - ansible_facts['distribution_release'] in ['noble', 'jammy']
-
-# Non-LTS releases: use distro repos (ships recent git, PPA unavailable)
-- name: Install Git and Git LFS (Ubuntu non-LTS)
-  ansible.builtin.apt:
-    name:
-      - git
-      - git-lfs
-      - git-filter-repo
-    state: latest
-    update_cache: true
-  when:
-    - ansible_facts['distribution'] == 'Ubuntu'
-    - ansible_facts['distribution_release'] not in ['noble', 'jammy']
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 # ============================================================================
 # macOS - Latest Git from Homebrew
