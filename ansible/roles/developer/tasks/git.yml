@@ -45,12 +45,12 @@
     - name: Import git-core PPA GPG keys (both legacy and current)
       ansible.builtin.shell:
         cmd: |
-          gpg --no-default-keyring --keyring /tmp/git-core-ppa.gpg \
-            --keyserver keyserver.ubuntu.com \
+          export GNUPGHOME=$(mktemp -d)
+          gpg --keyserver keyserver.ubuntu.com \
             --recv-keys E1DD270288B4E6030699E45FA1715D88E1DF1F24 E363C90F8F1B6217
-          gpg --no-default-keyring --keyring /tmp/git-core-ppa.gpg \
-            --export --output /etc/apt/keyrings/git-core-ppa.gpg
-          rm -f /tmp/git-core-ppa.gpg /tmp/git-core-ppa.gpg~
+          gpg --export E1DD270288B4E6030699E45FA1715D88E1DF1F24 E363C90F8F1B6217 \
+            > /etc/apt/keyrings/git-core-ppa.gpg
+          rm -rf "$GNUPGHOME"
         creates: /etc/apt/keyrings/git-core-ppa.gpg
 
     - name: Add git-core PPA repository
