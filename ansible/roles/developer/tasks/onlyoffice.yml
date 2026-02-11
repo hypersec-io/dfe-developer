@@ -5,15 +5,23 @@
 # OnlyOffice is a modern office suite with MS Office compatibility
 # Installs from official OnlyOffice apt repository
 
+- name: Create apt keyrings directory (Ubuntu)
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
 - name: Add OnlyOffice GPG key (Ubuntu)
-  ansible.builtin.apt_key:
+  ansible.builtin.get_url:
     url: https://download.onlyoffice.com/GPG-KEY-ONLYOFFICE
-    state: present
+    dest: /etc/apt/keyrings/onlyoffice.asc
+    mode: "0644"
   when: ansible_facts['distribution'] == 'Ubuntu'
 
 - name: Add OnlyOffice apt repository (Ubuntu)
   ansible.builtin.apt_repository:
-    repo: "deb https://download.onlyoffice.com/repo/debian squeeze main"
+    repo: "deb [signed-by=/etc/apt/keyrings/onlyoffice.asc] https://download.onlyoffice.com/repo/debian squeeze main"
     state: present
     filename: onlyoffice
   when: ansible_facts['distribution'] == 'Ubuntu'
