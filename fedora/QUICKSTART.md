@@ -16,7 +16,7 @@ What you'll need:
 ### Step 1: Clone Repository
 
 ```bash
-git clone https://github.com/hypersec-io/dfe-developer.git
+git clone https://github.com/hyperi-io/dfe-developer.git
 cd dfe-developer/fedora
 ```
 

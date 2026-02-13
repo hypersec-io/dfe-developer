@@ -295,7 +295,7 @@ if [[ ! -d "ansible" ]]; then
     print_info "Cloning ansible directory from repository (branch: $GIT_BRANCH)..."
 
     # Download GitHub tarball (no git required)
-    TARBALL_URL="https://github.com/hypersec-io/dfe-developer/archive/refs/heads/${GIT_BRANCH}.tar.gz"
+    TARBALL_URL="https://github.com/hyperi-io/dfe-developer/archive/refs/heads/${GIT_BRANCH}.tar.gz"
 
     print_info "Downloading from $TARBALL_URL..."
     curl -fsSL "$TARBALL_URL" -o /tmp/dfe-developer.tar.gz || {
