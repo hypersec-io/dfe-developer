@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.23.2](https://github.com/hyperi-io/dfe-developer/compare/v2.23.1...v2.23.2) (2026-02-13)
+
+
+### Bug Fixes
+
+* replace deprecated apt-key with signed-by keyring for OnlyOffice ([c704bd0](https://github.com/hyperi-io/dfe-developer/commit/c704bd0bf56744c021067bfdb53ada6b64f2af7b))
+* use HTTP export for git-core PPA GPG keys ([8aed3fa](https://github.com/hyperi-io/dfe-developer/commit/8aed3fa53b7112c74b2902262ef0e5e121b63b5b))
+
 ## [2.23.1](https://github.com/hypersec-io/dfe-developer/compare/v2.23.0...v2.23.1) (2026-02-09)
 
 
