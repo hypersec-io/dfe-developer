@@ -50,9 +50,17 @@
         dest: /usr/share/keyrings/microsoft.asc
         mode: '0644'
 
+    # Map unsupported Ubuntu releases to nearest supported LTS
+    # Microsoft only publishes repos for LTS releases (jammy, noble)
+    - name: Determine Azure CLI repo codename
+      ansible.builtin.set_fact:
+        azure_cli_codename: >-
+          {{ (ansible_facts['distribution_version'] is version('24.04', '>'))
+             | ternary('noble', ansible_facts['distribution_release']) }}
+
     - name: Add Azure CLI repository
       ansible.builtin.apt_repository:
-        repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft.asc] https://packages.microsoft.com/repos/azure-cli/ {{ ansible_facts['distribution_release'] }} main"
+        repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft.asc] https://packages.microsoft.com/repos/azure-cli/ {{ azure_cli_codename }} main"
         filename: azure-cli
         state: present
 
