@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.23.3](https://github.com/hyperi-io/dfe-developer/compare/v2.23.2...v2.23.3) (2026-02-15)
+
+
+### Bug Fixes
+
+* add regional locale support and rename-user script ([3f07a98](https://github.com/hyperi-io/dfe-developer/commit/3f07a98acc44282a5dc88d848ec9b9fd48e4a5de))
+* azure CLI and vector apt repos for plucky (Ubuntu 25.04) ([839c5a1](https://github.com/hyperi-io/dfe-developer/commit/839c5a1f7186a413ab23ed07a7bf84ae6abeee45))
+
 ## [2.23.2](https://github.com/hyperi-io/dfe-developer/compare/v2.23.1...v2.23.2) (2026-02-13)
 
 
