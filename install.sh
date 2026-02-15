@@ -56,6 +56,7 @@ OPTIONS:
   --branch BRANCH      Git branch to use (default: main)
   --core               Shortcut for: --tags developer,base,core,advanced
   --all                Shortcut for: --tags developer,base,core,advanced,vm,optimizer,rdp,maclike
+  --region REGION      Apply regional settings (e.g. au, en_AU.UTF-8)
   --help               Show this help message
 
 AVAILABLE TAGS:
@@ -72,6 +73,9 @@ AVAILABLE TAGS:
     vm              VM guest optimizations (QEMU guest agent, SPICE agent)
     optimizer       VM optimizer role (included with --vm)
     rdp             GNOME Remote Desktop configuration (RDP server on port 3389)
+
+  Regional Tags (opt-in via --region):
+    region          Regional locale, formats, spell-check (opt-in)
 
   Optional Tags (included by default, can be excluded):
     ghostty         Ghostty terminal emulator (included by default)
@@ -97,6 +101,9 @@ EXAMPLES:
 
   Exclude fastestmirror (use default OS mirrors):
     ./install.sh --tags-exclude fastestmirror
+
+  Install everything with Australian region (locale, formats, spell-check):
+    ./install.sh --all --region au
 
   Install everything except wallpaper:
     ./install.sh --all --tags-exclude wallpaper
@@ -162,6 +169,10 @@ while [[ $# -gt 0 ]]; do
             ANSIBLE_TAGS="--tags developer,base,core,advanced,vm,optimizer,rdp,maclike"
             shift
             ;;
+        --region)
+            REGION_ARG="$2"
+            shift 2
+            ;;
         --help|-h)
             show_help
             ;;
@@ -180,6 +191,33 @@ if [[ "$ANSIBLE_TAGS" == *"winlike"* ]] && [[ "$ANSIBLE_TAGS" == *"maclike"* ]];
     ANSIBLE_TAGS="${ANSIBLE_TAGS//,maclike/}"
     ANSIBLE_TAGS="${ANSIBLE_TAGS//maclike,/}"
     ANSIBLE_TAGS="${ANSIBLE_TAGS//maclike/}"
+fi
+
+# Handle --region: resolve short codes to full locale, add tag and extra var
+if [[ -n "${REGION_ARG:-}" ]]; then
+    # Map short codes to full locale strings
+    case "${REGION_ARG,,}" in
+        au|en_au|en_au.utf-8|en_au.utf8)  DESKTOP_REGION="en_AU.UTF-8" ;;
+        us|en_us|en_us.utf-8|en_us.utf8)  DESKTOP_REGION="en_US.UTF-8" ;;
+        gb|en_gb|en_gb.utf-8|en_gb.utf8)  DESKTOP_REGION="en_GB.UTF-8" ;;
+        nz|en_nz|en_nz.utf-8|en_nz.utf8)  DESKTOP_REGION="en_NZ.UTF-8" ;;
+        *)
+            # Accept any value as-is (assume full locale string)
+            DESKTOP_REGION="${REGION_ARG}"
+            ;;
+    esac
+
+    # Add region tag
+    if [[ -n "$ANSIBLE_TAGS" ]]; then
+        CURRENT_TAGS="${ANSIBLE_TAGS#--tags }"
+        ANSIBLE_TAGS="--tags ${CURRENT_TAGS},region"
+    else
+        ANSIBLE_TAGS="--tags region"
+    fi
+
+    # Pass desktop_region as extra var
+    ANSIBLE_EXTRA_VARS="-e desktop_region=${DESKTOP_REGION}"
+    print_info "Region: ${DESKTOP_REGION}"
 fi
 
 # Detect operating system

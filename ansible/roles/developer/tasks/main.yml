@@ -203,6 +203,16 @@
     - has_gnome | default(false)
     - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
 
+- name: Apply regional settings (locale, formats, spell-check)
+  ansible.builtin.include_tasks:
+    file: region.yml
+    apply:
+      tags: ['region']
+  tags: ['region']
+  when:
+    - desktop_region | default('') | length > 0
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+
 - name: Install Ghostty terminal
   ansible.builtin.include_tasks:
     file: ghostty.yml

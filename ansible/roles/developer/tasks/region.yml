@@ -1,0 +1,88 @@
+---
+# Regional settings - GNOME locale/formats and spell-check dictionaries
+# Driven by desktop_region variable (SSoT). Opt-in: empty = skip.
+#
+# Sets:
+# - GNOME region/formats (date, currency, measurement)
+# - 24-hour clock format
+# - hunspell dictionary matching the region
+
+# ============================================================================
+# GNOME REGION / FORMATS (dconf)
+# ============================================================================
+
+- name: Set GNOME region formats
+  community.general.dconf:
+    key: "/org/gnome/system/locale/region"
+    value: "'{{ desktop_region }}'"
+    state: present
+  become: false
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+
+- name: Set 24-hour clock format
+  community.general.dconf:
+    key: "/org/gnome/desktop/interface/clock-format"
+    value: "'24h'"
+    state: present
+  become: false
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+
+# ============================================================================
+# DCONF DEFAULTS (system-wide region settings)
+# ============================================================================
+# Add region block to system-wide dconf defaults so new users inherit it
+
+- name: Deploy system-wide region dconf defaults
+  ansible.builtin.copy:
+    content: |
+      # Regional settings - deployed by dfe-developer region tag
+      # SSoT: desktop_region={{ desktop_region }}
+
+      [org/gnome/system/locale]
+      region='{{ desktop_region }}'
+
+      [org/gnome/desktop/interface]
+      clock-format='24h'
+    dest: /etc/dconf/db/local.d/01-region-defaults
+    mode: '0644'
+  register: region_dconf_defaults
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+
+- name: Update dconf database (region)
+  ansible.builtin.command:
+    cmd: dconf update
+  changed_when: true
+  when:
+    - has_gnome | default(false)
+    - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+    - region_dconf_defaults.changed | default(false)
+
+# ============================================================================
+# HUNSPELL DICTIONARY
+# ============================================================================
+# Derive hunspell package name from desktop_region (e.g. en_AU.UTF-8 -> hunspell-en-au)
+
+- name: Derive hunspell package name from region
+  ansible.builtin.set_fact:
+    hunspell_package: "hunspell-{{ desktop_region.split('.')[0] | lower | replace('_', '-') }}"
+  when: ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+
+- name: Install hunspell dictionary (Ubuntu)
+  ansible.builtin.apt:
+    name: "{{ hunspell_package }}"
+    state: present
+  failed_when: false
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Install hunspell dictionary (Fedora)
+  ansible.builtin.dnf:
+    name: "{{ hunspell_package }}"
+    state: present
+  failed_when: false
+  when: ansible_facts['distribution'] == 'Fedora'

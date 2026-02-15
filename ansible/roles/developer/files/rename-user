@@ -1,0 +1,242 @@
+#!/bin/bash
+# ============================================================================
+# rename-user - Rename the default template user and update RDP credentials
+# ============================================================================
+# Renames the default desktop user (e.g. hyperi) to a new username, updates:
+# - Linux user account (username, group, home directory)
+# - Passwordless sudo configuration
+# - GNOME Remote Desktop (RDP) credentials
+# - Local cloud-init default user
+#
+# Can be run via SSH or from a desktop terminal. If a graphical session is
+# active, the script warns that it will be terminated and asks to proceed.
+#
+# The actual rename runs in a detached background process so it survives
+# the session kill.
+#
+# USAGE:
+#   sudo rename-user
+#
+# SUPPORTED PLATFORMS:
+#   - Ubuntu 24.04+
+#   - Fedora 42+
+#
+# LICENSE:
+#   Licensed under the Apache License, Version 2.0
+# ============================================================================
+
+set -euo pipefail
+
+# Colours
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+NC='\033[0m'
+
+print_info()  { echo -e "${GREEN}[INFO]${NC} $1"; }
+print_warn()  { echo -e "${YELLOW}[WARN]${NC} $1"; }
+print_error() { echo -e "${RED}[ERROR]${NC} $1" >&2; }
+
+# ============================================================================
+# SAFETY CHECKS
+# ============================================================================
+
+if [[ $EUID -ne 0 ]]; then
+    print_error "This script must be run as root (use sudo)"
+    exit 1
+fi
+
+# ============================================================================
+# DETECT CURRENT DEFAULT USER
+# ============================================================================
+
+# Skip cloud-image default users (all major distros)
+CLOUD_IMAGE_USERS="ubuntu debian fedora cloud-user centos rocky alma ec2-user azureuser opc"
+DEFAULT_USER=""
+DEFAULT_UID=""
+for uid in $(seq 1000 1010); do
+    user=$(getent passwd "$uid" 2>/dev/null | cut -d: -f1)
+    [[ -z "$user" ]] && continue
+    skip=false
+    for cloud_user in $CLOUD_IMAGE_USERS; do
+        [[ "$user" == "$cloud_user" ]] && skip=true && break
+    done
+    [[ "$skip" == "true" ]] && continue
+    DEFAULT_USER="$user"
+    DEFAULT_UID="$uid"
+    break
+done
+
+if [[ -z "$DEFAULT_USER" ]]; then
+    print_error "Cannot find a desktop user (checked UIDs 1000-1010, skipping: ${CLOUD_IMAGE_USERS})"
+    exit 1
+fi
+
+DEFAULT_HOME=$(getent passwd "$DEFAULT_USER" | cut -d: -f6)
+IP_ADDR=$(hostname -I 2>/dev/null | awk '{print $1}')
+
+echo ""
+print_info "Current default user: ${CYAN}${DEFAULT_USER}${NC} (UID ${DEFAULT_UID}, home: ${DEFAULT_HOME})"
+echo ""
+
+# ============================================================================
+# INTERACTIVE PROMPTS
+# ============================================================================
+
+while true; do
+    read -rp "New username: " NEW_USER
+    [[ -z "$NEW_USER" ]] && print_error "Username cannot be empty" && continue
+    [[ "$NEW_USER" == "$DEFAULT_USER" ]] && print_error "Same as current username" && continue
+    [[ ! "$NEW_USER" =~ ^[a-z_][a-z0-9_-]*$ ]] && print_error "Invalid username (lowercase, digits, hyphens only)" && continue
+    id "$NEW_USER" &>/dev/null && print_error "User '$NEW_USER' already exists" && continue
+    break
+done
+
+while true; do
+    read -rsp "New password: " NEW_PASS
+    echo ""
+    [[ -z "$NEW_PASS" ]] && print_error "Password cannot be empty" && continue
+    read -rsp "Confirm password: " NEW_PASS_CONFIRM
+    echo ""
+    [[ "$NEW_PASS" != "$NEW_PASS_CONFIRM" ]] && print_error "Passwords do not match" && continue
+    break
+done
+
+# Detect Proxmox VMID from SMBIOS
+VMID=""
+if [[ -f /sys/class/dmi/id/product_serial ]]; then
+    VMID=$(cat /sys/class/dmi/id/product_serial 2>/dev/null || true)
+fi
+[[ -z "$VMID" ]] && command -v dmidecode &>/dev/null && VMID=$(dmidecode -s system-serial-number 2>/dev/null || true)
+
+echo ""
+print_info "Will rename: ${DEFAULT_USER} -> ${NEW_USER}"
+print_info "Home directory: ${DEFAULT_HOME} -> /home/${NEW_USER}"
+
+# Warn about active sessions
+if loginctl list-sessions --no-legend 2>/dev/null | grep -q "$DEFAULT_USER"; then
+    echo ""
+    print_warn "Active sessions for ${DEFAULT_USER} will be terminated."
+    print_warn "This includes any RDP/graphical sessions."
+fi
+
+echo ""
+read -rp "Proceed? (y/N): " CONFIRM
+if [[ "${CONFIRM,,}" != "y" ]]; then
+    print_info "Cancelled"
+    exit 0
+fi
+
+# ============================================================================
+# WRITE WORKER SCRIPT (proper variable expansion)
+# ============================================================================
+
+LOG_FILE="/var/log/rename-user.log"
+WORKER_SCRIPT=$(mktemp /tmp/rename-worker.XXXXXX.sh)
+chmod 700 "$WORKER_SCRIPT"
+
+cat > "$WORKER_SCRIPT" << WORKER_EOF
+#!/bin/bash
+set -euo pipefail
+exec > "$LOG_FILE" 2>&1
+
+echo "=== rename-user: \$(date '+%Y-%m-%d %H:%M:%S %Z') ==="
+echo "Renaming $DEFAULT_USER -> $NEW_USER"
+
+# Wait for parent to finish printing
+sleep 2
+
+# Terminate all sessions for the old user
+echo "Terminating sessions for $DEFAULT_USER..."
+loginctl terminate-user "$DEFAULT_USER" 2>/dev/null || true
+sleep 3
+pkill -u "$DEFAULT_USER" 2>/dev/null || true
+sleep 1
+pkill -9 -u "$DEFAULT_USER" 2>/dev/null || true
+sleep 2
+
+# Rename user account and move home directory
+echo "Renaming user..."
+usermod -l "$NEW_USER" -d "/home/$NEW_USER" -m "$DEFAULT_USER"
+echo "User renamed"
+
+# Rename primary group
+groupmod -n "$NEW_USER" "$DEFAULT_USER" 2>/dev/null || true
+echo "Group renamed"
+
+# Set new password
+echo "$NEW_USER:$NEW_PASS" | chpasswd
+echo "Password set"
+
+# Update sudoers
+echo "Updating sudoers..."
+rm -f "/etc/sudoers.d/90-${DEFAULT_USER}-nopasswd"
+rm -f "/etc/sudoers.d/${DEFAULT_USER}"
+rm -f "/etc/sudoers.d/90-cloud-init-users"
+echo "$NEW_USER ALL=(ALL) NOPASSWD: ALL" > "/etc/sudoers.d/90-${NEW_USER}-nopasswd"
+chmod 440 "/etc/sudoers.d/90-${NEW_USER}-nopasswd"
+echo "Sudoers updated"
+
+# Update RDP credentials
+if command -v grdctl &>/dev/null; then
+    echo "Updating RDP credentials..."
+    systemctl stop gnome-remote-desktop.service 2>/dev/null || true
+    grdctl --system rdp set-credentials "$NEW_USER" "$NEW_PASS" 2>/dev/null || true
+    systemctl start gnome-remote-desktop.service 2>/dev/null || true
+    echo "RDP credentials updated"
+fi
+
+# Update local cloud-init config
+if [[ -f /etc/cloud/cloud.cfg ]]; then
+    if grep -q "name: $DEFAULT_USER" /etc/cloud/cloud.cfg 2>/dev/null; then
+        sed -i "s/name: $DEFAULT_USER/name: $NEW_USER/" /etc/cloud/cloud.cfg
+        echo "cloud.cfg updated"
+    fi
+fi
+
+echo ""
+echo "=== rename-user: COMPLETE ==="
+echo "Old user: $DEFAULT_USER"
+echo "New user: $NEW_USER"
+echo "Home: /home/$NEW_USER"
+echo "Groups: \$(id -nG "$NEW_USER")"
+echo ""
+echo "SSH: ssh $NEW_USER@$IP_ADDR"
+echo "RDP: $IP_ADDR:3389 (user: $NEW_USER)"
+
+# Cleanup worker script
+rm -f "$WORKER_SCRIPT"
+WORKER_EOF
+
+# ============================================================================
+# LAUNCH DETACHED WORKER AND PRINT SUMMARY
+# ============================================================================
+
+echo ""
+print_info "Launching rename in background (survives session termination)..."
+print_info "Log: ${LOG_FILE}"
+echo ""
+
+# setsid detaches from the controlling terminal and session
+setsid bash "$WORKER_SCRIPT" &
+disown 2>/dev/null || true
+
+print_info "Your session will be terminated in a few seconds."
+print_info "Wait ~15 seconds, then reconnect as:"
+echo ""
+echo "    ssh ${NEW_USER}@${IP_ADDR}"
+echo ""
+
+if command -v grdctl &>/dev/null; then
+    echo "  RDP: ${IP_ADDR}:3389 (user: ${NEW_USER})"
+    echo ""
+fi
+
+if [[ -n "$VMID" ]]; then
+    print_warn "Update Proxmox cloud-init on the host:"
+    echo "    qm set ${VMID} --ciuser ${NEW_USER}"
+    echo ""
+fi
+
+print_info "Check result: cat ${LOG_FILE}"

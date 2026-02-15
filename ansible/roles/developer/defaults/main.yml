@@ -41,6 +41,15 @@ avatar_file: "user-avatar.png"
 background_file: "default-background.svg"
 
 # ============================================================================
+# REGIONAL SETTINGS (opt-in)
+# ============================================================================
+# SSoT for desktop locale/region. Set to a valid locale (e.g. "en_AU.UTF-8")
+# to apply GNOME region formats, 24h clock, and matching hunspell dictionary.
+# Empty string = skip all regional customisation (default).
+# Use --tags region to apply, or set the variable and run with desktop tag.
+desktop_region: ""
+
+# ============================================================================
 # OFFICE SUITE
 # ============================================================================
 # OnlyOffice is the default (better MS Office compatibility)
